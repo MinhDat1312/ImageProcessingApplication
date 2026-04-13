@@ -1,11 +1,11 @@
 package com.pipeline.image.core;
 
-import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Pipeline manager that maintains a list of stages and executes them sequentially.
+ * Passes a PipelineContext object through all stages.
  */
 public class ImagePipeline {
     private final List<ImageStage> stages = new ArrayList<>();
@@ -14,11 +14,19 @@ public class ImagePipeline {
         stages.add(stage);
     }
 
-    public BufferedImage execute(BufferedImage input) throws Exception {
-        BufferedImage currentImage = input;
+    public PipelineContext execute(PipelineContext context) throws Exception {
+        long startTime = System.currentTimeMillis();
+        
         for (ImageStage stage : stages) {
-            currentImage = stage.process(currentImage);
+            if (context.isHasError()) {
+                break; // Stop processing if error occurred
+            }
+            context = stage.process(context);
         }
-        return currentImage;
+        
+        long executionTime = System.currentTimeMillis() - startTime;
+        context.setExecutionTimeMs(executionTime);
+        
+        return context;
     }
 }

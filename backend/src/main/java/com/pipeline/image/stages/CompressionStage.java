@@ -1,6 +1,7 @@
 package com.pipeline.image.stages;
 
 import com.pipeline.image.core.ImageStage;
+import com.pipeline.image.core.PipelineContext;
 import net.coobird.thumbnailator.Thumbnails;
 
 import java.awt.image.BufferedImage;
@@ -22,15 +23,33 @@ public class CompressionStage implements ImageStage {
     }
 
     @Override
-    public BufferedImage process(BufferedImage input) throws Exception {
-        // Thumbnailator supports quality setting if output format is JPEG
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        Thumbnails.of(input)
-                .scale(1.0)
-                .outputFormat("jpg")
-                .outputQuality(quality)
-                .toOutputStream(baos);
-        
-        return ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+    public PipelineContext process(PipelineContext context) throws Exception {
+        try {
+            if (context.isHasError()) {
+                return context;
+            }
+
+            BufferedImage input = context.getImage();
+            if (input == null) {
+                context.setError("No image to compress");
+                return context;
+            }
+
+            // Thumbnailator supports quality setting if output format is JPEG
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            Thumbnails.of(input)
+                    .scale(1.0)
+                    .outputFormat("jpg")
+                    .outputQuality(quality)
+                    .toOutputStream(baos);
+
+            BufferedImage compressed = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
+            context.setImage(compressed);
+            return context;
+
+        } catch (Exception e) {
+            context.setError("Compression failed: " + e.getMessage());
+            return context;
+        }
     }
 }

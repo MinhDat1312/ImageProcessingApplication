@@ -1,6 +1,7 @@
 package com.pipeline.image.stages;
 
 import com.pipeline.image.core.ImageStage;
+import com.pipeline.image.core.PipelineContext;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
@@ -18,25 +19,42 @@ public class FilterStage implements ImageStage {
     }
 
     @Override
-    public BufferedImage process(BufferedImage input) throws Exception {
-        BufferedImage output = input;
+    public PipelineContext process(PipelineContext context) throws Exception {
+        try {
+            if (context.isHasError()) {
+                return context;
+            }
 
-        switch (filterType) {
-            case "grayscale":
-                output = applyGrayscale(output);
-                break;
-            case "sepia":
-                output = applySepia(output);
-                break;
-            case "brightness":
-                output = applyBrightness(output);
-                break;
-            case "none":
-            default:
-                break;
+            BufferedImage input = context.getImage();
+            if (input == null) {
+                context.setError("No image to filter");
+                return context;
+            }
+
+            BufferedImage output = input;
+
+            switch (filterType) {
+                case "grayscale":
+                    output = applyGrayscale(output);
+                    break;
+                case "sepia":
+                    output = applySepia(output);
+                    break;
+                case "brightness":
+                    output = applyBrightness(output);
+                    break;
+                case "none":
+                default:
+                    break;
+            }
+
+            context.setImage(output);
+            return context;
+
+        } catch (Exception e) {
+            context.setError("Filter failed: " + e.getMessage());
+            return context;
         }
-
-        return output;
     }
 
     private BufferedImage applyGrayscale(BufferedImage img) {
