@@ -114,7 +114,7 @@ function App() {
                   </Upload>
                 </Form.Item>
 
-                <Divider orientation="left" style={{ margin: '12px 0' }}>2. Resize Stage</Divider>
+                <Divider style={{ margin: '12px 0' }}>2. Resize Stage</Divider>
                 <Row gutter={16}>
                   <Col span={12}>
                     <Form.Item name="resizeWidth" label="Width (px)">
@@ -128,7 +128,7 @@ function App() {
                   </Col>
                 </Row>
 
-                <Divider orientation="left" style={{ margin: '12px 0' }}>3. Filter Stage</Divider>
+                <Divider style={{ margin: '12px 0' }}>3. Filter Stage</Divider>
                 <Form.Item name="filterType" label="Filter Selection">
                   <Select options={filterOptions} />
                 </Form.Item>
@@ -138,7 +138,7 @@ function App() {
                   </Form.Item>
                 )}
 
-                <Divider orientation="left" style={{ margin: '12px 0' }}>4. Watermark Stage</Divider>
+                <Divider style={{ margin: '12px 0' }}>4. Watermark Stage</Divider>
                 <Form.Item name="watermarkText" label="Watermark Text">
                   <Input placeholder="Enter text to overlap" />
                 </Form.Item>
@@ -155,7 +155,7 @@ function App() {
                   </Col>
                 </Row>
 
-                <Divider orientation="left" style={{ margin: '12px 0' }}>5. Compression Stage</Divider>
+                <Divider style={{ margin: '12px 0' }}>5. Compression Stage</Divider>
                 <Form.Item name="compressionQuality" label="JPEG Quality (1.0 = Best)">
                   <Slider min={0.1} max={1.0} step={0.1} />
                 </Form.Item>
