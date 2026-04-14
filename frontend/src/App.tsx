@@ -15,13 +15,33 @@ import type { ProcessFormValues, ProcessResponse } from "./types";
 
 const { Header, Content } = Layout;
 
-interface ApiError {
-  response?: {
-    data?: {
-      error?: string;
-    };
-  };
+interface ApiErrorResponse {
+  error?: string;
   message?: string;
+  status?: number;
+  path?: string;
+  timestamp?: string;
+}
+
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8082";
+const DEFAULT_ERROR_MESSAGE =
+  "An unexpected error occurred while processing the image";
+
+function getApiErrorMessage(error: unknown): string {
+  if (axios.isAxiosError<ApiErrorResponse>(error)) {
+    return (
+      error.response?.data?.message ??
+      error.response?.data?.error ??
+      error.message ??
+      DEFAULT_ERROR_MESSAGE
+    );
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return DEFAULT_ERROR_MESSAGE;
 }
 
 function App() {
@@ -36,6 +56,8 @@ function App() {
   const [processedFilename, setProcessedFilename] = useState<string>();
   const [processing, setProcessing] = useState(false);
   const [executionTime, setExecutionTime] = useState<number | null>(null);
+  const [elapsedTime, setElapsedTime] = useState(0);
+  const processingStartedAtRef = useRef<number | null>(null);
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -48,6 +70,20 @@ function App() {
       }
     };
   }, [previewUrl]);
+
+  useEffect(() => {
+    if (!processing || processingStartedAtRef.current === null) {
+      return;
+    }
+
+    const intervalId = setInterval(() => {
+      setElapsedTime(Date.now() - processingStartedAtRef.current!);
+    }, 100);
+
+    return () => {
+      clearInterval(intervalId);
+    };
+  }, [processing]);
 
   const handleUploadChange = (
     nextFile: File | null,
@@ -64,6 +100,8 @@ function App() {
     setProcessedUrl(null);
     setProcessedFilename(undefined);
     setExecutionTime(null);
+    setElapsedTime(0);
+    processingStartedAtRef.current = null;
     form.resetFields(["resizeWidth", "resizeHeight", "watermarkText"]);
   };
 
@@ -77,6 +115,9 @@ function App() {
 
     setProcessing(true);
     setProcessedUrl(null);
+    setExecutionTime(null);
+    setElapsedTime(0);
+    processingStartedAtRef.current = Date.now();
     startSimulation(values);
 
     const formData = new FormData();
@@ -109,7 +150,7 @@ function App() {
 
     try {
       const response = await axios.post<ProcessResponse>(
-        "http://localhost:8080/api/images/process",
+        `${API_BASE_URL}/api/images/process`,
         formData,
         {
           headers: { "Content-Type": "multipart/form-data" },
@@ -120,6 +161,7 @@ function App() {
       setProcessedUrl(response.data.url);
       setProcessedFilename(response.data.filename);
       setExecutionTime(response.data.executionTimeMs);
+      setElapsedTime(response.data.executionTimeMs);
       notification.success({
         message: "Image processed successfully",
         description: `Pipeline completed in ${response.data.executionTimeMs} ms`,
@@ -127,11 +169,7 @@ function App() {
       });
     } catch (err: unknown) {
       failCurrent();
-      const error = err as ApiError;
-      const message =
-        error.response?.data?.error ??
-        error.message ??
-        "An unexpected error occurred while processing the image";
+      const message = getApiErrorMessage(err);
 
       notification.error({
         message: "Processing failed",
@@ -140,6 +178,7 @@ function App() {
       });
     } finally {
       setProcessing(false);
+      processingStartedAtRef.current = null;
       if (resetTimerRef.current) {
         clearTimeout(resetTimerRef.current);
       }
@@ -203,7 +242,12 @@ function App() {
 
                 <AnimatePresence mode="wait">
                   {showProgress ? (
-                    <ProgressPipeline key="progress" steps={steps} />
+                    <ProgressPipeline
+                      key="progress"
+                      steps={steps}
+                      elapsedTimeMs={elapsedTime}
+                      executionTimeMs={executionTime}
+                    />
                   ) : (
                     <PipelineControls
                       key="controls"

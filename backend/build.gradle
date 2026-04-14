@@ -23,6 +23,8 @@ repositories {
 
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
     
@@ -30,6 +32,19 @@ dependencies {
     implementation 'net.coobird:thumbnailator:0.4.20'
     
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Thư viện Validation cho Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+    
+    // Đảm bảo có Lombok nếu dòng import lombok.Data cũng bị lỗi
+    compileOnly 'org.projectlombok:lombok'
+    annotationProcessor 'org.projectlombok:lombok'
+
+    // Thư viện hỗ trợ AOP để sử dụng @Aspect, @Pointcut, @Around
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+    
+    // Các thư viện khác đã có...
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
 }
 
 tasks.named('test') {
