@@ -1,6 +1,7 @@
 package com.pipeline.image.stages;
 
 import com.pipeline.image.core.ImageStage;
+import com.pipeline.image.core.PipelineContext;
 import net.coobird.thumbnailator.Thumbnails;
 import net.coobird.thumbnailator.geometry.Positions;
 
@@ -26,53 +27,70 @@ public class WatermarkStage implements ImageStage {
     }
 
     @Override
-    public BufferedImage process(BufferedImage input) throws Exception {
-        if (text == null || text.trim().isEmpty()) {
-            return input;
+    public PipelineContext process(PipelineContext context) throws Exception {
+        try {
+            if (context.isHasError()) {
+                return context;
+            }
+
+            BufferedImage input = context.getImage();
+            if (input == null) {
+                context.setError("No image to watermark");
+                return context;
+            }
+
+            if (text == null || text.trim().isEmpty()) {
+                return context;
+            }
+
+            BufferedImage watermarked = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2d = (Graphics2D) watermarked.getGraphics();
+            
+            g2d.drawImage(input, 0, 0, null);
+            AlphaComposite alphaChannel = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
+            g2d.setComposite(alphaChannel);
+            g2d.setColor(Color.WHITE);
+            g2d.setFont(new Font("Arial", Font.BOLD, size));
+            FontMetrics fontMetrics = g2d.getFontMetrics();
+            
+            int x = 0;
+            int y = 0;
+            int textWidth = fontMetrics.stringWidth(text);
+            int textHeight = fontMetrics.getHeight();
+
+            switch (position.toLowerCase()) {
+                case "top-left":
+                    x = 10;
+                    y = textHeight;
+                    break;
+                case "top-right":
+                    x = input.getWidth() - textWidth - 10;
+                    y = textHeight;
+                    break;
+                case "center":
+                    x = (input.getWidth() - textWidth) / 2;
+                    y = (input.getHeight() - textHeight) / 2;
+                    break;
+                case "bottom-left":
+                    x = 10;
+                    y = input.getHeight() - 10;
+                    break;
+                case "bottom-right":
+                default:
+                    x = input.getWidth() - textWidth - 10;
+                    y = input.getHeight() - 10;
+                    break;
+            }
+
+            g2d.drawString(text, x, y);
+            g2d.dispose();
+            
+            context.setImage(watermarked);
+            return context;
+
+        } catch (Exception e) {
+            context.setError("Watermark failed: " + e.getMessage());
+            return context;
         }
-
-        BufferedImage watermarked = new BufferedImage(input.getWidth(), input.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        Graphics2D g2d = (Graphics2D) watermarked.getGraphics();
-        
-        g2d.drawImage(input, 0, 0, null);
-        AlphaComposite alphaChannel = AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.5f);
-        g2d.setComposite(alphaChannel);
-        g2d.setColor(Color.WHITE);
-        g2d.setFont(new Font("Arial", Font.BOLD, size));
-        FontMetrics fontMetrics = g2d.getFontMetrics();
-        
-        int x = 0;
-        int y = 0;
-        int textWidth = fontMetrics.stringWidth(text);
-        int textHeight = fontMetrics.getHeight();
-
-        switch (position.toLowerCase()) {
-            case "top-left":
-                x = 10;
-                y = textHeight;
-                break;
-            case "top-right":
-                x = input.getWidth() - textWidth - 10;
-                y = textHeight;
-                break;
-            case "center":
-                x = (input.getWidth() - textWidth) / 2;
-                y = (input.getHeight() - textHeight) / 2;
-                break;
-            case "bottom-left":
-                x = 10;
-                y = input.getHeight() - 10;
-                break;
-            case "bottom-right":
-            default:
-                x = input.getWidth() - textWidth - 10;
-                y = input.getHeight() - 10;
-                break;
-        }
-
-        g2d.drawString(text, x, y);
-        g2d.dispose();
-        
-        return watermarked;
     }
 }
