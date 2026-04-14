@@ -197,6 +197,38 @@
   font-weight: 600;
 }
 
+.progress-pipeline {
+  padding: 12px 0;
+}
+
+.progress-timer-card {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, #bfdbfe 26%, var(--surface)),
+    var(--surface)
+  );
+}
+
+.progress-timer-label {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.progress-timer-value {
+  color: var(--text-primary);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
 .preview-card {
   min-height: 530px;
 }

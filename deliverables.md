@@ -108,7 +108,7 @@ function App() {
     const formData = new FormData();
     formData.append('file', file);
     // ... Append processing params ...
-    const response = await axios.post('http://localhost:8080/api/images/process', formData);
+    const response = await axios.post('http://localhost:8082/api/images/process', formData);
     setProcessedUrl(response.data.url);
   }
   
@@ -164,7 +164,7 @@ Executes an image processing pipeline based on multi-part request.
 **Response (200 OK):**
 ```json
 {
-  "url": "http://localhost:8080/api/images/download/UUID.jpg",
+  "url": "http://localhost:8082/api/images/download/UUID.jpg",
   "filename": "UUID.jpg",
   "executionTimeMs": 142
 }
@@ -275,7 +275,7 @@ flowchart TD
    # Or using standard Gradle if installed:
    gradle bootRun
    ```
-3. The server will start on `http://localhost:8080`.
+3. The server will start on `http://localhost:8082`.
 
 ### Running the Frontend
 1. Open a new terminal and navigate to the `frontend/` directory:
