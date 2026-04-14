@@ -2,6 +2,7 @@ import { CloudUploadOutlined, FileImageOutlined } from "@ant-design/icons";
 import { Upload } from "antd";
 import type { UploadChangeParam, UploadFile } from "antd/es/upload/interface";
 import { motion } from "framer-motion";
+import { useState } from "react";
 
 interface UploadZoneProps {
   file: File | null;
@@ -10,6 +11,8 @@ interface UploadZoneProps {
 }
 
 export function UploadZone({ file, previewUrl, onChange }: UploadZoneProps) {
+  const [dragActive, setDragActive] = useState(false);
+
   const handleChange = (info: UploadChangeParam<UploadFile>) => {
     if (info.fileList.length > 0) {
       const nextFile = info.fileList[0].originFileObj;
@@ -23,36 +26,32 @@ export function UploadZone({ file, previewUrl, onChange }: UploadZoneProps) {
   };
 
   return (
-    <motion.div whileHover={{ scale: 1.01 }} transition={{ duration: 0.15 }}>
+    <motion.div
+      className="upload-zone-shell"
+      whileHover={{ scale: 1.01 }}
+      transition={{ duration: 0.15 }}
+      onDragEnter={() => setDragActive(true)}
+      onDragLeave={() => setDragActive(false)}
+      onDrop={() => setDragActive(false)}
+    >
       <Upload.Dragger
+        className={`upload-dragger ${dragActive ? "is-drag-active" : ""}`}
         beforeUpload={() => false}
         onChange={handleChange}
+        onDrop={() => setDragActive(false)}
         maxCount={1}
         accept="image/png,image/jpeg"
         showUploadList={false}
-        style={{ padding: "8px" }}
+        style={{ padding: "20px" }}
       >
         {previewUrl ? (
-          <div
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              gap: 8,
-              padding: "8px 0",
-            }}
-          >
+          <div className="upload-preview-content">
             <img
               src={previewUrl}
               alt="preview"
-              style={{
-                maxHeight: 160,
-                maxWidth: "100%",
-                borderRadius: 8,
-                objectFit: "contain",
-              }}
+              className="upload-preview-image"
             />
-            <span style={{ fontSize: 12, opacity: 0.6 }}>
+            <span className="upload-preview-name">
               <FileImageOutlined /> {file?.name} - Click or drag to replace
               image
             </span>
@@ -63,9 +62,11 @@ export function UploadZone({ file, previewUrl, onChange }: UploadZoneProps) {
               <CloudUploadOutlined style={{ fontSize: 48 }} />
             </p>
             <p className="ant-upload-text">
-              Drag image here or click to select
+              Drop image anywhere in this area or click to upload
             </p>
-            <p className="ant-upload-hint">Supports PNG and JPEG</p>
+            <p className="ant-upload-hint">
+              Large drop target for PNG and JPEG files
+            </p>
           </>
         )}
       </Upload.Dragger>

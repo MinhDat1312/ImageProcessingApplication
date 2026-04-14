@@ -3,6 +3,7 @@ import { Card, ConfigProvider, Form, Layout, notification, theme } from "antd";
 import { AnimatePresence } from "framer-motion";
 import axios from "axios";
 import { useEffect, useRef, useState } from "react";
+import "./App.css";
 import { ImagePreview } from "./components/ImagePreview";
 import { PipelineControls } from "./components/PipelineControls";
 import { ProgressPipeline } from "./components/ProgressPipeline";
@@ -155,45 +156,51 @@ function App() {
       theme={{
         algorithm:
           themeMode === "dark" ? theme.darkAlgorithm : theme.defaultAlgorithm,
+        token: {
+          colorPrimary: "#1d4ed8",
+          colorInfo: "#1d4ed8",
+          colorSuccess: "#16a34a",
+          colorError: "#dc2626",
+          borderRadius: 14,
+        },
       }}
     >
-      <Layout style={{ minHeight: "100vh" }}>
-        <Header
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            padding: "0 24px",
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <PictureOutlined style={{ fontSize: 22, color: "#1890ff" }} />
-            <span style={{ color: "white", fontWeight: 700, fontSize: 18 }}>
-              Image Processing Pipeline
-            </span>
+      <Layout
+        className={`app-layout ${themeMode === "dark" ? "theme-dark" : "theme-light"}`}
+      >
+        <Header className="app-header">
+          <div className="app-title-group">
+            <PictureOutlined className="app-title-icon" />
+            <span className="app-title-text">Image Processing Pipeline</span>
           </div>
           <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
         </Header>
 
-        <Content style={{ padding: "32px 48px" }}>
-          <div
-            style={{
-              maxWidth: 1200,
-              margin: "0 auto",
-              display: "grid",
-              gridTemplateColumns: "380px 1fr",
-              gap: 24,
-              alignItems: "start",
-            }}
-          >
-            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+        <Content className="app-content">
+          <div className="app-shell">
+            <Card
+              bordered={false}
+              className="upload-hero-card"
+              styles={{ body: { padding: 20 } }}
+            >
               <UploadZone
                 file={file}
                 previewUrl={previewUrl}
                 onChange={handleUploadChange}
               />
+            </Card>
 
-              <Card bordered={false} styles={{ body: { padding: 16 } }}>
+            <div className="workspace-grid">
+              <Card
+                bordered={false}
+                className="settings-card"
+                styles={{ body: { padding: 20 } }}
+              >
+                <div className="settings-header">
+                  <h2>Pipeline Settings</h2>
+                  <p>Adjust each stage, then run processing.</p>
+                </div>
+
                 <AnimatePresence mode="wait">
                   {showProgress ? (
                     <ProgressPipeline key="progress" steps={steps} />
@@ -207,16 +214,20 @@ function App() {
                   )}
                 </AnimatePresence>
               </Card>
-            </div>
 
-            <Card bordered={false} style={{ minHeight: 500 }}>
-              <ImagePreview
-                originalUrl={previewUrl}
-                processedUrl={processedUrl}
-                executionTime={executionTime}
-                processedFilename={processedFilename}
-              />
-            </Card>
+              <Card
+                bordered={false}
+                className="preview-card"
+                styles={{ body: { padding: 20 } }}
+              >
+                <ImagePreview
+                  originalUrl={previewUrl}
+                  processedUrl={processedUrl}
+                  executionTime={executionTime}
+                  processedFilename={processedFilename}
+                />
+              </Card>
+            </div>
           </div>
         </Content>
       </Layout>
