@@ -1,0 +1,146 @@
+package com.pipeline.image.exception;
+
+import com.pipeline.image.dto.response.RestResponse;
+import org.springframework.context.support.DefaultMessageSourceResolvable;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.validation.BindingResult;
+import org.springframework.validation.FieldError;
+import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import java.util.List;
+
+@ControllerAdvice
+public class GlobalExceptionHandler {
+
+    @ExceptionHandler(Exception.class)
+    ResponseEntity<RestResponse<Object>> handleAllExceptions(Exception e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.INTERNAL_SERVER_ERROR.value());
+        response.setMessage(e.getMessage());
+        response.setError("Internal Server Error");
+
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
+    @ExceptionHandler(AccountPrivateException.class)
+    ResponseEntity<RestResponse<Object>> handleAccountPrivateException(AccountPrivateException e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.FORBIDDEN.value());
+        response.setMessage(e.getMessage());
+        response.setError(AccountPrivateException.ERROR_CODE);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(BlockedInteractionException.class)
+    ResponseEntity<RestResponse<Object>> handleBlockedInteractionException(BlockedInteractionException e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.FORBIDDEN.value());
+        response.setMessage(e.getMessage());
+        response.setError(BlockedInteractionException.ERROR_CODE);
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(value = {
+            InvalidException.class,
+            UsernameNotFoundException.class,
+    })
+    ResponseEntity<RestResponse<Object>> handleAllSpecialExceptions(Exception e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        response.setMessage(e.getMessage());
+        response.setError("Exception Occurred");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(value = {
+            BadCredentialsException.class,
+    })
+    ResponseEntity<RestResponse<Object>> handleBadCredentialsException(Exception e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        response.setMessage("Email hoặc mật khẩu không chính xác");
+        response.setError("Exception Occurred");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    ResponseEntity<RestResponse<Object>> handleValidationException(MethodArgumentNotValidException e) {
+        BindingResult result = e.getBindingResult();
+        final List<FieldError> list = result.getFieldErrors();
+        RestResponse<Object> res = new RestResponse<>();
+        res.setStatusCode(HttpStatus.BAD_REQUEST.value());
+
+        if (list.isEmpty()) {
+            res.setError("Validation failed");
+            res.setMessage("No valid fields found");
+            return ResponseEntity.badRequest().body(res);
+        }
+
+        List<String> messages = list.stream().map(DefaultMessageSourceResolvable::getDefaultMessage).toList();
+        res.setError(e.getBody().getDetail());
+        res.setMessage(messages.size() > 1 ? messages : messages.getFirst());
+
+        return ResponseEntity.badRequest().body(res);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    ResponseEntity<RestResponse<Object>> handleResourceException(Exception e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.NOT_FOUND.value());
+        response.setMessage(e.getMessage());
+        response.setError("404 Not found. URL may not exist");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(NotFoundException.class)
+    ResponseEntity<RestResponse<Object>> handleNotFoundException(NotFoundException e) {
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.NOT_FOUND.value());
+        response.setMessage(e.getMessage());
+        response.setError("Not Found");
+
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
+    }
+
+    @ExceptionHandler(ConflictException.class)
+    ResponseEntity<RestResponse<Object>> handleConflictException(ConflictException e) {
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.CONFLICT.value());
+        response.setMessage(e.getMessage());
+        response.setError("Conflict");
+
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(response);
+    }
+
+    @ExceptionHandler(StorageException.class)
+    ResponseEntity<RestResponse<Object>> handleUploadFileException(StorageException e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.BAD_REQUEST.value());
+        response.setMessage(e.getMessage());
+        response.setError("Upload file exception");
+
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(PermissionException.class)
+    ResponseEntity<RestResponse<Object>> handlePermissionException(PermissionException e){
+        RestResponse<Object> response = new RestResponse<Object>();
+        response.setStatusCode(HttpStatus.FORBIDDEN.value());
+        response.setMessage(e.getMessage());
+        response.setError("Forbidden");
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+}

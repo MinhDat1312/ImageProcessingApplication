@@ -2,38 +2,53 @@ package com.pipeline.image.controller;
 
 import com.pipeline.image.core.ImagePipeline;
 import com.pipeline.image.core.PipelineContext;
-import com.pipeline.image.dto.ProcessRequestDto;
+import com.pipeline.image.entity.Image;
+import com.pipeline.image.entity.User;
+import com.pipeline.image.dto.request.ProcessRequestDto;
+import com.pipeline.image.repository.ImageRepository;
+import com.pipeline.image.repository.UserRepository;
+import com.pipeline.image.service.S3StorageService;
 import com.pipeline.image.stages.*;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.io.Resource;
-import org.springframework.core.io.UrlResource;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
+import org.springframework.security.core.Authentication;
+
 import java.util.HashMap;
 import java.util.Map;
 
 @RestController
 @RequestMapping("/api/images")
-@CrossOrigin(origins = "*")
 public class ImageController {
 
-    @Value("${app.image.storage.dir:processed-images}")
-    private String storageDir;
+    private final UserRepository userRepository;
+    private final ImageRepository imageRepository;
+    private final S3StorageService storageService;
+
+    public ImageController(UserRepository userRepository,
+                           ImageRepository imageRepository,
+                           S3StorageService storageService) {
+        this.userRepository = userRepository;
+        this.imageRepository = imageRepository;
+        this.storageService = storageService;
+    }
 
     @PostMapping("/process")
     public ResponseEntity<?> processImage(
             @RequestParam("file") MultipartFile file,
-            @ModelAttribute ProcessRequestDto requestDto) {
+            @ModelAttribute ProcessRequestDto requestDto,
+            Authentication authentication) {
         
         try {
+            User currentUser = currentUser(authentication);
+
             // Create pipeline context
             PipelineContext context = new PipelineContext(file);
+            context.setUserId(currentUser.getId());
             
             // Build pipeline
             ImagePipeline pipeline = new ImagePipeline();
@@ -68,7 +83,7 @@ public class ImageController {
             }
             
             // Output stage - save and generate URL
-            pipeline.addStage(new OutputStage(storageDir, String.valueOf(quality)));
+            pipeline.addStage(new OutputStage(storageService));
             
             // Execute pipeline
             context = pipeline.execute(context);
@@ -77,12 +92,18 @@ public class ImageController {
             if (context.isHasError()) {
                 return ResponseEntity.badRequest().body(Map.of("error", context.getErrorMessage()));
             }
+
+            Image savedImage = new Image();
+            savedImage.setUser(currentUser);
+            savedImage.setImageUrl(context.getOutputUrl());
+            savedImage = imageRepository.save(savedImage);
             
             // Return response
             Map<String, Object> response = new HashMap<>();
             response.put("url", context.getOutputUrl());
             response.put("filename", context.getOutputFilename());
             response.put("executionTimeMs", context.getExecutionTimeMs());
+            response.put("imageId", savedImage.getId());
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -91,23 +112,64 @@ public class ImageController {
         }
     }
 
-    @GetMapping("/download/{filename}")
-    public ResponseEntity<Resource> downloadImage(@PathVariable String filename) {
-        try {
-            Path filePath = Paths.get(storageDir).resolve(filename).normalize();
-            Resource resource = new UrlResource(filePath.toUri());
+        @GetMapping("/mine")
+        public ResponseEntity<Map<String, Object>> myImages(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size) {
+        User currentUser = currentUser(authentication);
+        int normalizedPage = Math.max(page, 0);
+        int normalizedSize = Math.min(Math.max(size, 1), 50);
+        Pageable pageable = PageRequest.of(normalizedPage, normalizedSize);
 
-            if (resource.exists()) {
-                return ResponseEntity.ok()
-                        .contentType(filename.endsWith(".png") ? MediaType.IMAGE_PNG : MediaType.IMAGE_JPEG)
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
-                        .body(resource);
-            } else {
-                return ResponseEntity.notFound().build();
-            }
-        } catch (Exception e) {
-            return ResponseEntity.internalServerError().build();
+        Page<Image> imagePage = imageRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId(), pageable);
+
+        var items = imagePage.getContent()
+                .stream()
+                .map(image -> Map.<String, Object>of(
+                        "id", image.getId(),
+                        "url", image.getImageUrl(),
+                        "createdAt", image.getCreatedAt()
+                ))
+                .toList();
+
+        return ResponseEntity.ok(Map.of(
+            "items", items,
+            "page", imagePage.getNumber(),
+            "size", imagePage.getSize(),
+            "totalItems", imagePage.getTotalElements(),
+            "totalPages", imagePage.getTotalPages()
+        ));
         }
+
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> deleteImage(@PathVariable Long id, Authentication authentication) {
+        User currentUser = currentUser(authentication);
+        Image image = imageRepository.findByIdAndUserId(id, currentUser.getId())
+            .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+
+        storageService.deleteByUrl(image.getImageUrl());
+        imageRepository.delete(image);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/download")
+    public ResponseEntity<Map<String, String>> downloadImage(@PathVariable Long id, Authentication authentication) {
+        User currentUser = currentUser(authentication);
+        Image image = imageRepository.findByIdAndUserId(id, currentUser.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+        return ResponseEntity.ok(Map.of("url", image.getImageUrl()));
+    }
+
+    private User currentUser(Authentication authentication) {
+        if (authentication == null || authentication.getName() == null) {
+            throw new IllegalArgumentException("Authenticated user required");
+        }
+
+        return userRepository.findByUsernameIgnoreCase(authentication.getName())
+                .or(() -> userRepository.findByEmailIgnoreCase(authentication.getName()))
+                .orElseThrow(() -> new IllegalArgumentException("Authenticated user not found"));
     }
 }
 

@@ -21,6 +21,8 @@ public class PipelineContext {
     private String outputFilename;
     private String outputUrl;
     private long executionTimeMs;
+    private Long userId;
+    private boolean compressed;
     
     // Error handling
     private boolean hasError;

@@ -1,4 +1,4 @@
-package com.pipeline.image.dto;
+package com.pipeline.image.dto.request;
 
 import lombok.Data;
 

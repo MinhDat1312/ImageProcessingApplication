@@ -45,6 +45,7 @@ public class CompressionStage implements ImageStage {
 
             BufferedImage compressed = ImageIO.read(new ByteArrayInputStream(baos.toByteArray()));
             context.setImage(compressed);
+            context.setCompressed(true);
             return context;
 
         } catch (Exception e) {
