@@ -12,9 +12,9 @@ import java.util.Optional;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, String>, JpaSpecificationExecutor<Image> {
-    List<Image> findByUserIdOrderByCreatedAtDesc(Long userId);
+    List<Image> findByUser_UserIdOrderByCreatedAtDesc(String userId);
 
-    Page<Image> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
+    Page<Image> findByUser_UserIdOrderByCreatedAtDesc(String userId, Pageable pageable);
 
-    Optional<Image> findByIdAndUserId(Long id, Long userId);
+    Optional<Image> findByImageIdAndUser_UserId(String id, String userId);
 }

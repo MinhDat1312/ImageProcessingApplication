@@ -22,7 +22,7 @@ import lombok.Setter;
 @AllArgsConstructor
 public class Image extends BaseEntity {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String imageId;
     @Column(nullable = false, length = 1024)
     private String url;

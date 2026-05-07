@@ -7,8 +7,9 @@ import com.pipeline.image.entity.User;
 import com.pipeline.image.dto.request.ProcessRequestDto;
 import com.pipeline.image.repository.ImageRepository;
 import com.pipeline.image.repository.UserRepository;
-import com.pipeline.image.service.S3StorageService;
+import com.pipeline.image.service.StorageService;
 import com.pipeline.image.stages.*;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -23,19 +24,12 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/images")
+@RequiredArgsConstructor
 public class ImageController {
 
     private final UserRepository userRepository;
     private final ImageRepository imageRepository;
-    private final S3StorageService storageService;
-
-    public ImageController(UserRepository userRepository,
-                           ImageRepository imageRepository,
-                           S3StorageService storageService) {
-        this.userRepository = userRepository;
-        this.imageRepository = imageRepository;
-        this.storageService = storageService;
-    }
+    private final StorageService storageService;
 
     @PostMapping("/process")
     public ResponseEntity<?> processImage(
@@ -48,7 +42,7 @@ public class ImageController {
 
             // Create pipeline context
             PipelineContext context = new PipelineContext(file);
-            context.setUserId(currentUser.getId());
+            context.setUserId(currentUser.getUserId());
             
             // Build pipeline
             ImagePipeline pipeline = new ImagePipeline();
@@ -95,7 +89,7 @@ public class ImageController {
 
             Image savedImage = new Image();
             savedImage.setUser(currentUser);
-            savedImage.setImageUrl(context.getOutputUrl());
+//            savedImage.setImageUrl(context.getOutputUrl());
             savedImage = imageRepository.save(savedImage);
             
             // Return response
@@ -103,7 +97,7 @@ public class ImageController {
             response.put("url", context.getOutputUrl());
             response.put("filename", context.getOutputFilename());
             response.put("executionTimeMs", context.getExecutionTimeMs());
-            response.put("imageId", savedImage.getId());
+//            response.put("imageId", savedImage.getId());
             return ResponseEntity.ok(response);
 
         } catch (Exception e) {
@@ -122,13 +116,13 @@ public class ImageController {
         int normalizedSize = Math.min(Math.max(size, 1), 50);
         Pageable pageable = PageRequest.of(normalizedPage, normalizedSize);
 
-        Page<Image> imagePage = imageRepository.findByUserIdOrderByCreatedAtDesc(currentUser.getId(), pageable);
+        Page<Image> imagePage = imageRepository.findByUser_UserIdOrderByCreatedAtDesc(currentUser.getUserId(), pageable);
 
         var items = imagePage.getContent()
                 .stream()
                 .map(image -> Map.<String, Object>of(
-                        "id", image.getId(),
-                        "url", image.getImageUrl(),
+                        "id", image.getImageId(),
+                        "url", image.getUrl(),
                         "createdAt", image.getCreatedAt()
                 ))
                 .toList();
@@ -142,25 +136,25 @@ public class ImageController {
         ));
         }
 
-        @DeleteMapping("/{id}")
-        public ResponseEntity<Void> deleteImage(@PathVariable Long id, Authentication authentication) {
-        User currentUser = currentUser(authentication);
-        Image image = imageRepository.findByIdAndUserId(id, currentUser.getId())
-            .orElseThrow(() -> new IllegalArgumentException("Image not found"));
-
-        storageService.deleteByUrl(image.getImageUrl());
-        imageRepository.delete(image);
-
-        return ResponseEntity.noContent().build();
-    }
-
-    @GetMapping("/{id}/download")
-    public ResponseEntity<Map<String, String>> downloadImage(@PathVariable Long id, Authentication authentication) {
-        User currentUser = currentUser(authentication);
-        Image image = imageRepository.findByIdAndUserId(id, currentUser.getId())
-                .orElseThrow(() -> new IllegalArgumentException("Image not found"));
-        return ResponseEntity.ok(Map.of("url", image.getImageUrl()));
-    }
+//    @DeleteMapping("/{id}")
+//    public ResponseEntity<Void> deleteImage(@PathVariable Long id, Authentication authentication) {
+//        User currentUser = currentUser(authentication);
+//        Image image = imageRepository.findByIdAndUserId(id, currentUser.getId())
+//            .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+//
+//        storageService.deleteByUrl(image.getImageUrl());
+//        imageRepository.delete(image);
+//
+//        return ResponseEntity.noContent().build();
+//    }
+//
+//    @GetMapping("/{id}/download")
+//    public ResponseEntity<Map<String, String>> downloadImage(@PathVariable Long id, Authentication authentication) {
+//        User currentUser = currentUser(authentication);
+//        Image image = imageRepository.findByIdAndUserId(id, currentUser.getId())
+//                .orElseThrow(() -> new IllegalArgumentException("Image not found"));
+//        return ResponseEntity.ok(Map.of("url", image.getImageUrl()));
+//    }
 
     private User currentUser(Authentication authentication) {
         if (authentication == null || authentication.getName() == null) {
