@@ -1,6 +1,5 @@
 package com.pipeline.image.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pipeline.image.common.Gender;
 import com.pipeline.image.common.Role;
 import com.pipeline.image.dto.request.auth.LoginRequest;
@@ -52,7 +51,6 @@ public class AuthService {
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final PasswordEncoder passwordEncoder;
     private final SecurityUtil securityUtil;
-    private final ObjectMapper mapper;
 
     @Value("${minhdat.jwt.access-token-validity-in-seconds}")
     private long jwtAccessToken;
