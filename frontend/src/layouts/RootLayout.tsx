@@ -1,7 +1,8 @@
 import { PictureOutlined } from '@ant-design/icons'
 import { ConfigProvider, Layout, theme } from 'antd'
-import { lazy, Suspense, type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { ThemeToggle } from '../components/ThemeToggle'
+import { UserMenu } from '../components/UserMenu'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 
@@ -36,26 +37,12 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
             <span className="app-title-text">Image Processing Pipeline</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {user && <UserMenuSlot />}
+            {user && <UserMenu />}
             <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
           </div>
         </Header>
         <Content className={contentClassName}>{children}</Content>
       </Layout>
     </ConfigProvider>
-  )
-}
-
-const LazyUserMenu = lazy(() =>
-  import('../components/UserMenu')
-    .then(m => ({ default: m.UserMenu }))
-    .catch(() => ({ default: () => null }))
-)
-
-function UserMenuSlot() {
-  return (
-    <Suspense fallback={null}>
-      <LazyUserMenu />
-    </Suspense>
   )
 }
