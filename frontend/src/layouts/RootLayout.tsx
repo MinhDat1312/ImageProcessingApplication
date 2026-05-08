@@ -1,6 +1,6 @@
 import { PictureOutlined } from '@ant-design/icons'
 import { ConfigProvider, Layout, theme } from 'antd'
-import type { ReactNode } from 'react'
+import { lazy, Suspense, type ReactNode } from 'react'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
@@ -46,13 +46,16 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
   )
 }
 
-// Lazy require to avoid circular/missing-module issues before UserMenu is created in Task 11
+const LazyUserMenu = lazy(() =>
+  import('../components/UserMenu')
+    .then(m => ({ default: m.UserMenu }))
+    .catch(() => ({ default: () => null }))
+)
+
 function UserMenuSlot() {
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const { UserMenu } = require('../components/UserMenu')
-    return <UserMenu />
-  } catch {
-    return null
-  }
+  return (
+    <Suspense fallback={null}>
+      <LazyUserMenu />
+    </Suspense>
+  )
 }
