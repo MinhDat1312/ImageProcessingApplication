@@ -33,3 +33,24 @@ export interface ProcessResponse {
   filename: string;
   executionTimeMs: number;
 }
+
+export interface LoginResponse {
+  userId: string
+  username: string
+  email: string
+  gender: 'MALE' | 'FEMALE' | 'OTHER'
+  avatar: string
+  enabled: boolean
+  role: { roleId: string; name: string }
+}
+
+export interface UserResponse extends LoginResponse {
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ImageItem {
+  id: string
+  url: string
+  createdAt: string
+}
