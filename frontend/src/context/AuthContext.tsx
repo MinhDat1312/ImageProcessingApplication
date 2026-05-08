@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
 import axiosInstance from '../api/axiosInstance'
 import type { LoginResponse } from '../types'
+import { AUTH_LOGOUT_EVENT } from '../types'
 
 interface AuthContextValue {
   user: LoginResponse | null
@@ -33,8 +34,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Listen for forced logout from the silent-refresh interceptor (Task 13)
   useEffect(() => {
     const handleForceLogout = () => setUser(null)
-    window.addEventListener('auth:logout', handleForceLogout)
-    return () => window.removeEventListener('auth:logout', handleForceLogout)
+    window.addEventListener(AUTH_LOGOUT_EVENT, handleForceLogout)
+    return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleForceLogout)
   }, [])
 
   const login = (userData: LoginResponse) => setUser(userData)

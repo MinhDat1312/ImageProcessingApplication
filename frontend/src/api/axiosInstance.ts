@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { AUTH_LOGOUT_EVENT } from '../types'
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
@@ -48,7 +49,7 @@ axiosInstance.interceptors.response.use(
       return axiosInstance(original)
     } catch (refreshError) {
       processQueue(refreshError)
-      window.dispatchEvent(new CustomEvent('auth:logout'))
+      window.dispatchEvent(new CustomEvent(AUTH_LOGOUT_EVENT))
       return Promise.reject(refreshError)
     } finally {
       isRefreshing = false

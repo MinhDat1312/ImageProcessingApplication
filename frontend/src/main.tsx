@@ -35,7 +35,7 @@ createRoot(document.getElementById('root')!).render(
               </RootLayout>
             }
           />
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
       </AuthProvider>
     </BrowserRouter>

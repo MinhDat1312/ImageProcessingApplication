@@ -1,5 +1,7 @@
 export type ThemeMode = "light" | "dark";
 
+export const AUTH_LOGOUT_EVENT = 'auth:logout' as const
+
 export interface ProcessFormValues {
   resizeWidth?: number;
   resizeHeight?: number;
