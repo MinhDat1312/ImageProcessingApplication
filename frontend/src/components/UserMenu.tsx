@@ -1,6 +1,7 @@
 import { DownOutlined, LogoutOutlined, PictureOutlined } from '@ant-design/icons'
 import { Avatar, Dropdown, Space, Tag, Typography } from 'antd'
 import type { MenuProps } from 'antd'
+import { useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 
@@ -13,12 +14,17 @@ export function UserMenu() {
   const initials = user.username.slice(0, 2).toUpperCase()
   const normalizedRole = (user.role?.name ?? 'USER').replace(/^ROLE_/i, '')
 
-  const handleLogout = async () => {
-    await logout()
-    navigate('/login', { replace: true })
-  }
+  // I1 + I2: stable callback with guaranteed navigation even on logout() rejection
+  const handleLogout = useCallback(async () => {
+    try {
+      await logout()
+    } finally {
+      navigate('/login', { replace: true })
+    }
+  }, [logout, navigate])
 
-  const items: MenuProps['items'] = [
+  // I2: memoize items array so it is not recreated on every render
+  const items = useMemo<MenuProps['items']>(() => [
     {
       key: 'info',
       label: (
@@ -56,21 +62,28 @@ export function UserMenu() {
       danger: true,
       onClick: handleLogout,
     },
-  ]
+  ], [user.avatar, user.username, user.email, normalizedRole, initials, navigate, handleLogout])
 
+  // I3: wrap trigger in a native <button> for keyboard accessibility and screen readers
   return (
     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
-      <Space style={{ cursor: 'pointer' }}>
-        <Avatar
-          size={32}
-          src={user.avatar || undefined}
-          style={{ background: '#1d4ed8', fontWeight: 700 }}
-        >
-          {!user.avatar && initials}
-        </Avatar>
-        <span style={{ fontSize: 14, fontWeight: 600 }}>{user.username}</span>
-        <DownOutlined style={{ fontSize: 12, opacity: 0.5 }} />
-      </Space>
+      <button
+        type="button"
+        aria-label={`User menu for ${user.username}`}
+        style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, display: 'flex', alignItems: 'center' }}
+      >
+        <Space>
+          <Avatar
+            size={32}
+            src={user.avatar || undefined}
+            style={{ background: '#1d4ed8', fontWeight: 700 }}
+          >
+            {!user.avatar && initials}
+          </Avatar>
+          <span style={{ fontSize: 14, fontWeight: 600 }}>{user.username}</span>
+          <DownOutlined style={{ fontSize: 12, opacity: 0.5 }} />
+        </Space>
+      </button>
     </Dropdown>
   )
 }
