@@ -1,5 +1,7 @@
 export type ThemeMode = "light" | "dark";
 
+export const AUTH_LOGOUT_EVENT = 'auth:logout' as const
+
 export interface ProcessFormValues {
   resizeWidth?: number;
   resizeHeight?: number;
@@ -32,4 +34,25 @@ export interface ProcessResponse {
   url: string;
   filename: string;
   executionTimeMs: number;
+}
+
+export interface LoginResponse {
+  userId: string
+  username: string
+  email: string
+  gender: 'MALE' | 'FEMALE' | 'OTHER'
+  avatar: string
+  enabled: boolean
+  role: { roleId: string; name: string }
+}
+
+export interface UserResponse extends LoginResponse {
+  createdAt: string
+  updatedAt: string
+}
+
+export interface ImageItem {
+  id: string
+  url: string
+  createdAt: string
 }
