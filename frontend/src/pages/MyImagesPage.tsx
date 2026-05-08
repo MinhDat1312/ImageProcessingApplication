@@ -11,8 +11,13 @@ interface ImagePageResponse {
   totalPages: number
 }
 
+const PAGE_SIZE = 9
+
 function timeAgo(dateStr: string): string {
-  const diff = Date.now() - new Date(dateStr).getTime()
+  const date = new Date(dateStr)
+  if (isNaN(date.getTime())) return ''
+  const diff = Date.now() - date.getTime()
+  if (diff < 0) return 'Vừa xong'
   const mins = Math.floor(diff / 60000)
   if (mins < 1) return 'Vừa xong'
   if (mins < 60) return `${mins} phút trước`
@@ -29,24 +34,30 @@ export function MyImagesPage() {
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
 
-  const PAGE_SIZE = 9
-
   useEffect(() => {
+    const controller = new AbortController()
     const fetchImages = async () => {
       setLoading(true)
       try {
         const res = await axiosInstance.get<ImagePageResponse>('/api/images/mine', {
           params: { page: page - 1, size: PAGE_SIZE },
+          signal: controller.signal,
         })
         setImages(res.data.items)
         setTotal(res.data.totalItems)
       } catch {
-        setImages([])
+        if (!controller.signal.aborted) {
+          setImages([])
+          setTotal(0)
+        }
       } finally {
-        setLoading(false)
+        if (!controller.signal.aborted) {
+          setLoading(false)
+        }
       }
     }
     fetchImages()
+    return () => controller.abort()
   }, [page])
 
   return (
