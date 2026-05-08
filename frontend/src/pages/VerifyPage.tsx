@@ -8,6 +8,8 @@ const OTP_LENGTH = 6
 const RESEND_COOLDOWN = 60
 const OTP_VALIDITY = 15 * 60 // 15 phút theo BE config
 
+const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
+
 export function VerifyPage() {
   const { user } = useAuth()
   const navigate = useNavigate()
@@ -24,15 +26,21 @@ export function VerifyPage() {
   const [expire, setExpire] = useState(OTP_VALIDITY)
   const expireRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  useEffect(() => {
+  const startExpireTimer = () => {
+    if (expireRef.current) clearInterval(expireRef.current)
+    setExpire(OTP_VALIDITY)
     expireRef.current = setInterval(() => {
       setExpire(prev => {
         if (prev <= 1) { clearInterval(expireRef.current!); return 0 }
         return prev - 1
       })
     }, 1000)
+  }
+
+  useEffect(() => {
+    startExpireTimer()
     return () => { if (expireRef.current) clearInterval(expireRef.current) }
-  }, [])
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }
@@ -41,9 +49,8 @@ export function VerifyPage() {
   if (user) return <Navigate to="/" replace />
   if (!email) return <Navigate to="/login" replace />
 
-  const formatTime = (s: number) => `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
-
   const startCooldown = () => {
+    if (cooldownRef.current) clearInterval(cooldownRef.current)
     setCooldown(RESEND_COOLDOWN)
     cooldownRef.current = setInterval(() => {
       setCooldown(prev => {
@@ -56,6 +63,10 @@ export function VerifyPage() {
   const handleVerify = async () => {
     if (otp.length < OTP_LENGTH) {
       setError('Vui lòng nhập đủ 6 chữ số')
+      return
+    }
+    if (expire === 0) {
+      setError('Mã xác thực đã hết hạn, vui lòng gửi lại')
       return
     }
     setError(null)
@@ -78,7 +89,7 @@ export function VerifyPage() {
     try {
       await axiosInstance.post(`/api/v1/auth/resend?email=${encodeURIComponent(email)}`)
       notification.success({ message: 'Đã gửi lại mã xác thực', duration: 3 })
-      setExpire(OTP_VALIDITY)
+      startExpireTimer()
       startCooldown()
     } catch {
       notification.error({ message: 'Gửi lại thất bại, vui lòng thử lại' })
@@ -115,7 +126,7 @@ export function VerifyPage() {
           size="large"
           block
           loading={loading}
-          disabled={otp.length < OTP_LENGTH}
+          disabled={otp.length < OTP_LENGTH || expire === 0}
           onClick={handleVerify}
           style={{ marginTop: 8 }}
         >
