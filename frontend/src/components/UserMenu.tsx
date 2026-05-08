@@ -9,12 +9,7 @@ export function UserMenu() {
   const { user, logout } = useAuth()
   const navigate = useNavigate()
 
-  if (!user) return null
-
-  const initials = user.username.slice(0, 2).toUpperCase()
-  const normalizedRole = (user.role?.name ?? 'USER').replace(/^ROLE_/i, '')
-
-  // I1 + I2: stable callback with guaranteed navigation even on logout() rejection
+  // ALL hooks FIRST — before any early returns (Rules of Hooks compliance)
   const handleLogout = useCallback(async () => {
     try {
       await logout()
@@ -22,6 +17,9 @@ export function UserMenu() {
       navigate('/login', { replace: true })
     }
   }, [logout, navigate])
+
+  const initials = user?.username?.slice(0, 2).toUpperCase() ?? ''
+  const normalizedRole = (user?.role?.name ?? 'USER').replace(/^ROLE_/i, '')
 
   // I2: memoize items array so it is not recreated on every render
   const items = useMemo<MenuProps['items']>(() => [
@@ -31,14 +29,14 @@ export function UserMenu() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
           <Avatar
             size={36}
-            src={user.avatar || undefined}
+            src={user?.avatar || undefined}
             style={{ background: '#1d4ed8', fontWeight: 700, flexShrink: 0 }}
           >
-            {!user.avatar && initials}
+            {!user?.avatar && initials}
           </Avatar>
           <div>
-            <div style={{ fontWeight: 700 }}>{user.username}</div>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>{user.email}</Typography.Text>
+            <div style={{ fontWeight: 700 }}>{user?.username}</div>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>{user?.email}</Typography.Text>
             <div style={{ marginTop: 4 }}>
               <Tag color="blue" style={{ fontSize: 11 }}>{normalizedRole}</Tag>
             </div>
@@ -62,7 +60,10 @@ export function UserMenu() {
       danger: true,
       onClick: handleLogout,
     },
-  ], [user.avatar, user.username, user.email, normalizedRole, initials, navigate, handleLogout])
+  ], [user?.avatar, user?.username, user?.email, normalizedRole, initials, navigate, handleLogout])
+
+  // Early return AFTER all hooks
+  if (!user) return null
 
   // I3: wrap trigger in a native <button> for keyboard accessibility and screen readers
   return (
