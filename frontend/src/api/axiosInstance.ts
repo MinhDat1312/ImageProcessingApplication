@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
   withCredentials: true,
 })
 
@@ -19,7 +19,15 @@ function processQueue(error: unknown) {
 axiosInstance.interceptors.response.use(
   response => response,
   async error => {
+    if (!error.config) {
+      return Promise.reject(error)
+    }
+
     const original = error.config as typeof error.config & { _retry?: boolean }
+
+    if (original.url === '/api/v1/auth/refresh') {
+      return Promise.reject(error)
+    }
 
     if (error.response?.status !== 401 || original._retry) {
       return Promise.reject(error)
@@ -28,9 +36,7 @@ axiosInstance.interceptors.response.use(
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject })
-      })
-        .then(() => axiosInstance(original))
-        .catch(err => Promise.reject(err))
+      }).then(() => axiosInstance(original))
     }
 
     original._retry = true
