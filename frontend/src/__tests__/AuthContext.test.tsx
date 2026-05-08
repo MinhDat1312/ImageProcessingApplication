@@ -34,7 +34,7 @@ describe('AuthContext', () => {
     expect(result.current.user).toEqual(fakeUser)
   })
 
-  it('sets user=null when both /users and /refresh fail on mount', async () => {
+  it('sets user=null when /users fails on mount', async () => {
     mockedAxios.get = vi.fn().mockRejectedValue(new Error('401'))
 
     const { result } = renderHook(() => useAuth(), { wrapper })
@@ -62,6 +62,15 @@ describe('AuthContext', () => {
 
     await result.current.logout()
     expect(mockedAxios.post).toHaveBeenCalledWith('/api/v1/auth/logout')
+    await waitFor(() => expect(result.current.user).toBeNull())
+  })
+
+  it('clears user when auth:logout event is dispatched', async () => {
+    mockedAxios.get = vi.fn().mockResolvedValueOnce({ data: fakeUser })
+    const { result } = renderHook(() => useAuth(), { wrapper })
+    await waitFor(() => expect(result.current.user).toEqual(fakeUser))
+
+    window.dispatchEvent(new CustomEvent('auth:logout'))
     await waitFor(() => expect(result.current.user).toBeNull())
   })
 })
