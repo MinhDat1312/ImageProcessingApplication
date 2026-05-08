@@ -1,4 +1,4 @@
-import { LogoutOutlined, PictureOutlined, UserOutlined } from '@ant-design/icons'
+import { DownOutlined, LogoutOutlined, PictureOutlined } from '@ant-design/icons'
 import { Avatar, Dropdown, Space, Tag, Typography } from 'antd'
 import type { MenuProps } from 'antd'
 import { useNavigate } from 'react-router-dom'
@@ -11,6 +11,7 @@ export function UserMenu() {
   if (!user) return null
 
   const initials = user.username.slice(0, 2).toUpperCase()
+  const normalizedRole = (user.role?.name ?? 'USER').replace(/^ROLE_/i, '')
 
   const handleLogout = async () => {
     await logout()
@@ -21,11 +22,20 @@ export function UserMenu() {
     {
       key: 'info',
       label: (
-        <div style={{ padding: '4px 0' }}>
-          <div style={{ fontWeight: 700 }}>{user.username}</div>
-          <Typography.Text type="secondary" style={{ fontSize: 12 }}>{user.email}</Typography.Text>
-          <div style={{ marginTop: 4 }}>
-            <Tag color="blue" style={{ fontSize: 11 }}>{user.role?.name ?? 'USER'}</Tag>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
+          <Avatar
+            size={36}
+            src={user.avatar || undefined}
+            style={{ background: '#1d4ed8', fontWeight: 700, flexShrink: 0 }}
+          >
+            {!user.avatar && initials}
+          </Avatar>
+          <div>
+            <div style={{ fontWeight: 700 }}>{user.username}</div>
+            <Typography.Text type="secondary" style={{ fontSize: 12 }}>{user.email}</Typography.Text>
+            <div style={{ marginTop: 4 }}>
+              <Tag color="blue" style={{ fontSize: 11 }}>{normalizedRole}</Tag>
+            </div>
           </div>
         </div>
       ),
@@ -51,11 +61,15 @@ export function UserMenu() {
   return (
     <Dropdown menu={{ items }} trigger={['click']} placement="bottomRight">
       <Space style={{ cursor: 'pointer' }}>
-        <Avatar size={32} style={{ background: '#1d4ed8', fontWeight: 700 }}>
-          {user.avatar ? <img src={user.avatar} alt={user.username} /> : initials}
+        <Avatar
+          size={32}
+          src={user.avatar || undefined}
+          style={{ background: '#1d4ed8', fontWeight: 700 }}
+        >
+          {!user.avatar && initials}
         </Avatar>
         <span style={{ fontSize: 14, fontWeight: 600 }}>{user.username}</span>
-        <UserOutlined style={{ fontSize: 12, opacity: 0.5 }} />
+        <DownOutlined style={{ fontSize: 12, opacity: 0.5 }} />
       </Space>
     </Dropdown>
   )
