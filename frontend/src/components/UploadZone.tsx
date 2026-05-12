@@ -8,12 +8,15 @@ interface UploadZoneProps {
   file: File | null;
   previewUrl: string | null;
   onChange: (file: File | null, previewUrl: string | null) => void;
+  disabled?: boolean;
 }
 
-export function UploadZone({ file, previewUrl, onChange }: UploadZoneProps) {
+export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneProps) {
   const [dragActive, setDragActive] = useState(false);
 
   const handleChange = (info: UploadChangeParam<UploadFile>) => {
+    if (disabled) return;
+    
     if (info.fileList.length > 0) {
       const nextFile = info.fileList[0].originFileObj;
       if (nextFile) {
@@ -35,13 +38,14 @@ export function UploadZone({ file, previewUrl, onChange }: UploadZoneProps) {
       onDrop={() => setDragActive(false)}
     >
       <Upload.Dragger
-        className={`upload-dragger ${dragActive ? "is-drag-active" : ""}`}
+        className={`upload-dragger ${dragActive ? "is-drag-active" : ""} ${disabled ? "is-disabled" : ""}`}
         beforeUpload={() => false}
         onChange={handleChange}
         onDrop={() => setDragActive(false)}
         maxCount={1}
         accept="image/png,image/jpeg"
         showUploadList={false}
+        disabled={disabled}
         style={{ padding: "20px" }}
       >
         {previewUrl ? (
@@ -52,8 +56,7 @@ export function UploadZone({ file, previewUrl, onChange }: UploadZoneProps) {
               className="upload-preview-image"
             />
             <span className="upload-preview-name">
-              <FileImageOutlined /> {file?.name} - Click or drag to replace
-              image
+              <FileImageOutlined /> {file?.name} - {disabled ? 'Vui lòng đăng nhập để thay đổi' : 'Click or drag to replace image'}
             </span>
           </div>
         ) : (
@@ -62,10 +65,14 @@ export function UploadZone({ file, previewUrl, onChange }: UploadZoneProps) {
               <CloudUploadOutlined style={{ fontSize: 48 }} />
             </p>
             <p className="ant-upload-text">
-              Drop image anywhere in this area or click to upload
+              {disabled 
+                ? 'Vui lòng đăng nhập để tải lên hình ảnh' 
+                : 'Drop image anywhere in this area or click to upload'}
             </p>
             <p className="ant-upload-hint">
-              Large drop target for PNG and JPEG files
+              {disabled 
+                ? 'Bạn cần đăng nhập để sử dụng tính năng này' 
+                : 'Large drop target for PNG and JPEG files'}
             </p>
           </>
         )}

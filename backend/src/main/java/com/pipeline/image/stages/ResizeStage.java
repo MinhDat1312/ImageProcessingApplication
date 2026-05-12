@@ -6,9 +6,6 @@ import net.coobird.thumbnailator.Thumbnails;
 
 import java.awt.image.BufferedImage;
 
-/**
- * Resizes the image to the specified width and height.
- */
 public class ResizeStage implements ImageStage {
     private final int targetWidth;
     private final int targetHeight;
@@ -32,12 +29,10 @@ public class ResizeStage implements ImageStage {
             }
 
             if (targetWidth <= 0 || targetHeight <= 0) {
-                return context; // Skip if invalid dimensions
+                return context;
             }
 
-            BufferedImage resized = Thumbnails.of(input)
-                    .forceSize(targetWidth, targetHeight)
-                    .asBufferedImage();
+            BufferedImage resized = Thumbnails.of(input).forceSize(targetWidth, targetHeight).asBufferedImage();
 
             context.setImage(resized);
             return context;

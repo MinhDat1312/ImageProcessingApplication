@@ -39,7 +39,7 @@ export function MyImagesPage() {
     const fetchImages = async () => {
       setLoading(true)
       try {
-        const res = await axiosInstance.get<ImagePageResponse>('/api/images/mine', {
+        const res = await axiosInstance.get<ImagePageResponse>('/api/v1/images/me', {
           params: { page: page - 1, size: PAGE_SIZE },
           signal: controller.signal,
         })

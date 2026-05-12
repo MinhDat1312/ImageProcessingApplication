@@ -8,12 +8,14 @@ interface PipelineControlsProps {
   form: FormInstance<ProcessFormValues>;
   onFinish: (values: ProcessFormValues) => void;
   processing: boolean;
+  disabled?: boolean;
 }
 
 export function PipelineControls({
   form,
   onFinish,
   processing,
+  disabled,
 }: PipelineControlsProps) {
   const filterType = Form.useWatch("filterType", form);
 
@@ -23,6 +25,7 @@ export function PipelineControls({
       form={form}
       layout="vertical"
       onFinish={onFinish}
+      disabled={disabled}
       initialValues={{
         filterType: "none",
         watermarkPosition: "bottom-right",
@@ -141,12 +144,12 @@ export function PipelineControls({
           type="primary"
           htmlType="submit"
           loading={processing}
-          disabled={processing}
+          disabled={processing || disabled}
           icon={<SendOutlined />}
           size="large"
           style={{ width: "100%" }}
         >
-          {processing ? "Processing..." : "Process image"}
+          {disabled ? "Đăng nhập để xử lý ảnh" : (processing ? "Processing..." : "Process image")}
         </Button>
       </Form.Item>
     </Form>

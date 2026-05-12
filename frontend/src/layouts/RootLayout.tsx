@@ -1,6 +1,7 @@
 import { PictureOutlined } from '@ant-design/icons'
-import { ConfigProvider, Layout, theme } from 'antd'
+import { Button, ConfigProvider, Layout, theme } from 'antd'
 import { type ReactNode } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { UserMenu } from '../components/UserMenu'
 import { useAuth } from '../context/AuthContext'
@@ -16,6 +17,7 @@ interface RootLayoutProps {
 export function RootLayout({ children, contentClassName }: RootLayoutProps) {
   const { themeMode, toggleTheme } = useTheme()
   const { user } = useAuth()
+  const navigate = useNavigate()
 
   return (
     <ConfigProvider
@@ -37,7 +39,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
             <span className="app-title-text">Image Processing Pipeline</span>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            {user && <UserMenu />}
+            {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Đăng nhập</Button>}
             <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
           </div>
         </Header>

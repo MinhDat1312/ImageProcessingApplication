@@ -12,9 +12,6 @@ import java.awt.FontMetrics;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 
-/**
- * Adds a text watermark to the image.
- */
 public class WatermarkStage implements ImageStage {
     private final String text;
     private final String position;
@@ -58,29 +55,28 @@ public class WatermarkStage implements ImageStage {
             int textWidth = fontMetrics.stringWidth(text);
             int textHeight = fontMetrics.getHeight();
 
-            switch (position.toLowerCase()) {
-                case "top-left":
+            y = switch (position.toLowerCase()) {
+                case "top-left" -> {
                     x = 10;
-                    y = textHeight;
-                    break;
-                case "top-right":
+                    yield textHeight;
+                }
+                case "top-right" -> {
                     x = input.getWidth() - textWidth - 10;
-                    y = textHeight;
-                    break;
-                case "center":
+                    yield textHeight;
+                }
+                case "center" -> {
                     x = (input.getWidth() - textWidth) / 2;
-                    y = (input.getHeight() - textHeight) / 2;
-                    break;
-                case "bottom-left":
+                    yield (input.getHeight() - textHeight) / 2;
+                }
+                case "bottom-left" -> {
                     x = 10;
-                    y = input.getHeight() - 10;
-                    break;
-                case "bottom-right":
-                default:
+                    yield input.getHeight() - 10;
+                }
+                default -> {
                     x = input.getWidth() - textWidth - 10;
-                    y = input.getHeight() - 10;
-                    break;
-            }
+                    yield input.getHeight() - 10;
+                }
+            };
 
             g2d.drawString(text, x, y);
             g2d.dispose();

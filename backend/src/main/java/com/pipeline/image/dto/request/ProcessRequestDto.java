@@ -1,5 +1,6 @@
 package com.pipeline.image.dto.request;
 
+import com.pipeline.image.common.FilterType;
 import lombok.Data;
 
 @Data
@@ -7,7 +8,7 @@ public class ProcessRequestDto {
     private Integer resizeWidth;
     private Integer resizeHeight;
     
-    private String filterType; // grayscale, sepia, brightness, or none
+    private FilterType filterType; // grayscale, sepia, brightness, or none
     private Float brightnessLevel; // > 1.0 lighter, < 1.0 darker
     
     private String watermarkText;

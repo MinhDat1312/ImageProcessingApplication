@@ -9,17 +9,12 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import javax.imageio.ImageIO;
 
-/**
- * Compresses the image using JPEG with the specified quality (0.1 to 1.0).
- */
 public class CompressionStage implements ImageStage {
     private final float quality;
 
     public CompressionStage(float quality) {
-        // Ensure quality is within valid bounds
         if (quality < 0.1f) this.quality = 0.1f;
-        else if (quality > 1.0f) this.quality = 1.0f;
-        else this.quality = quality;
+        else this.quality = Math.min(quality, 1.0f);
     }
 
     @Override
@@ -35,7 +30,6 @@ public class CompressionStage implements ImageStage {
                 return context;
             }
 
-            // Thumbnailator supports quality setting if output format is JPEG
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             Thumbnails.of(input)
                     .scale(1.0)

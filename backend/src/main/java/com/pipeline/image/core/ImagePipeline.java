@@ -3,10 +3,6 @@ package com.pipeline.image.core;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Pipeline manager that maintains a list of stages and executes them sequentially.
- * Passes a PipelineContext object through all stages.
- */
 public class ImagePipeline {
     private final List<ImageStage> stages = new ArrayList<>();
 

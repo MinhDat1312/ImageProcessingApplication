@@ -56,3 +56,49 @@ export interface ImageItem {
   url: string
   createdAt: string
 }
+
+export interface Role {
+  roleId: string
+  name: string
+}
+
+export interface Permission {
+  permissionId: string
+  name: string
+  description?: string
+}
+
+export interface UserAccount {
+  userId: string
+  username: string
+  email: string
+  gender: 'MALE' | 'FEMALE' | 'OTHER'
+  avatar: string
+  enabled: boolean
+  role: Role
+  createdAt: string
+  updatedAt: string
+}
+
+export interface AdminImage {
+  id: string
+  filename: string
+  url: string
+  owner: UserAccount
+  createdAt: string
+  size?: number
+}
+
+export interface AccessLog {
+  timestamp: string
+  count: number
+  hour?: number
+  month?: number
+  year?: number
+}
+
+export interface AccessStats {
+  hourly: AccessLog[]
+  daily: AccessLog[]
+  monthly: AccessLog[]
+}

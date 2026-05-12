@@ -5,10 +5,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.awt.image.BufferedImage;
 
-/**
- * Context object that flows through the entire image processing pipeline.
- * Contains input file, processing state, and output metadata.
- */
 @Data
 public class PipelineContext {
     // Input

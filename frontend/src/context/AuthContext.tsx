@@ -38,7 +38,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleForceLogout)
   }, [])
 
-  const login = (userData: LoginResponse) => setUser(userData)
+  const login = (userData: LoginResponse) => {
+    setUser(userData)
+    setIsLoading(false) // Reset loading after login
+  }
 
   const logout = async () => {
     try {
@@ -55,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used within AuthProvider')

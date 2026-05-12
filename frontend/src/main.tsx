@@ -5,25 +5,28 @@ import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
+import { AdminProtectedRoute } from './components/AdminProtectedRoute.tsx'
 import { RootLayout } from './layouts/RootLayout.tsx'
+import { AuthLayout } from './layouts/AuthLayout.tsx'
 import { LoginPage } from './pages/LoginPage.tsx'
 import { RegisterPage } from './pages/RegisterPage.tsx'
 import { VerifyPage } from './pages/VerifyPage.tsx'
 import { MyImagesPage } from './pages/MyImagesPage.tsx'
+import { AdminPage } from './pages/AdminPage.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
         <Routes>
-          <Route path="/login" element={<RootLayout><LoginPage /></RootLayout>} />
-          <Route path="/register" element={<RootLayout><RegisterPage /></RootLayout>} />
+          <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
+          <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
           <Route path="/verify" element={<RootLayout><VerifyPage /></RootLayout>} />
           <Route
             path="/"
             element={
               <RootLayout contentClassName="app-content">
-                <ProtectedRoute><App /></ProtectedRoute>
+                <App />
               </RootLayout>
             }
           />
@@ -32,6 +35,14 @@ createRoot(document.getElementById('root')!).render(
             element={
               <RootLayout contentClassName="my-images-page">
                 <ProtectedRoute><MyImagesPage /></ProtectedRoute>
+              </RootLayout>
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              <RootLayout contentClassName="admin-page">
+                <AdminProtectedRoute><AdminPage /></AdminProtectedRoute>
               </RootLayout>
             }
           />

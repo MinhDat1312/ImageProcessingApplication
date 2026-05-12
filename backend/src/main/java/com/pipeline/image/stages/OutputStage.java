@@ -4,11 +4,11 @@ import com.pipeline.image.core.ImageStage;
 import com.pipeline.image.core.PipelineContext;
 import com.pipeline.image.service.StorageService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.mock.web.MockMultipartFile;
 
-/**
- * Output stage that uploads the processed image to S3 and records the public URL.
- * This is the final stage in the pipeline.
- */
+import javax.imageio.ImageIO;
+import java.io.ByteArrayOutputStream;
+
 @RequiredArgsConstructor
 public class OutputStage implements ImageStage {
     private final StorageService storageService;
@@ -32,15 +32,28 @@ public class OutputStage implements ImageStage {
             }
 
             String fileExtension = "jpg";
-            if (!context.isCompressed() && context.getInputFile() != null
-                    && context.getInputFile().getOriginalFilename() != null
-                    && context.getInputFile().getOriginalFilename().toLowerCase().endsWith(".png")) {
+            String originalFilename = context.getInputFile() != null ? context.getInputFile().getOriginalFilename() : null;
+            if (!context.isCompressed() && originalFilename != null && originalFilename.toLowerCase().endsWith(".png")) {
                 fileExtension = "png";
             }
 
-//            StoredImageInfo storedImage = storageService.storeProcessedImage(context.getImage(), fileExtension, userId);
-            context.setOutputFilename("");
-            context.setOutputUrl("");
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            if (!ImageIO.write(context.getImage(), fileExtension, outputStream)) {
+                context.setError("Unsupported output image format: " + fileExtension);
+                return context;
+            }
+
+            String outputFilename = String.format("processed-%s.%s", userId, fileExtension);
+            MockMultipartFile multipartFile = new MockMultipartFile(
+                    "file",
+                    outputFilename,
+                    "image/" + ("png".equalsIgnoreCase(fileExtension) ? "png" : "jpeg"),
+                    outputStream.toByteArray()
+            );
+
+            var storedImage = storageService.handleUploadFile(multipartFile, userId).join();
+            context.setOutputFilename(outputFilename);
+            context.setOutputUrl(storedImage.getUrl());
 
             return context;
 

@@ -1,12 +1,16 @@
 import { Card, Form, notification } from 'antd'
 import { AnimatePresence } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
 import './App.css'
 import { ImagePreview } from './components/ImagePreview'
+import { Button } from 'antd'
+import { PictureOutlined } from '@ant-design/icons'
 import { PipelineControls } from './components/PipelineControls'
 import { ProgressPipeline } from './components/ProgressPipeline'
 import { UploadZone } from './components/UploadZone'
 import { usePipelineSteps } from './hooks/usePipelineSteps'
+import { useAuth } from './context/AuthContext'
 import type { ProcessFormValues, ProcessResponse } from './types'
 import axiosInstance from './api/axiosInstance'
 
@@ -16,7 +20,9 @@ interface ApiError {
 }
 
 export default function App() {
+  const { user } = useAuth()
   const { steps, isRunning, startSimulation, completeAll, failCurrent, reset } = usePipelineSteps()
+  const navigate = useNavigate()
 
   const [form] = Form.useForm<ProcessFormValues>()
   const [file, setFile] = useState<File | null>(null)
@@ -72,7 +78,7 @@ export default function App() {
     formData.append('compressionQuality', String(values.compressionQuality))
 
     try {
-      const response = await axiosInstance.post<ProcessResponse>('/api/images/process', formData, {
+      const response = await axiosInstance.post<ProcessResponse>('/api/v1/images/process', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
       completeAll()
@@ -105,22 +111,39 @@ export default function App() {
     <div className="app-content">
       <div className="app-shell">
         <Card bordered={false} className="upload-hero-card" styles={{ body: { padding: 20 } }}>
-          <UploadZone file={file} previewUrl={previewUrl} onChange={handleUploadChange} />
+          <UploadZone file={file} previewUrl={previewUrl} onChange={handleUploadChange} disabled={!user} />
         </Card>
 
         <div className="workspace-grid">
           <Card bordered={false} className="settings-card" styles={{ body: { padding: 20 } }}>
             <div className="settings-header">
               <h2>Pipeline Settings</h2>
-              <p>Adjust each stage, then run processing.</p>
-            </div>
-            <AnimatePresence mode="wait">
-              {showProgress ? (
-                <ProgressPipeline key="progress" steps={steps} />
-              ) : (
-                <PipelineControls key="controls" form={form} onFinish={onFinish} processing={processing} />
+              <p>{user ? 'Adjust each stage, then run processing.' : 'Vui lòng đăng nhập để sử dụng tính năng này'}</p>
+              {user && (
+                <div style={{ marginTop: 8 }}>
+                  <Button type="default" icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>
+                    Xem ảnh của tôi
+                  </Button>
+                </div>
               )}
-            </AnimatePresence>
+            </div>
+            {user ? (
+              <AnimatePresence mode="wait">
+                {showProgress ? (
+                  <ProgressPipeline key="progress" steps={steps} />
+                ) : (
+                  <PipelineControls key="controls" form={form} onFinish={onFinish} processing={processing} />
+                )}
+              </AnimatePresence>
+            ) : (
+              <AnimatePresence mode="wait">
+                {showProgress ? (
+                  <ProgressPipeline key="progress" steps={steps} />
+                ) : (
+                  <PipelineControls key="controls" form={form} onFinish={onFinish} processing={processing} disabled />
+                )}
+              </AnimatePresence>
+            )}
           </Card>
 
           <Card bordered={false} className="preview-card" styles={{ body: { padding: 20 } }}>

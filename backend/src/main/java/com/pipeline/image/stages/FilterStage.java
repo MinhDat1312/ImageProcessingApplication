@@ -1,20 +1,18 @@
 package com.pipeline.image.stages;
 
+import com.pipeline.image.common.FilterType;
 import com.pipeline.image.core.ImageStage;
 import com.pipeline.image.core.PipelineContext;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
 import java.awt.image.RescaleOp;
 
-/**
- * Applies a filter to the image (grayscale, sepia, or brightness).
- */
 public class FilterStage implements ImageStage {
-    private final String filterType;
+    private final FilterType filterType;
     private final float brightnessLevel; // 1.0 is default, >1 brighter, <1 darker
 
-    public FilterStage(String filterType, float brightnessLevel) {
-        this.filterType = filterType != null ? filterType.toLowerCase() : "none";
+    public FilterStage(FilterType filterType, float brightnessLevel) {
+        this.filterType = filterType != null ? filterType : FilterType.NONE;
         this.brightnessLevel = brightnessLevel > 0 ? brightnessLevel : 1.0f;
     }
 
@@ -34,16 +32,16 @@ public class FilterStage implements ImageStage {
             BufferedImage output = input;
 
             switch (filterType) {
-                case "grayscale":
+                case GRAYSCALE:
                     output = applyGrayscale(output);
                     break;
-                case "sepia":
+                case SEPIA:
                     output = applySepia(output);
                     break;
-                case "brightness":
+                case BRIGHTNESS:
                     output = applyBrightness(output);
                     break;
-                case "none":
+                case NONE:
                 default:
                     break;
             }

@@ -1,9 +1,10 @@
-import { DownOutlined, LogoutOutlined, PictureOutlined } from '@ant-design/icons'
+import { DownOutlined, LogoutOutlined, PictureOutlined, DashboardOutlined } from '@ant-design/icons'
 import { Avatar, Dropdown, Space, Tag, Typography } from 'antd'
 import type { MenuProps } from 'antd'
 import { useCallback, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
+import { isAdminRole, normalizeRoleName } from '../utils/roleUtils'
 
 export function UserMenu() {
   const { user, logout } = useAuth()
@@ -19,7 +20,7 @@ export function UserMenu() {
   }, [logout, navigate])
 
   const initials = user?.username?.slice(0, 2).toUpperCase() ?? ''
-  const normalizedRole = (user?.role?.name ?? 'USER').replace(/^ROLE_/i, '')
+  const normalizedRole = normalizeRoleName(user?.role?.name)
 
   // I2: memoize items array so it is not recreated on every render
   const items = useMemo<MenuProps['items']>(() => [
@@ -52,6 +53,15 @@ export function UserMenu() {
       label: 'My Images',
       onClick: () => navigate('/my-images'),
     },
+    ...(isAdminRole(user?.role?.name) ? [
+      { type: 'divider' as const },
+      {
+        key: 'admin',
+        icon: <DashboardOutlined />,
+        label: 'Admin Dashboard',
+        onClick: () => navigate('/admin'),
+      },
+    ] : []),
     { type: 'divider' },
     {
       key: 'logout',
