@@ -11,6 +11,7 @@ export function AccountsTab() {
   const [accounts, setAccounts] = useState<UserAccount[]>([])
   const [roles, setRoles] = useState<AdminRole[]>([])
   const [loading, setLoading] = useState(false)
+  const [rolesLoading, setRolesLoading] = useState(false)
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null)
   const [form] = Form.useForm<UpdateFormValues>()
@@ -33,11 +34,14 @@ export function AccountsTab() {
   }
 
   const fetchRoles = async () => {
+    setRolesLoading(true)
     try {
       const res = await axiosInstance.get<{ roles: AdminRole[] }>('/api/v1/admin/roles')
       setRoles(res.data.roles)
     } catch {
       message.error('Lỗi khi tải danh sách vai trò')
+    } finally {
+      setRolesLoading(false)
     }
   }
 
@@ -172,7 +176,7 @@ export function AccountsTab() {
           >
             <Select
               options={roles.map(r => ({ label: r.name, value: r.roleId }))}
-              loading={roles.length === 0}
+              loading={rolesLoading}
             />
           </Form.Item>
         </Form>

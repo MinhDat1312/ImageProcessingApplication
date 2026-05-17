@@ -67,12 +67,12 @@ export function AccessStatsTab() {
       <Row gutter={16} className="stats-summary">
         <Col xs={24} sm={12}>
           <Card>
-            <Statistic title="Tổng Lượt Truy Cập" value={totalAccess} suffix="lượt" valueStyle={{ color: '#1890ff' }} />
+            <Statistic title="Tổng Lượt Truy Cập" value={totalAccess} suffix="lượt" styles={{ content: { color: '#1890ff' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card>
-            <Statistic title="Lượt Truy Cập Hôm Nay" value={todayAccess} suffix="lượt" valueStyle={{ color: '#52c41a' }} />
+            <Statistic title="Lượt Truy Cập Hôm Nay" value={todayAccess} suffix="lượt" styles={{ content: { color: '#52c41a' } }} />
           </Card>
         </Col>
       </Row>
