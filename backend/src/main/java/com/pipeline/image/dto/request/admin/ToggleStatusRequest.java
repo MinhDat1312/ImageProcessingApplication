@@ -1,10 +1,14 @@
 package com.pipeline.image.dto.request.admin;
 
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Getter
 @Setter
+@NoArgsConstructor
 public class ToggleStatusRequest {
-    private boolean enabled;
+    @NotNull(message = "Trạng thái không được để trống")
+    private Boolean enabled;
 }
