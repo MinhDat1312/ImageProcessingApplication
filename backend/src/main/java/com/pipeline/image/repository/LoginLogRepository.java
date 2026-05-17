@@ -40,7 +40,7 @@ public interface LoginLogRepository extends JpaRepository<LoginLog, String> {
         """, nativeQuery = true)
     List<Object[]> findMonthlyStatsByYear(@Param("year") int year);
 
-    @Query(value = "SELECT COUNT(*) FROM login_logs WHERE DATE(created_at) = CURRENT_DATE",
+    @Query(value = "SELECT COUNT(*)::bigint FROM login_logs WHERE DATE(created_at) = CURRENT_DATE",
            nativeQuery = true)
-    long countToday();
+    Long countToday();
 }
