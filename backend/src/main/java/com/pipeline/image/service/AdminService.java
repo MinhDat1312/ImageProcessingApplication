@@ -55,7 +55,11 @@ public class AdminService {
     public void deleteUser(String userId) throws InvalidException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidException("Người dùng không tồn tại"));
-        userRepository.delete(user);
+        try {
+            userRepository.delete(user);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new InvalidException("Không thể xóa tài khoản: tài khoản vẫn còn hình ảnh liên kết");
+        }
     }
 
     // ── Images ───────────────────────────────────────────────────────────
@@ -104,7 +108,11 @@ public class AdminService {
     public void deleteRole(String roleId) throws InvalidException {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new InvalidException("Vai trò không tồn tại"));
-        roleRepository.delete(role);
+        try {
+            roleRepository.delete(role);
+        } catch (org.springframework.dao.DataIntegrityViolationException e) {
+            throw new InvalidException("Không thể xóa vai trò: vẫn còn tài khoản được gán vai trò này");
+        }
     }
 
     // ── Permissions ──────────────────────────────────────────────────────
