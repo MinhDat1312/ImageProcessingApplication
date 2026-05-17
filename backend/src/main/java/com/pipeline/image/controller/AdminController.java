@@ -29,14 +29,14 @@ public class AdminController {
     @PatchMapping("/users/{userId}")
     public ResponseEntity<Map<String, AdminUserResponse>> updateUser(
             @PathVariable String userId,
-            @RequestBody UpdateUserRequest req) throws InvalidException {
+            @Valid @RequestBody UpdateUserRequest req) throws InvalidException {
         return ResponseEntity.ok(Map.of("user", adminService.updateUser(userId, req)));
     }
 
     @PatchMapping("/users/{userId}/status")
     public ResponseEntity<Map<String, String>> toggleUserStatus(
             @PathVariable String userId,
-            @RequestBody ToggleStatusRequest req) throws InvalidException {
+            @Valid @RequestBody ToggleStatusRequest req) throws InvalidException {
         adminService.toggleUserStatus(userId, req.getEnabled());
         String msg = req.getEnabled() ? "Tài khoản đã kích hoạt" : "Tài khoản đã vô hiệu hóa";
         return ResponseEntity.ok(Map.of("message", msg));
@@ -78,7 +78,7 @@ public class AdminController {
     @PatchMapping("/roles/{roleId}")
     public ResponseEntity<Map<String, AdminRoleResponse>> updateRole(
             @PathVariable String roleId,
-            @RequestBody UpdateRoleRequest req) throws InvalidException {
+            @Valid @RequestBody UpdateRoleRequest req) throws InvalidException {
         return ResponseEntity.ok(Map.of("role", adminService.updateRole(roleId, req)));
     }
 
@@ -105,7 +105,7 @@ public class AdminController {
     @PatchMapping("/permissions/{permissionId}")
     public ResponseEntity<Map<String, AdminPermissionResponse>> updatePermission(
             @PathVariable String permissionId,
-            @RequestBody UpdatePermissionRequest req) throws InvalidException {
+            @Valid @RequestBody UpdatePermissionRequest req) throws InvalidException {
         return ResponseEntity.ok(Map.of("permission", adminService.updatePermission(permissionId, req)));
     }
 
@@ -122,7 +122,7 @@ public class AdminController {
     public ResponseEntity<AccessStatsResponse> getAccessStats(
             @RequestParam(required = false) String date,
             @RequestParam(required = false) String month,
-            @RequestParam(required = false) Integer year) {
+            @RequestParam(required = false) Integer year) throws InvalidException {
         return ResponseEntity.ok(adminService.getAccessStats(date, month, year));
     }
 }

@@ -147,7 +147,13 @@ public class AdminService {
 
     // ── Access Stats ─────────────────────────────────────────────────────
 
-    public AccessStatsResponse getAccessStats(String date, String month, Integer year) {
+    public AccessStatsResponse getAccessStats(String date, String month, Integer year) throws InvalidException {
+        if (date != null && !date.matches("\\d{4}-\\d{2}-\\d{2}")) {
+            throw new InvalidException("date phải có định dạng YYYY-MM-DD");
+        }
+        if (month != null && !month.matches("\\d{4}-\\d{2}")) {
+            throw new InvalidException("month phải có định dạng YYYY-MM");
+        }
         AccessStatsResponse response = new AccessStatsResponse();
         response.setTotalAccess(loginLogRepository.count());
         response.setTodayAccess(loginLogRepository.countToday());

@@ -150,7 +150,11 @@ public class AuthService {
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
 
-        loginLogRepository.save(new LoginLog(user.getUserId(), user.getEmail()));
+        try {
+            loginLogRepository.save(new LoginLog(user.getUserId(), user.getEmail()));
+        } catch (Exception e) {
+            log.warn("Failed to save login log for user {}: {}", user.getEmail(), e.getMessage());
+        }
 
         return loginResponse;
     }
