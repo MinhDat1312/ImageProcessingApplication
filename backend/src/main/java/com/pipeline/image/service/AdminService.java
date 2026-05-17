@@ -7,6 +7,7 @@ import com.pipeline.image.exception.InvalidException;
 import com.pipeline.image.repository.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import java.time.Year;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,6 +30,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public AdminUserResponse updateUser(String userId, UpdateUserRequest req) throws InvalidException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidException("Người dùng không tồn tại"));
@@ -41,6 +43,7 @@ public class AdminService {
         return toUserResponse(userRepository.save(user));
     }
 
+    @Transactional
     public void toggleUserStatus(String userId, boolean enabled) throws InvalidException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidException("Người dùng không tồn tại"));
@@ -48,6 +51,7 @@ public class AdminService {
         userRepository.save(user);
     }
 
+    @Transactional
     public void deleteUser(String userId) throws InvalidException {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new InvalidException("Người dùng không tồn tại"));
@@ -62,6 +66,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public void deleteImage(String imageId) throws InvalidException {
         Image image = imageRepository.findById(imageId)
                 .orElseThrow(() -> new InvalidException("Hình ảnh không tồn tại"));
@@ -76,6 +81,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public AdminRoleResponse createRole(CreateRoleRequest req) {
         Role role = new Role();
         role.setName(req.getName());
@@ -84,6 +90,7 @@ public class AdminService {
         return toRoleResponse(roleRepository.save(role));
     }
 
+    @Transactional
     public AdminRoleResponse updateRole(String roleId, UpdateRoleRequest req) throws InvalidException {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new InvalidException("Vai trò không tồn tại"));
@@ -93,6 +100,7 @@ public class AdminService {
         return toRoleResponse(roleRepository.save(role));
     }
 
+    @Transactional
     public void deleteRole(String roleId) throws InvalidException {
         Role role = roleRepository.findById(roleId)
                 .orElseThrow(() -> new InvalidException("Vai trò không tồn tại"));
@@ -107,6 +115,7 @@ public class AdminService {
                 .collect(Collectors.toList());
     }
 
+    @Transactional
     public AdminPermissionResponse createPermission(CreatePermissionRequest req) {
         Permission perm = Permission.builder()
                 .name(req.getName())
@@ -117,6 +126,7 @@ public class AdminService {
         return toPermissionResponse(permissionRepository.save(perm));
     }
 
+    @Transactional
     public AdminPermissionResponse updatePermission(String permissionId, UpdatePermissionRequest req)
             throws InvalidException {
         Permission perm = permissionRepository.findById(permissionId)
@@ -128,6 +138,7 @@ public class AdminService {
         return toPermissionResponse(permissionRepository.save(perm));
     }
 
+    @Transactional
     public void deletePermission(String permissionId) throws InvalidException {
         Permission perm = permissionRepository.findById(permissionId)
                 .orElseThrow(() -> new InvalidException("Quyền hạn không tồn tại"));
@@ -198,8 +209,10 @@ public class AdminService {
         res.setUrl(image.getUrl());
         res.setCreatedAt(image.getCreatedAt());
         String url = image.getUrl();
-        int lastSlash = url.lastIndexOf('/');
-        res.setFilename(lastSlash >= 0 ? url.substring(lastSlash + 1) : url);
+        if (url != null) {
+            int lastSlash = url.lastIndexOf('/');
+            res.setFilename(lastSlash >= 0 ? url.substring(lastSlash + 1) : url);
+        }
         if (image.getUser() != null) {
             User u = image.getUser();
             res.setOwner(new AdminImageResponse.OwnerInfo(u.getUserId(), u.getUsername(), u.getEmail()));
