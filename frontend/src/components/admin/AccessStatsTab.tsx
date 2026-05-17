@@ -1,73 +1,62 @@
 import { useState, useEffect } from 'react'
 import { Card, Row, Col, Tabs, message, Statistic, DatePicker, Button, Space, Empty } from 'antd'
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import type { Dayjs } from 'dayjs'
+import {
+  LineChart, Line, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer,
+} from 'recharts'
 import { CalendarOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
 import type { AccessLog } from '../../types'
 import './admin.css'
+
+interface StatsApiResponse {
+  hourly: AccessLog[]
+  daily: AccessLog[]
+  monthly: AccessLog[]
+  totalAccess: number
+  todayAccess: number
+}
+
+interface FetchParams {
+  date?: string
+  month?: string
+  year?: number
+}
 
 export function AccessStatsTab() {
   const [hourlyStats, setHourlyStats] = useState<AccessLog[]>([])
   const [dailyStats, setDailyStats] = useState<AccessLog[]>([])
   const [monthlyStats, setMonthlyStats] = useState<AccessLog[]>([])
   const [loading, setLoading] = useState(false)
-  const [selectedDate, setSelectedDate] = useState<any>(null)
-  const [selectedMonth, setSelectedMonth] = useState<any>(null)
-  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear())
+  const [selectedDate, setSelectedDate] = useState<Dayjs | null>(null)
+  const [selectedMonth, setSelectedMonth] = useState<Dayjs | null>(null)
+  const [selectedYear, setSelectedYear] = useState<Dayjs | null>(null)
   const [totalAccess, setTotalAccess] = useState(0)
   const [todayAccess, setTodayAccess] = useState(0)
 
   useEffect(() => {
-    fetchStats()
+    fetchStats({})
   }, [])
 
-  const fetchStats = async (date?: string, month?: string, year?: number) => {
+  const fetchStats = async (params: FetchParams) => {
     setLoading(true)
     try {
-      const params: any = {}
-      if (date) params.date = date
-      if (month) params.month = month
-      if (year) params.year = year
-
-      const res = await axiosInstance.get('/api/v1/admin/access-stats', { params })
-      
-      setHourlyStats(res.data.hourly || [])
-      setDailyStats(res.data.daily || [])
-      setMonthlyStats(res.data.monthly || [])
-      setTotalAccess(res.data.totalAccess || 0)
-      setTodayAccess(res.data.todayAccess || 0)
-    } catch (error) {
+      const res = await axiosInstance.get<StatsApiResponse>('/api/v1/admin/access-stats', { params })
+      setHourlyStats(res.data.hourly ?? [])
+      setDailyStats(res.data.daily ?? [])
+      setMonthlyStats(res.data.monthly ?? [])
+      setTotalAccess(res.data.totalAccess ?? 0)
+      setTodayAccess(res.data.todayAccess ?? 0)
+    } catch {
       message.error('Lỗi khi tải thống kê')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleFetchByDate = () => {
-    if (selectedDate) {
-      const dateStr = selectedDate.format('YYYY-MM-DD')
-      fetchStats(dateStr)
-    }
-  }
-
-  const handleFetchByMonth = () => {
-    if (selectedMonth) {
-      const monthStr = selectedMonth.format('YYYY-MM')
-      fetchStats(undefined, monthStr)
-    }
-  }
-
-  const handleFetchByYear = () => {
-    fetchStats(undefined, undefined, selectedYear)
-  }
-
-  const formatChartData = (data: AccessLog[]) => {
-    return data.map(item => ({
-      name: item.timestamp,
-      count: item.count,
-      timestamp: item.timestamp,
-    }))
-  }
+  const formatChartData = (data: AccessLog[]) =>
+    data.map(item => ({ name: item.timestamp, count: item.count }))
 
   return (
     <div className="admin-tab">
@@ -78,22 +67,12 @@ export function AccessStatsTab() {
       <Row gutter={16} className="stats-summary">
         <Col xs={24} sm={12}>
           <Card>
-            <Statistic
-              title="Tổng Lượt Truy Cập"
-              value={totalAccess}
-              suffix="lượt"
-              valueStyle={{ color: '#1890ff' }}
-            />
+            <Statistic title="Tổng Lượt Truy Cập" value={totalAccess} suffix="lượt" valueStyle={{ color: '#1890ff' }} />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card>
-            <Statistic
-              title="Lượt Truy Cập Hôm Nay"
-              value={todayAccess}
-              suffix="lượt"
-              valueStyle={{ color: '#52c41a' }}
-            />
+            <Statistic title="Lượt Truy Cập Hôm Nay" value={todayAccess} suffix="lượt" valueStyle={{ color: '#52c41a' }} />
           </Card>
         </Col>
       </Row>
@@ -109,13 +88,18 @@ export function AccessStatsTab() {
                   <DatePicker
                     placeholder="Chọn ngày"
                     value={selectedDate}
-                    onChange={setSelectedDate}
+                    onChange={(d: Dayjs | null) => setSelectedDate(d)}
                   />
-                  <Button type="primary" icon={<CalendarOutlined />} onClick={handleFetchByDate}>
+                  <Button
+                    type="primary"
+                    icon={<CalendarOutlined />}
+                    loading={loading}
+                    disabled={!selectedDate}
+                    onClick={() => selectedDate && fetchStats({ date: selectedDate.format('YYYY-MM-DD') })}
+                  >
                     Xem
                   </Button>
                 </Space>
-
                 {hourlyStats.length > 0 ? (
                   <ResponsiveContainer width="100%" height={400}>
                     <LineChart data={formatChartData(hourlyStats)}>
@@ -124,13 +108,7 @@ export function AccessStatsTab() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line
-                        type="monotone"
-                        dataKey="count"
-                        stroke="#1890ff"
-                        name="Lượt Truy Cập"
-                        dot={false}
-                      />
+                      <Line type="monotone" dataKey="count" stroke="#1890ff" name="Lượt Truy Cập" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
@@ -149,13 +127,18 @@ export function AccessStatsTab() {
                     picker="month"
                     placeholder="Chọn tháng"
                     value={selectedMonth}
-                    onChange={setSelectedMonth}
+                    onChange={(d: Dayjs | null) => setSelectedMonth(d)}
                   />
-                  <Button type="primary" icon={<CalendarOutlined />} onClick={handleFetchByMonth}>
+                  <Button
+                    type="primary"
+                    icon={<CalendarOutlined />}
+                    loading={loading}
+                    disabled={!selectedMonth}
+                    onClick={() => selectedMonth && fetchStats({ month: selectedMonth.format('YYYY-MM') })}
+                  >
                     Xem
                   </Button>
                 </Space>
-
                 {dailyStats.length > 0 ? (
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart data={formatChartData(dailyStats)}>
@@ -182,16 +165,19 @@ export function AccessStatsTab() {
                   <DatePicker
                     picker="year"
                     placeholder="Chọn năm"
-                    value={undefined}
-                    onChange={(date) => {
-                      if (date) setSelectedYear(date.year())
-                    }}
+                    value={selectedYear}
+                    onChange={(d: Dayjs | null) => setSelectedYear(d)}
                   />
-                  <Button type="primary" icon={<CalendarOutlined />} onClick={handleFetchByYear}>
+                  <Button
+                    type="primary"
+                    icon={<CalendarOutlined />}
+                    loading={loading}
+                    disabled={!selectedYear}
+                    onClick={() => selectedYear && fetchStats({ year: selectedYear.year() })}
+                  >
                     Xem
                   </Button>
                 </Space>
-
                 {monthlyStats.length > 0 ? (
                   <ResponsiveContainer width="100%" height={400}>
                     <BarChart data={formatChartData(monthlyStats)}>
