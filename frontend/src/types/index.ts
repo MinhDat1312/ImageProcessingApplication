@@ -65,7 +65,16 @@ export interface Role {
 export interface Permission {
   permissionId: string
   name: string
+  apiPath: string
+  method: string
+  module: string
+}
+
+export interface AdminRole {
+  roleId: string
+  name: string
   description?: string
+  active: boolean
 }
 
 export interface UserAccount {

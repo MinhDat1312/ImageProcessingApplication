@@ -2,18 +2,23 @@ import { useState, useEffect } from 'react'
 import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Space } from 'antd'
 import { EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
-import type { UserAccount } from '../../types'
+import type { UserAccount, AdminRole } from '../../types'
 import './admin.css'
+
+type UpdateFormValues = { username: string; email: string; role: string }
 
 export function AccountsTab() {
   const [accounts, setAccounts] = useState<UserAccount[]>([])
+  const [roles, setRoles] = useState<AdminRole[]>([])
   const [loading, setLoading] = useState(false)
+  const [rolesLoading, setRolesLoading] = useState(false)
   const [isModalVisible, setIsModalVisible] = useState(false)
   const [editingUser, setEditingUser] = useState<UserAccount | null>(null)
-  const [form] = Form.useForm()
+  const [form] = Form.useForm<UpdateFormValues>()
 
   useEffect(() => {
     fetchAccounts()
+    fetchRoles()
   }, [])
 
   const fetchAccounts = async () => {
@@ -21,20 +26,28 @@ export function AccountsTab() {
     try {
       const res = await axiosInstance.get<{ users: UserAccount[] }>('/api/v1/admin/users')
       setAccounts(res.data.users)
-    } catch (error) {
+    } catch {
       message.error('Lỗi khi tải danh sách tài khoản')
     } finally {
       setLoading(false)
     }
   }
 
+  const fetchRoles = async () => {
+    setRolesLoading(true)
+    try {
+      const res = await axiosInstance.get<{ roles: AdminRole[] }>('/api/v1/admin/roles')
+      setRoles(res.data.roles)
+    } catch {
+      message.error('Lỗi khi tải danh sách vai trò')
+    } finally {
+      setRolesLoading(false)
+    }
+  }
+
   const handleEdit = (user: UserAccount) => {
     setEditingUser(user)
-    form.setFieldsValue({
-      username: user.username,
-      email: user.email,
-      role: user.role.roleId,
-    })
+    form.setFieldsValue({ username: user.username, email: user.email, role: user.role.roleId })
     setIsModalVisible(true)
   }
 
@@ -43,61 +56,50 @@ export function AccountsTab() {
       await axiosInstance.delete(`/api/v1/admin/users/${userId}`)
       message.success('Xóa tài khoản thành công')
       fetchAccounts()
-    } catch (error) {
+    } catch {
       message.error('Lỗi khi xóa tài khoản')
     }
   }
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      await axiosInstance.patch(`/api/v1/admin/users/${userId}/status`, {
-        enabled: !currentStatus,
-      })
+      await axiosInstance.patch(`/api/v1/admin/users/${userId}/status`, { enabled: !currentStatus })
       message.success(`Tài khoản đã ${!currentStatus ? 'kích hoạt' : 'vô hiệu hóa'}`)
       fetchAccounts()
-    } catch (error) {
+    } catch {
       message.error('Lỗi khi cập nhật trạng thái')
     }
   }
 
-  const handleSubmit = async (values: any) => {
+  const handleSubmit = async (values: UpdateFormValues) => {
     try {
       if (editingUser) {
-        await axiosInstance.patch(`/api/v1/admin/users/${editingUser.userId}`, values)
+        await axiosInstance.patch(`/api/v1/admin/users/${editingUser.userId}`, {
+          email: values.email,
+          roleId: values.role,
+        })
         message.success('Cập nhật tài khoản thành công')
       }
       setIsModalVisible(false)
       fetchAccounts()
-    } catch (error) {
+    } catch {
       message.error('Lỗi khi cập nhật tài khoản')
     }
   }
 
   const columns = [
-    {
-      title: 'Tên Đăng Nhập',
-      dataIndex: 'username',
-      key: 'username',
-    },
-    {
-      title: 'Email',
-      dataIndex: 'email',
-      key: 'email',
-    },
+    { title: 'Tên Đăng Nhập', dataIndex: 'username', key: 'username' },
+    { title: 'Email', dataIndex: 'email', key: 'email' },
     {
       title: 'Giới Tính',
       dataIndex: 'gender',
       key: 'gender',
       render: (gender: string) => {
-        const genderMap = { MALE: 'Nam', FEMALE: 'Nữ', OTHER: 'Khác' }
-        return genderMap[gender as keyof typeof genderMap] || gender
+        const map: Record<string, string> = { MALE: 'Nam', FEMALE: 'Nữ', OTHER: 'Khác' }
+        return map[gender] ?? gender
       },
     },
-    {
-      title: 'Vai Trò',
-      dataIndex: ['role', 'name'],
-      key: 'role',
-    },
+    { title: 'Vai Trò', dataIndex: ['role', 'name'], key: 'role' },
     {
       title: 'Trạng Thái',
       dataIndex: 'enabled',
@@ -117,14 +119,9 @@ export function AccountsTab() {
     {
       title: 'Hành Động',
       key: 'action',
-      render: (_: any, record: UserAccount) => (
+      render: (_: unknown, record: UserAccount) => (
         <Space>
-          <Button
-            type="primary"
-            size="small"
-            icon={<EditOutlined />}
-            onClick={() => handleEdit(record)}
-          />
+          <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
             type="primary"
             size="small"
@@ -153,31 +150,17 @@ export function AccountsTab() {
       <div className="tab-header">
         <h2>Quản Lý Tài Khoản</h2>
       </div>
-      <Table
-        columns={columns}
-        dataSource={accounts}
-        loading={loading}
-        rowKey="userId"
-        pagination={{ pageSize: 10 }}
-      />
+      <Table columns={columns} dataSource={accounts} loading={loading} rowKey="userId" pagination={{ pageSize: 10 }} />
 
       <Modal
-        title={editingUser ? 'Cập Nhật Tài Khoản' : 'Tạo Tài Khoản Mới'}
+        title="Cập Nhật Tài Khoản"
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         onOk={() => form.submit()}
       >
-        <Form
-          form={form}
-          layout="vertical"
-          onFinish={handleSubmit}
-        >
-          <Form.Item
-            label="Tên Đăng Nhập"
-            name="username"
-            rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}
-          >
-            <Input disabled={!!editingUser} />
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Form.Item label="Tên Đăng Nhập" name="username">
+            <Input disabled />
           </Form.Item>
           <Form.Item
             label="Email"
@@ -192,10 +175,8 @@ export function AccountsTab() {
             rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
           >
             <Select
-              options={[
-                { label: 'ADMIN', value: 'admin-role-id' },
-                { label: 'USER', value: 'user-role-id' },
-              ]}
+              options={roles.map(r => ({ label: r.name, value: r.roleId }))}
+              loading={rolesLoading}
             />
           </Form.Item>
         </Form>

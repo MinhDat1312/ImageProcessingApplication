@@ -7,8 +7,10 @@ import com.pipeline.image.dto.request.auth.RegisterRequest;
 import com.pipeline.image.dto.request.auth.VerifyUserRequest;
 import com.pipeline.image.dto.response.auth.LoginResponse;
 import com.pipeline.image.dto.response.auth.UserResponse;
+import com.pipeline.image.entity.LoginLog;
 import com.pipeline.image.entity.User;
 import com.pipeline.image.exception.InvalidException;
+import com.pipeline.image.repository.LoginLogRepository;
 import com.pipeline.image.repository.RoleRepository;
 import com.pipeline.image.repository.UserRepository;
 import com.pipeline.image.util.BasicUtil;
@@ -47,6 +49,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
+    private final LoginLogRepository loginLogRepository;
 
     private final AuthenticationManagerBuilder authenticationManagerBuilder;
     private final PasswordEncoder passwordEncoder;
@@ -146,6 +149,12 @@ public class AuthService {
 
         response.addHeader(HttpHeaders.SET_COOKIE, accessCookie.toString());
         response.addHeader(HttpHeaders.SET_COOKIE, refreshCookie.toString());
+
+        try {
+            loginLogRepository.save(new LoginLog(user.getUserId(), user.getEmail()));
+        } catch (Exception e) {
+            log.warn("Failed to save login log for user {}: {}", user.getEmail(), e.getMessage());
+        }
 
         return loginResponse;
     }
