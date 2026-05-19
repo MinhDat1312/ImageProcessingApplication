@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import axiosInstance from '../api/axiosInstance'
 import type { LoginResponse } from '../types'
 import { AUTH_LOGOUT_EVENT } from '../types'
@@ -16,6 +16,8 @@ const AuthContext = createContext<AuthContextValue | null>(null)
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<LoginResponse | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  // Use ref so the event listener always reads the current value without re-subscribing
+  const isLoggingInRef = useRef(false)
 
   useEffect(() => {
     const checkSession = async () => {
@@ -33,17 +35,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // Listen for forced logout from the silent-refresh interceptor (Task 13)
   useEffect(() => {
-    const handleForceLogout = () => setUser(null)
+    const handleForceLogout = () => {
+      if (!isLoggingInRef.current) {
+        setUser(null)
+      }
+    }
     window.addEventListener(AUTH_LOGOUT_EVENT, handleForceLogout)
     return () => window.removeEventListener(AUTH_LOGOUT_EVENT, handleForceLogout)
   }, [])
 
   const login = (userData: LoginResponse) => {
+    isLoggingInRef.current = true
     setUser(userData)
-    setIsLoading(false) // Reset loading after login
+    setIsLoading(false)
+    // Reset flag after a delay — any interceptor chain triggered by the login request will have fired by then
+    setTimeout(() => {
+      isLoggingInRef.current = false
+    }, 2000)
   }
 
   const logout = async () => {
+    isLoggingInRef.current = false
     try {
       await axiosInstance.post('/api/v1/auth/logout')
     } finally {
