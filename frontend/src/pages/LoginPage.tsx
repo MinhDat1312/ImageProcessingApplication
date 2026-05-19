@@ -1,6 +1,6 @@
 import { Alert, Button, Form, Input } from 'antd'
-import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { isAdminRole } from '../utils/roleUtils'
@@ -13,19 +13,18 @@ interface LoginFields {
 
 export function LoginPage() {
   const { user, login } = useAuth()
-  const navigate = useNavigate()
   const [serverError, setServerError] = useState<string | null>(null)
   const [unverified, setUnverified] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [justLoggedIn, setJustLoggedIn] = useState(false)
 
-  // Redirect when user logs in
   useEffect(() => {
     if (user && justLoggedIn) {
-      const redirectPath = isAdminRole(user.role.name) ? '/admin' : '/'
-      navigate(redirectPath, { replace: true })
+      const isAdmin = user.role ? isAdminRole(user.role.name) : false
+      window.location.replace(isAdmin ? '/admin' : '/')
+      setJustLoggedIn(false)
     }
-  }, [user, justLoggedIn, navigate])
+  }, [user, justLoggedIn])
 
   const onFinish = async (values: LoginFields) => {
     setServerError(null)
@@ -34,7 +33,8 @@ export function LoginPage() {
     try {
       const res = await axiosInstance.post<LoginResponse>('/api/v1/auth/login', values)
       login(res.data)
-      setJustLoggedIn(true) // Trigger redirect via useEffect
+      const isAdmin = res.data.role ? isAdminRole(res.data.role.name) : false
+      window.location.replace(isAdmin ? '/admin' : '/')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: string } }).response?.data
         ?? (err as Error).message
