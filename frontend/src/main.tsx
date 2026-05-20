@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
+import { ImagesProvider } from './context/ImagesContext.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
 import { AdminProtectedRoute } from './components/AdminProtectedRoute.tsx'
 import { RootLayout } from './layouts/RootLayout.tsx'
@@ -18,7 +19,8 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <Routes>
+        <ImagesProvider>
+          <Routes>
           <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
           <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
           <Route path="/verify" element={<RootLayout><VerifyPage /></RootLayout>} />
@@ -48,6 +50,7 @@ createRoot(document.getElementById('root')!).render(
           />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>
+        </ImagesProvider>
       </AuthProvider>
     </BrowserRouter>
   </StrictMode>,

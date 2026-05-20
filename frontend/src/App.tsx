@@ -1,4 +1,4 @@
-import { Card, Form, notification } from 'antd'
+import { Card, Form, App as AntApp } from 'antd'
 import { AnimatePresence } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
@@ -11,6 +11,7 @@ import { ProgressPipeline } from './components/ProgressPipeline'
 import { UploadZone } from './components/UploadZone'
 import { usePipelineSteps } from './hooks/usePipelineSteps'
 import { useAuth } from './context/AuthContext'
+import { useImages } from './context/ImagesContext'
 import type { ProcessFormValues, ProcessResponse, ApiResponse } from './types'
 import axiosInstance from './api/axiosInstance'
 
@@ -22,7 +23,9 @@ interface ApiError {
 }
 
 export default function App() {
+  const { notification } = AntApp.useApp()
   const { user } = useAuth()
+  const { triggerRefresh } = useImages()
   const { steps, isRunning, startSimulation, startWaiting, completeAll, failCurrent, reset } = usePipelineSteps()
   const navigate = useNavigate()
 
@@ -56,7 +59,7 @@ export default function App() {
 
   const onFinish = async (values: ProcessFormValues) => {
     if (!file) {
-      notification.warning({ message: 'Please select an image before processing' })
+      notification.warning({ title: 'Please select an image before processing' })
       return
     }
 
@@ -84,17 +87,18 @@ export default function App() {
       const response = await axiosInstance.post<ApiResponse<ProcessResponse>>('/api/v1/images/process', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      console.log('Response received:', response.data)
       const data = response.data.data
       completeAll()
       setProcessedUrl(data.url)
       setProcessedFilename(data.filename)
       setExecutionTime(data.executionTimeMs)
       notification.success({
-        message: 'Image processed successfully',
-        description: `Pipeline completed in ${data.executionTimeMs} ms`,
-        duration: 3,
+        title: 'Image processed successfully',
+        description: `Pipeline completed in ${data.executionTimeMs} ms - Ảnh đã được lưu vào My Images`,
+        duration: 5,
       })
+
+      triggerRefresh()
     } catch (err: unknown) {
       failCurrent()
       const error = err as ApiError
@@ -107,7 +111,7 @@ export default function App() {
       }
 
       notification.error({
-        message: 'Processing failed',
+        title: 'Processing failed',
         description: errorMessage,
         duration: 5,
       })
@@ -121,54 +125,56 @@ export default function App() {
   const showProgress = isRunning || steps.length > 0
 
   return (
-    <div className="app-content">
-      <div className="app-shell">
-        <Card bordered={false} className="upload-hero-card" styles={{ body: { padding: 20 } }}>
-          <UploadZone file={file} previewUrl={previewUrl} onChange={handleUploadChange} disabled={!user} />
-        </Card>
+    <AntApp>
+      <div className="app-content">
+        <div className="app-shell">
+          <Card variant="borderless" className="upload-hero-card" styles={{ body: { padding: 20 } }}>
+            <UploadZone file={file} previewUrl={previewUrl} onChange={handleUploadChange} disabled={!user} />
+          </Card>
 
-        <div className="workspace-grid">
-          <Card bordered={false} className="settings-card" styles={{ body: { padding: 20 } }}>
-            <div className="settings-header">
-              <h2>Pipeline Settings</h2>
-              <p>{user ? 'Adjust each stage, then run processing.' : 'Vui lòng đăng nhập để sử dụng tính năng này'}</p>
-              {user && (
-                <div style={{ marginTop: 8 }}>
-                  <Button type="default" icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>
-                    Xem ảnh của tôi
-                  </Button>
-                </div>
+          <div className="workspace-grid">
+            <Card variant="borderless" className="settings-card" styles={{ body: { padding: 20 } }}>
+              <div className="settings-header">
+                <h2>Pipeline Settings</h2>
+                <p>{user ? 'Adjust each stage, then run processing.' : 'Vui lòng đăng nhập để sử dụng tính năng này'}</p>
+                {user && (
+                  <div style={{ marginTop: 8 }}>
+                    <Button type="default" icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>
+                      Xem ảnh của tôi
+                    </Button>
+                  </div>
+                )}
+              </div>
+              {user ? (
+                <AnimatePresence mode="wait">
+                  {showProgress ? (
+                    <ProgressPipeline key="progress" steps={steps} />
+                  ) : (
+                    <PipelineControls key="controls" form={form} onFinish={onFinish} processing={processing} />
+                  )}
+                </AnimatePresence>
+              ) : (
+                <AnimatePresence mode="wait">
+                  {showProgress ? (
+                    <ProgressPipeline key="progress" steps={steps} />
+                  ) : (
+                    <PipelineControls key="controls" form={form} onFinish={onFinish} processing={processing} disabled />
+                  )}
+                </AnimatePresence>
               )}
-            </div>
-            {user ? (
-              <AnimatePresence mode="wait">
-                {showProgress ? (
-                  <ProgressPipeline key="progress" steps={steps} />
-                ) : (
-                  <PipelineControls key="controls" form={form} onFinish={onFinish} processing={processing} />
-                )}
-              </AnimatePresence>
-            ) : (
-              <AnimatePresence mode="wait">
-                {showProgress ? (
-                  <ProgressPipeline key="progress" steps={steps} />
-                ) : (
-                  <PipelineControls key="controls" form={form} onFinish={onFinish} processing={processing} disabled />
-                )}
-              </AnimatePresence>
-            )}
-          </Card>
+            </Card>
 
-          <Card bordered={false} className="preview-card" styles={{ body: { padding: 20 } }}>
-            <ImagePreview
-              originalUrl={previewUrl}
-              processedUrl={processedUrl}
-              executionTime={executionTime}
-              processedFilename={processedFilename}
-            />
-          </Card>
+            <Card variant="borderless" className="preview-card" styles={{ body: { padding: 20 } }}>
+              <ImagePreview
+                originalUrl={previewUrl}
+                processedUrl={processedUrl}
+                executionTime={executionTime}
+                processedFilename={processedFilename}
+              />
+            </Card>
+          </div>
         </div>
       </div>
-    </div>
+    </AntApp>
   )
 }

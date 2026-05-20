@@ -47,11 +47,11 @@ export function ProgressPipeline({ steps }: ProgressPipelineProps) {
         </motion.div>
       )}
       <Steps
-        direction="vertical"
+        orientation="vertical"
         size="small"
         items={steps.map((step) => ({
           title: step.title,
-          description: isWaitingStatus(step.status) ? "Waiting..." : step.description,
+          content: isWaitingStatus(step.status) ? "Waiting..." : step.description,
           status: isWaitingStatus(step.status) ? "process" as const : step.status,
         }))}
       />

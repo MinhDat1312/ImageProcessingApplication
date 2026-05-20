@@ -1,6 +1,8 @@
-import { Empty, Pagination, Skeleton } from 'antd'
-import { useEffect, useState } from 'react'
+import { Empty, Pagination, Skeleton, Button } from 'antd'
+import { useEffect, useState, useCallback } from 'react'
+import { ReloadOutlined } from '@ant-design/icons'
 import axiosInstance from '../api/axiosInstance'
+import { useImages } from '../context/ImagesContext'
 import type { ImageItem } from '../types'
 
 interface ImagePageResponse {
@@ -29,24 +31,31 @@ function timeAgo(dateStr: string): string {
 }
 
 export function MyImagesPage() {
+  const { refreshKey, triggerRefresh } = useImages()
   const [images, setImages] = useState<ImageItem[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+
+  const refreshImages = () => {
+    triggerRefresh()
+  }
 
   useEffect(() => {
     const controller = new AbortController()
     const fetchImages = async () => {
       setLoading(true)
       try {
-        const res = await axiosInstance.get<ImagePageResponse>('/api/v1/images/me', {
+        const res = await axiosInstance.get<{ data: ImagePageResponse }>('/api/v1/images/me', {
           params: { page: page - 1, size: PAGE_SIZE },
           signal: controller.signal,
         })
-        setImages(res.data.items)
-        setTotal(res.data.totalItems)
-      } catch {
+        const responseData = res.data.data
+        setImages(responseData?.items ?? [])
+        setTotal(responseData?.totalItems ?? 0)
+      } catch (err) {
         if (!controller.signal.aborted) {
+          console.error('Error fetching images:', err)
           setImages([])
           setTotal(0)
         }
@@ -58,13 +67,24 @@ export function MyImagesPage() {
     }
     fetchImages()
     return () => controller.abort()
-  }, [page])
+  }, [page, refreshKey])
 
   return (
     <div className="my-images-shell">
       <div className="my-images-header">
-        <h1>Ảnh của tôi</h1>
-        <p>{total > 0 ? `${total} ảnh đã xử lý` : 'Chưa có ảnh nào'}</p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div>
+            <h1>Ảnh của tôi</h1>
+            <p>{total > 0 ? `${total} ảnh đã xử lý` : 'Chưa có ảnh nào'}</p>
+          </div>
+          <Button
+            icon={<ReloadOutlined />}
+            onClick={refreshImages}
+            loading={loading}
+          >
+            Làm mới
+          </Button>
+        </div>
       </div>
 
       {loading ? (
