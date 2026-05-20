@@ -54,9 +54,9 @@ public class ImageController {
                 pipeline.addStage(new ResizeStage(requestDto.getResizeWidth(), requestDto.getResizeHeight()));
             }
             
-            if (FilterType.GRAYSCALE.equals(requestDto.getFilterType()) ||
-                    FilterType.SEPIA.equals(requestDto.getFilterType()) ||
-                    FilterType.BRIGHTNESS.equals(requestDto.getFilterType())
+            if (FilterType.grayscale.equals(requestDto.getFilterType()) ||
+                    FilterType.sepia.equals(requestDto.getFilterType()) ||
+                    FilterType.brightness.equals(requestDto.getFilterType())
             ) {
                 float brightness = requestDto.getBrightnessLevel() != null ? requestDto.getBrightnessLevel() : 1.0f;
                 pipeline.addStage(new FilterStage(requestDto.getFilterType(), brightness));
