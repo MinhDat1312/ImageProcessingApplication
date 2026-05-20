@@ -11,17 +11,19 @@ import { ProgressPipeline } from './components/ProgressPipeline'
 import { UploadZone } from './components/UploadZone'
 import { usePipelineSteps } from './hooks/usePipelineSteps'
 import { useAuth } from './context/AuthContext'
-import type { ProcessFormValues, ProcessResponse } from './types'
+import type { ProcessFormValues, ProcessResponse, ApiResponse } from './types'
 import axiosInstance from './api/axiosInstance'
 
 interface ApiError {
   response?: { data?: { error?: string } }
   message?: string
+  code?: string
+  isAxiosError?: boolean
 }
 
 export default function App() {
   const { user } = useAuth()
-  const { steps, isRunning, startSimulation, completeAll, failCurrent, reset } = usePipelineSteps()
+  const { steps, isRunning, startSimulation, startWaiting, completeAll, failCurrent, reset } = usePipelineSteps()
   const navigate = useNavigate()
 
   const [form] = Form.useForm<ProcessFormValues>()
@@ -61,6 +63,7 @@ export default function App() {
     setProcessing(true)
     setProcessedUrl(null)
     startSimulation(values)
+    startWaiting()
 
     const formData = new FormData()
     formData.append('file', file)
@@ -78,24 +81,34 @@ export default function App() {
     formData.append('compressionQuality', String(values.compressionQuality))
 
     try {
-      const response = await axiosInstance.post<ProcessResponse>('/api/v1/images/process', formData, {
+      const response = await axiosInstance.post<ApiResponse<ProcessResponse>>('/api/v1/images/process', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
+      console.log('Response received:', response.data)
+      const data = response.data.data
       completeAll()
-      setProcessedUrl(response.data.url)
-      setProcessedFilename(response.data.filename)
-      setExecutionTime(response.data.executionTimeMs)
+      setProcessedUrl(data.url)
+      setProcessedFilename(data.filename)
+      setExecutionTime(data.executionTimeMs)
       notification.success({
         message: 'Image processed successfully',
-        description: `Pipeline completed in ${response.data.executionTimeMs} ms`,
+        description: `Pipeline completed in ${data.executionTimeMs} ms`,
         duration: 3,
       })
     } catch (err: unknown) {
       failCurrent()
       const error = err as ApiError
+      let errorMessage = error.message ?? 'An unexpected error occurred'
+
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        errorMessage = 'Request timeout - image processing took too long'
+      } else if (error.response?.data?.error) {
+        errorMessage = error.response.data.error
+      }
+
       notification.error({
         message: 'Processing failed',
-        description: error.response?.data?.error ?? error.message ?? 'An unexpected error occurred',
+        description: errorMessage,
         duration: 5,
       })
     } finally {

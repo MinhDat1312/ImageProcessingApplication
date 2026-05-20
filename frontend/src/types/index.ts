@@ -18,7 +18,7 @@ export interface ProcessFormValues {
   compressionQuality: number;
 }
 
-export type StepStatus = "wait" | "process" | "finish" | "error";
+export type StepStatus = "wait" | "process" | "finish" | "error" | "waiting";
 
 export interface StepDef {
   key: string;
@@ -34,6 +34,14 @@ export interface ProcessResponse {
   url: string;
   filename: string;
   executionTimeMs: number;
+  imageId: string;
+}
+
+export interface ApiResponse<T> {
+  statusCode: number;
+  message: string;
+  data: T;
+  error: string | null;
 }
 
 export interface LoginResponse {
