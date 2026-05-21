@@ -3,26 +3,44 @@
 :root {
   --font-sans: 'Manrope', system-ui, sans-serif;
   --font-display: 'Space Grotesk', 'Manrope', system-ui, sans-serif;
+  --font-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
   font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color-scheme: dark;
+  --bg-canvas: #050816;
+  --bg-surface: rgba(9, 14, 31, 0.74);
+  --bg-surface-2: rgba(13, 20, 43, 0.82);
+  --bg-surface-3: rgba(18, 28, 56, 0.72);
+  --border-soft: rgba(255, 255, 255, 0.09);
+  --border-strong: rgba(121, 180, 255, 0.22);
+  --text-primary: #eaf0ff;
+  --text-secondary: #9caec9;
+  --text-tertiary: #6f7f9b;
+  --primary: #39d6ff;
+  --secondary: #8b7dff;
+  --accent: #ff5fd7;
+  --success: #30e3a6;
+  --warning: #f5b942;
+  --danger: #ff6b7a;
+  --focus-ring: rgba(57, 214, 255, 0.28);
 }
 
 html {
-  background: #050816;
+  background: var(--bg-canvas);
 }
 
 body {
   margin: 0;
   min-height: 100vh;
   background:
-    radial-gradient(circle at top left, rgba(124, 58, 237, 0.24), transparent 28%),
-    radial-gradient(circle at top right, rgba(34, 211, 238, 0.18), transparent 30%),
-    linear-gradient(180deg, #050816 0%, #090e1f 45%, #050816 100%);
-  color: #e5eefb;
+    radial-gradient(circle at top left, rgba(139, 125, 255, 0.22), transparent 26%),
+    radial-gradient(circle at top right, rgba(57, 214, 255, 0.16), transparent 28%),
+    radial-gradient(circle at bottom center, rgba(255, 95, 215, 0.12), transparent 26%),
+    linear-gradient(180deg, #050816 0%, #09101f 40%, #050816 100%);
+  color: var(--text-primary);
 }
 
 * {
@@ -31,6 +49,18 @@ body {
 
 a {
   color: inherit;
+}
+
+button,
+input,
+textarea,
+select,
+.ant-btn,
+.ant-switch,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background-color 180ms ease;
 }
 
 button,
@@ -45,6 +75,22 @@ select {
 }
 
 ::selection {
-  background: rgba(124, 58, 237, 0.32);
+  background: rgba(57, 214, 255, 0.28);
   color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

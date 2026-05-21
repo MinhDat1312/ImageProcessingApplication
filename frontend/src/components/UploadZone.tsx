@@ -1,8 +1,10 @@
-import { CloudUploadOutlined, FileImageOutlined } from "@ant-design/icons";
-import { Upload } from "antd";
+import { CloudUploadOutlined, FileImageOutlined, FileOutlined, RadarChartOutlined } from "@ant-design/icons";
+import { Tag, Upload, Typography } from "antd";
 import type { UploadChangeParam, UploadFile } from "antd/es/upload/interface";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { useState } from "react";
+
+const { Text } = Typography;
 
 function formatFileSize(bytes: number) {
   if (!bytes) return '0 KB'
@@ -38,8 +40,8 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
   return (
     <motion.div
       className="upload-zone-shell"
-      whileHover={{ scale: 1.01 }}
-      transition={{ duration: 0.15 }}
+      whileHover={{ scale: disabled ? 1 : 1.008 }}
+      transition={{ duration: 0.18, ease: 'easeOut' }}
       onDragEnter={() => setDragActive(true)}
       onDragLeave={() => setDragActive(false)}
       onDrop={() => setDragActive(false)}
@@ -50,40 +52,74 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
         onChange={handleChange}
         onDrop={() => setDragActive(false)}
         maxCount={1}
-        accept="image/png,image/jpeg"
+        accept="image/png,image/jpeg,image/webp,image/avif"
         showUploadList={false}
         disabled={disabled}
         style={{ padding: "20px" }}
       >
-        {previewUrl ? (
-          <div className="upload-preview-content">
-            <img
-              src={previewUrl}
-              alt="preview"
-              className="upload-preview-image"
-            />
-            <span className="upload-preview-name">
-              <FileImageOutlined /> {file?.name} - {disabled ? 'Vui lòng đăng nhập để thay đổi' : 'Click or drag to replace image'}
-            </span>
-            {file && <span className="upload-preview-meta">{formatFileSize(file.size)}</span>}
-          </div>
-        ) : (
-          <>
-            <p className="ant-upload-drag-icon">
-              <CloudUploadOutlined style={{ fontSize: 48 }} />
-            </p>
-            <p className="ant-upload-text">
-              {disabled 
-                ? 'Đăng nhập để mở khóa private workspace' 
-                : 'Drop an image, paste a screenshot, or click to upload'}
-            </p>
-            <p className="ant-upload-hint">
-              {disabled 
-                ? 'Bạn cần đăng nhập để lưu lịch sử, gallery, và pipeline presets' 
-                : 'PNG, JPG, WEBP • Optimized for instant preview and processing'}
-            </p>
-          </>
-        )}
+        <AnimatePresence mode="wait">
+          {previewUrl ? (
+            <motion.div
+              key="upload-selected"
+              className="upload-preview-content"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                <Tag color="cyan"><RadarChartOutlined /> Live preview ready</Tag>
+                <Tag color="geekblue">Replace anytime</Tag>
+              </div>
+              <img
+                src={previewUrl}
+                alt="preview"
+                className="upload-preview-image"
+              />
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                <Text strong style={{ color: 'var(--text-primary)' }}>
+                  <FileImageOutlined /> {file?.name ?? 'Selected image'}
+                </Text>
+                <Text type="secondary" className="upload-preview-name">
+                  {disabled ? 'Đăng nhập để thay đổi ảnh' : 'Click or drag to replace this image'}
+                </Text>
+                {file && (
+                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                    <Tag icon={<FileOutlined />} color="default">{formatFileSize(file.size)}</Tag>
+                    <Tag color="purple">{file.type || 'image/*'}</Tag>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ) : (
+            <motion.div
+              key="upload-empty"
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -12 }}
+              transition={{ duration: 0.22 }}
+            >
+              <p className="ant-upload-drag-icon">
+                <CloudUploadOutlined style={{ fontSize: 48 }} />
+              </p>
+              <p className="ant-upload-text">
+                {disabled
+                  ? 'Đăng nhập để mở khóa private workspace'
+                  : 'Drop an image, paste a screenshot, or click to upload'}
+              </p>
+              <p className="ant-upload-hint">
+                {disabled
+                  ? 'Bạn cần đăng nhập để lưu lịch sử, gallery, và pipeline presets'
+                  : 'PNG, JPG, WEBP, AVIF • instant local preview, then process in one flow'}
+              </p>
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 14 }}>
+                <Tag color="cyan">Drag & drop</Tag>
+                <Tag color="purple">Paste screenshot</Tag>
+                <Tag color="geekblue">Browse file</Tag>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </Upload.Dragger>
     </motion.div>
   );

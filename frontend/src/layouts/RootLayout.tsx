@@ -1,7 +1,7 @@
-import { AppstoreOutlined, PictureOutlined, RocketOutlined, SafetyOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, BellOutlined, PictureOutlined, RocketOutlined, SafetyOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { Button, ConfigProvider, Layout, Tag, theme } from 'antd'
 import { type ReactNode } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import goatLogo from '../assets/goat.png'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { UserMenu } from '../components/UserMenu'
@@ -10,6 +10,12 @@ import { useTheme } from '../hooks/useTheme'
 import { isAdminRole } from '../utils/roleUtils'
 
 const { Header, Content } = Layout
+
+const baseNavItems = [
+  { key: '/', label: 'Studio', icon: <RocketOutlined /> },
+  { key: '/my-images', label: 'Gallery', icon: <PictureOutlined /> },
+  { key: '/admin', label: 'Admin', icon: <AppstoreOutlined />, adminOnly: true },
+]
 
 interface RootLayoutProps {
   children: ReactNode
@@ -20,49 +26,125 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
   const { themeMode, toggleTheme } = useTheme()
   const { user } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
   const isAdmin = isAdminRole(user?.role?.name)
+
+  const navItems = baseNavItems.filter(item => !item.adminOnly || isAdmin)
 
   return (
     <ConfigProvider
       theme={{
         algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#7c3aed',
-          colorInfo: '#22d3ee',
-          colorSuccess: '#14b8a6',
-          colorError: '#f43f5e',
+          colorPrimary: '#39d6ff',
+          colorInfo: '#8b7dff',
+          colorSuccess: '#30e3a6',
+          colorError: '#ff6b7a',
+          colorWarning: '#f5b942',
           borderRadius: 18,
           fontFamily: 'Manrope, sans-serif',
+          fontSize: 14,
+          colorBgLayout: 'transparent',
+          colorBgContainer: 'rgba(9, 14, 31, 0.72)',
+          colorBorder: 'rgba(255, 255, 255, 0.09)',
         },
       }}
     >
       <Layout className={`app-layout ${themeMode === 'dark' ? 'theme-dark' : 'theme-light'}`}>
         <div className="app-orbit app-orbit-one" />
         <div className="app-orbit app-orbit-two" />
-        <Header className="app-header">
-          <button type="button" className="brand-mark" onClick={() => navigate('/')} aria-label="Go to studio home">
-            <span className="brand-icon brand-logo-wrap">
-              <img className="brand-logo" src={goatLogo} alt="Goat logo" />
-            </span>
-            <span className="brand-copy">
-              <strong>NovaCanvas AI</strong>
-              <span>Image Processing & Generation Studio</span>
-            </span>
-          </button>
+        <div className="app-shell-grid">
+          <aside className="app-sidebar" aria-label="Primary navigation">
+            <button type="button" className="brand-mark brand-mark-sidebar" onClick={() => navigate('/')} aria-label="Go to studio home">
+              <span className="brand-icon brand-logo-wrap">
+                <img className="brand-logo" src={goatLogo} alt="NovaCanvas logo" />
+              </span>
+              <span className="brand-copy">
+                <strong>NovaCanvas AI</strong>
+                <span>Futuristic image studio</span>
+              </span>
+            </button>
 
-          <div className="app-nav">
-            <Button type="text" icon={<RocketOutlined />} onClick={() => navigate('/')}>Studio</Button>
-            <Button type="text" icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>Gallery</Button>
-            {isAdmin && <Button type="text" icon={<AppstoreOutlined />} onClick={() => navigate('/admin')}>Admin</Button>}
-            <Tag color="processing" className="nav-status"><SafetyOutlined /> Secure workspace</Tag>
-          </div>
+            <div className="sidebar-section">
+              <span className="sidebar-label">Workspace</span>
+              <div className="sidebar-nav">
+                {navItems.map(item => {
+                  const active = location.pathname === item.key || (item.key !== '/' && location.pathname.startsWith(item.key))
+                  return (
+                    <button
+                      key={item.key}
+                      type="button"
+                      className={`sidebar-link ${active ? 'is-active' : ''}`}
+                      onClick={() => navigate(item.key)}
+                    >
+                      <span className="sidebar-link-icon">{item.icon}</span>
+                      <span className="sidebar-link-text">
+                        <strong>{item.label}</strong>
+                        <span>{item.key === '/' ? 'Processing studio' : item.label === 'Gallery' ? 'Your exports' : 'Platform tools'}</span>
+                      </span>
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
 
-          <div className="app-actions">
-            {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Đăng nhập</Button>}
-            <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
+            <div className="sidebar-section sidebar-section-stats">
+              <span className="sidebar-label">System</span>
+              <div className="sidebar-stat-card">
+                <Tag color="success" className="sidebar-stat-tag"><ThunderboltOutlined /> Realtime ready</Tag>
+                <p>Glassmorphism workspace, pipeline sync, and responsive command center.</p>
+              </div>
+            </div>
+          </aside>
+
+          <div className="app-shell-main">
+            <Header className="app-header">
+              <div className="app-topbar-left">
+                <div className="topbar-page-title">
+                  <span className="section-kicker">AI Dashboard</span>
+                  <strong>Visual workspace</strong>
+                </div>
+                <Tag color="processing" className="nav-status"><SafetyOutlined /> Secure workspace</Tag>
+              </div>
+
+              <div className="app-topbar-center">
+                <Tag color="cyan" className="topbar-chip">Dark mode futuristic</Tag>
+                <Tag color="purple" className="topbar-chip">Glass UI</Tag>
+                <Tag color="geekblue" className="topbar-chip">Framer Motion</Tag>
+              </div>
+
+              <div className="app-actions">
+                <Button type="text" icon={<BellOutlined />} aria-label="Notifications" />
+                {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Đăng nhập</Button>}
+                <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
+              </div>
+            </Header>
+
+            <Content className={contentClassName ? `app-content ${contentClassName}` : 'app-content'}>{children}</Content>
+
+            <nav className="app-mobile-nav" aria-label="Mobile navigation">
+              {navItems.map(item => {
+                const active = location.pathname === item.key || (item.key !== '/' && location.pathname.startsWith(item.key))
+                return (
+                  <button
+                    key={item.key}
+                    type="button"
+                    className={`mobile-nav-item ${active ? 'is-active' : ''}`}
+                    onClick={() => navigate(item.key)}
+                    aria-current={active ? 'page' : undefined}
+                  >
+                    <span className="mobile-nav-icon">{item.icon}</span>
+                    <span>{item.label}</span>
+                  </button>
+                )
+              })}
+              <button type="button" className="mobile-nav-item" onClick={() => navigate('/login')}>
+                <span className="mobile-nav-icon"><SettingOutlined /></span>
+                <span>Account</span>
+              </button>
+            </nav>
           </div>
-        </Header>
-        <Content className={contentClassName ? `app-content ${contentClassName}` : 'app-content'}>{children}</Content>
+        </div>
       </Layout>
     </ConfigProvider>
   )

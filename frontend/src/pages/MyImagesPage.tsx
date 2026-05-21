@@ -1,6 +1,8 @@
 import { Empty, Pagination, Skeleton, Button } from 'antd'
 import { useEffect, useState } from 'react'
-import { ReloadOutlined } from '@ant-design/icons'
+import { ReloadOutlined, RocketOutlined } from '@ant-design/icons'
+import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useImages } from '../context/ImagesContext'
 import type { ApiResponse, ImageItem } from '../types'
@@ -36,6 +38,7 @@ export function MyImagesPage() {
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const navigate = useNavigate()
 
   const refreshImages = () => {
     triggerRefresh()
@@ -71,21 +74,35 @@ export function MyImagesPage() {
 
   return (
     <div className="my-images-shell">
-      <div className="my-images-header">
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+      <motion.div
+        className="my-images-header"
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.28 }}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' }}>
           <div>
+            <span className="section-kicker">Gallery</span>
             <h1>Ảnh của tôi</h1>
-            <p>{total > 0 ? `${total} ảnh đã xử lý` : 'Chưa có ảnh nào'}</p>
+            <p>{total > 0 ? `${total} ảnh đã xử lý` : 'Chưa có ảnh nào trong workspace'}</p>
           </div>
-          <Button
-            icon={<ReloadOutlined />}
-            onClick={refreshImages}
-            loading={loading}
-          >
-            Làm mới
-          </Button>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <Button
+              icon={<RocketOutlined />}
+              onClick={() => navigate('/')}
+            >
+              Open studio
+            </Button>
+            <Button
+              icon={<ReloadOutlined />}
+              onClick={refreshImages}
+              loading={loading}
+            >
+              Làm mới
+            </Button>
+          </div>
         </div>
-      </div>
+      </motion.div>
 
       {loading ? (
         <div className="images-grid">
@@ -94,17 +111,30 @@ export function MyImagesPage() {
           ))}
         </div>
       ) : images.length === 0 ? (
-        <Empty
-          description="Bạn chưa xử lý ảnh nào. Hãy thử pipeline ngay!"
-          style={{ margin: '48px auto' }}
-        />
+        <div style={{ display: 'grid', placeItems: 'center', minHeight: '48vh' }}>
+          <Empty
+            description="Bạn chưa xử lý ảnh nào. Mở studio để tạo ảnh đầu tiên."
+            style={{ margin: '48px auto' }}
+          >
+            <Button type="primary" icon={<RocketOutlined />} onClick={() => navigate('/')}>
+              Go to studio
+            </Button>
+          </Empty>
+        </div>
       ) : (
         <div className="images-grid">
           {images.map(img => (
-            <div key={img.id} className="image-grid-item">
+            <motion.div
+              key={img.id}
+              className="image-grid-item"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.22 }}
+              whileHover={{ y: -3, scale: 1.01 }}
+            >
               <img src={img.url} alt={img.id} loading="lazy" />
               <div className="image-grid-item-overlay">{timeAgo(img.createdAt)}</div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}
