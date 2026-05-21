@@ -1,9 +1,9 @@
 import { Empty, Pagination, Skeleton, Button } from 'antd'
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState } from 'react'
 import { ReloadOutlined } from '@ant-design/icons'
 import axiosInstance from '../api/axiosInstance'
 import { useImages } from '../context/ImagesContext'
-import type { ImageItem } from '../types'
+import type { ApiResponse, ImageItem } from '../types'
 
 interface ImagePageResponse {
   items: ImageItem[]
@@ -46,7 +46,7 @@ export function MyImagesPage() {
     const fetchImages = async () => {
       setLoading(true)
       try {
-        const res = await axiosInstance.get<{ data: ImagePageResponse }>('/api/v1/images/me', {
+        const res = await axiosInstance.get<ApiResponse<ImagePageResponse>>('/api/v1/images/me', {
           params: { page: page - 1, size: PAGE_SIZE },
           signal: controller.signal,
         })

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Space, Tabs } from 'antd'
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
-import type { AdminRole, Permission } from '../../types'
+import type { ApiResponse, AdminRole, Permission } from '../../types'
 import './admin.css'
 
 type RoleFormValues = { name: string; description?: string }
@@ -27,11 +27,11 @@ export function RolesPermissionsTab() {
     setLoading(true)
     try {
       const [rolesRes, permsRes] = await Promise.all([
-        axiosInstance.get<{ roles: AdminRole[] }>('/api/v1/admin/roles'),
-        axiosInstance.get<{ permissions: Permission[] }>('/api/v1/admin/permissions'),
+        axiosInstance.get<ApiResponse<{ roles: AdminRole[] }>>('/api/v1/admin/roles'),
+        axiosInstance.get<ApiResponse<{ permissions: Permission[] }>>('/api/v1/admin/permissions'),
       ])
-      setRoles(rolesRes.data.roles)
-      setPermissions(permsRes.data.permissions)
+      setRoles(rolesRes.data.data.roles)
+      setPermissions(permsRes.data.data.permissions)
     } catch {
       message.error('Lỗi khi tải dữ liệu')
     } finally {
@@ -47,7 +47,7 @@ export function RolesPermissionsTab() {
 
   const handleDeleteRole = async (roleId: string) => {
     try {
-      await axiosInstance.delete(`/api/v1/admin/roles/${roleId}`)
+      await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/roles/${roleId}`)
       message.success('Xóa vai trò thành công')
       fetchData()
     } catch {
@@ -58,10 +58,10 @@ export function RolesPermissionsTab() {
   const handleSubmitRole = async (values: RoleFormValues) => {
     try {
       if (editingRole) {
-        await axiosInstance.patch(`/api/v1/admin/roles/${editingRole.roleId}`, values)
+        await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/roles/${editingRole.roleId}`, values)
         message.success('Cập nhật vai trò thành công')
       } else {
-        await axiosInstance.post('/api/v1/admin/roles', values)
+        await axiosInstance.post<ApiResponse<unknown>>('/api/v1/admin/roles', values)
         message.success('Tạo vai trò thành công')
       }
       setRoleModalVisible(false)
@@ -85,7 +85,7 @@ export function RolesPermissionsTab() {
 
   const handleDeletePermission = async (permissionId: string) => {
     try {
-      await axiosInstance.delete(`/api/v1/admin/permissions/${permissionId}`)
+      await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/permissions/${permissionId}`)
       message.success('Xóa quyền hạn thành công')
       fetchData()
     } catch {
@@ -96,10 +96,10 @@ export function RolesPermissionsTab() {
   const handleSubmitPermission = async (values: PermissionFormValues) => {
     try {
       if (editingPermission) {
-        await axiosInstance.patch(`/api/v1/admin/permissions/${editingPermission.permissionId}`, values)
+        await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/permissions/${editingPermission.permissionId}`, values)
         message.success('Cập nhật quyền hạn thành công')
       } else {
-        await axiosInstance.post('/api/v1/admin/permissions', values)
+        await axiosInstance.post<ApiResponse<unknown>>('/api/v1/admin/permissions', values)
         message.success('Tạo quyền hạn thành công')
       }
       setPermissionModalVisible(false)

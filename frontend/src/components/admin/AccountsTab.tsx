@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Space } from 'antd'
 import { EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
-import type { UserAccount, AdminRole } from '../../types'
+import type { ApiResponse, UserAccount, AdminRole } from '../../types'
 import './admin.css'
 
 type UpdateFormValues = { username: string; email: string; role: string }
@@ -24,8 +24,8 @@ export function AccountsTab() {
   const fetchAccounts = async () => {
     setLoading(true)
     try {
-      const res = await axiosInstance.get<{ users: UserAccount[] }>('/api/v1/admin/users')
-      setAccounts(res.data.users)
+      const res = await axiosInstance.get<ApiResponse<{ users: UserAccount[] }>>('/api/v1/admin/users')
+      setAccounts(res.data.data.users)
     } catch {
       message.error('Lỗi khi tải danh sách tài khoản')
     } finally {
@@ -36,8 +36,8 @@ export function AccountsTab() {
   const fetchRoles = async () => {
     setRolesLoading(true)
     try {
-      const res = await axiosInstance.get<{ roles: AdminRole[] }>('/api/v1/admin/roles')
-      setRoles(res.data.roles)
+      const res = await axiosInstance.get<ApiResponse<{ roles: AdminRole[] }>>('/api/v1/admin/roles')
+      setRoles(res.data.data.roles)
     } catch {
       message.error('Lỗi khi tải danh sách vai trò')
     } finally {
@@ -53,7 +53,7 @@ export function AccountsTab() {
 
   const handleDeleteAccount = async (userId: string) => {
     try {
-      await axiosInstance.delete(`/api/v1/admin/users/${userId}`)
+      await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/users/${userId}`)
       message.success('Xóa tài khoản thành công')
       fetchAccounts()
     } catch {
@@ -63,7 +63,7 @@ export function AccountsTab() {
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      await axiosInstance.patch(`/api/v1/admin/users/${userId}/status`, { enabled: !currentStatus })
+      await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/users/${userId}/status`, { enabled: !currentStatus })
       message.success(`Tài khoản đã ${!currentStatus ? 'kích hoạt' : 'vô hiệu hóa'}`)
       fetchAccounts()
     } catch {
@@ -74,7 +74,7 @@ export function AccountsTab() {
   const handleSubmit = async (values: UpdateFormValues) => {
     try {
       if (editingUser) {
-        await axiosInstance.patch(`/api/v1/admin/users/${editingUser.userId}`, {
+        await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/users/${editingUser.userId}`, {
           email: values.email,
           roleId: values.role,
         })

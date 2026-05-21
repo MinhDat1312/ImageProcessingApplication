@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
+import type { ApiResponse } from '../types'
 
 const OTP_LENGTH = 6
 const RESEND_COOLDOWN = 60
@@ -72,7 +73,7 @@ export function VerifyPage() {
     setError(null)
     setLoading(true)
     try {
-      await axiosInstance.post('/api/v1/auth/verify', { email, verificationCode: otp })
+      await axiosInstance.post<ApiResponse<unknown>>('/api/v1/auth/verify', { email, verificationCode: otp })
       notification.success({ message: 'Xác thực tài khoản thành công!', duration: 3 })
       navigate('/login')
     } catch (err: unknown) {
@@ -87,7 +88,7 @@ export function VerifyPage() {
   const handleResend = async () => {
     if (cooldown > 0) return
     try {
-      await axiosInstance.post(`/api/v1/auth/resend?email=${encodeURIComponent(email)}`)
+      await axiosInstance.post<ApiResponse<unknown>>(`/api/v1/auth/resend?email=${encodeURIComponent(email)}`)
       notification.success({ message: 'Đã gửi lại mã xác thực', duration: 3 })
       startExpireTimer()
       startCooldown()

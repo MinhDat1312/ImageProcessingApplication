@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { isAdminRole } from '../utils/roleUtils'
-import type { LoginResponse } from '../types'
+import type { ApiResponse, LoginResponse } from '../types'
 
 interface LoginFields {
   email: string
@@ -31,9 +31,9 @@ export function LoginPage() {
     setUnverified(null)
     setLoading(true)
     try {
-      const res = await axiosInstance.post<LoginResponse>('/api/v1/auth/login', values)
-      login(res.data)
-      const isAdmin = res.data.role ? isAdminRole(res.data.role.name) : false
+      const res = await axiosInstance.post<ApiResponse<LoginResponse>>('/api/v1/auth/login', values)
+      login(res.data.data)
+      const isAdmin = res.data.data.role ? isAdminRole(res.data.data.role.name) : false
       window.location.replace(isAdmin ? '/admin' : '/')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: string } }).response?.data

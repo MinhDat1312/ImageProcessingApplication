@@ -7,7 +7,7 @@ import {
 } from 'recharts'
 import { CalendarOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
-import type { AccessLog } from '../../types'
+import type { AccessLog, ApiResponse } from '../../types'
 import './admin.css'
 
 interface StatsApiResponse {
@@ -42,12 +42,12 @@ export function AccessStatsTab() {
   const fetchStats = async (params: FetchParams) => {
     setLoading(true)
     try {
-      const res = await axiosInstance.get<StatsApiResponse>('/api/v1/admin/access-stats', { params })
-      setHourlyStats(res.data.hourly ?? [])
-      setDailyStats(res.data.daily ?? [])
-      setMonthlyStats(res.data.monthly ?? [])
-      setTotalAccess(res.data.totalAccess ?? 0)
-      setTodayAccess(res.data.todayAccess ?? 0)
+      const res = await axiosInstance.get<ApiResponse<StatsApiResponse>>('/api/v1/admin/access-stats', { params })
+      setHourlyStats(res.data.data.hourly ?? [])
+      setDailyStats(res.data.data.daily ?? [])
+      setMonthlyStats(res.data.data.monthly ?? [])
+      setTotalAccess(res.data.data.totalAccess ?? 0)
+      setTodayAccess(res.data.data.todayAccess ?? 0)
     } catch {
       message.error('Lỗi khi tải thống kê')
     } finally {

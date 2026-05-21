@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Table, Button, Modal, Popconfirm, message, Space, Image, Tooltip } from 'antd'
 import { DeleteOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
-import type { AdminImage } from '../../types'
+import type { ApiResponse, AdminImage } from '../../types'
 import './admin.css'
 
 export function ImagesTab() {
@@ -17,8 +17,8 @@ export function ImagesTab() {
   const fetchImages = async () => {
     setLoading(true)
     try {
-      const res = await axiosInstance.get<{ images: AdminImage[] }>('/api/v1/admin/images')
-      setImages(res.data.images)
+      const res = await axiosInstance.get<ApiResponse<{ images: AdminImage[] }>>('/api/v1/admin/images')
+      setImages(res.data.data.images)
     } catch (error) {
       message.error('Lỗi khi tải danh sách hình ảnh')
     } finally {
@@ -28,7 +28,7 @@ export function ImagesTab() {
 
   const handleDeleteImage = async (imageId: string) => {
     try {
-      await axiosInstance.delete(`/api/v1/admin/images/${imageId}`)
+      await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/images/${imageId}`)
       message.success('Xóa hình ảnh thành công')
       fetchImages()
     } catch (error) {

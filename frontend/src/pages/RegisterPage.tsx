@@ -3,6 +3,7 @@ import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
+import type { ApiResponse } from '../types'
 
 interface RegisterFields {
   username: string
@@ -40,7 +41,7 @@ export function RegisterPage() {
     setServerError(null)
     setLoading(true)
     try {
-      await axiosInstance.post('/api/v1/auth/register', values)
+      await axiosInstance.post<ApiResponse<unknown>>('/api/v1/auth/register', values)
       navigate(`/verify?email=${encodeURIComponent(values.email)}`)
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: string } }).response?.data

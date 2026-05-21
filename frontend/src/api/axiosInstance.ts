@@ -1,4 +1,5 @@
 import axios from 'axios'
+import type { ApiResponse } from '../types'
 import { AUTH_LOGOUT_EVENT } from '../types'
 
 const axiosInstance = axios.create({
@@ -45,7 +46,7 @@ axiosInstance.interceptors.response.use(
     isRefreshing = true
 
     try {
-      await axiosInstance.get('/api/v1/auth/refresh')
+      await axiosInstance.get<ApiResponse<unknown>>('/api/v1/auth/refresh')
       processQueue(null)
       return axiosInstance(original)
     } catch (refreshError) {
