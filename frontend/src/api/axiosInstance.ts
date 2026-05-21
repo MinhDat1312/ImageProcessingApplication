@@ -4,6 +4,7 @@ import { AUTH_LOGOUT_EVENT } from '../types'
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000',
   withCredentials: true,
+  timeout: 60000, // 60 seconds timeout for image processing
 })
 
 let isRefreshing = false

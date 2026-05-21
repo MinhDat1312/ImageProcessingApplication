@@ -29,7 +29,6 @@ public class StorageService {
     @Value("${application.bucket.name}")
     private String bucketName;
 
-    @Async
     public CompletableFuture<StorageResponse> handleUploadFile(MultipartFile file, String folder) {
         String extension = FilenameUtils.getExtension(file.getOriginalFilename());
         String key = String.format(

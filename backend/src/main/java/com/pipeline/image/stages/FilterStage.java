@@ -12,7 +12,7 @@ public class FilterStage implements ImageStage {
     private final float brightnessLevel; // 1.0 is default, >1 brighter, <1 darker
 
     public FilterStage(FilterType filterType, float brightnessLevel) {
-        this.filterType = filterType != null ? filterType : FilterType.NONE;
+        this.filterType = filterType != null ? filterType : FilterType.none;
         this.brightnessLevel = brightnessLevel > 0 ? brightnessLevel : 1.0f;
     }
 
@@ -32,16 +32,16 @@ public class FilterStage implements ImageStage {
             BufferedImage output = input;
 
             switch (filterType) {
-                case GRAYSCALE:
+                case grayscale:
                     output = applyGrayscale(output);
                     break;
-                case SEPIA:
+                case sepia:
                     output = applySepia(output);
                     break;
-                case BRIGHTNESS:
+                case brightness:
                     output = applyBrightness(output);
                     break;
-                case NONE:
+                case none:
                 default:
                     break;
             }

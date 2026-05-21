@@ -105,6 +105,12 @@ export function usePipelineSteps() {
     setIsRunning(false);
   }, [clearTimer]);
 
+  const startWaiting = useCallback(() => {
+    setSteps((prev) =>
+      prev.map((step) => ({ ...step, status: "waiting" as StepStatus })),
+    );
+  }, []);
+
   const failCurrent = useCallback(() => {
     clearTimer();
     setSteps((prev) =>
@@ -124,5 +130,5 @@ export function usePipelineSteps() {
     setIsRunning(false);
   }, [clearTimer]);
 
-  return { steps, isRunning, startSimulation, completeAll, failCurrent, reset };
+  return { steps, isRunning, startSimulation, startWaiting, completeAll, failCurrent, reset };
 }
