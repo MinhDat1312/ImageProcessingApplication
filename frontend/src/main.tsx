@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
+import HomePage from './pages/HomePage'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { ImagesProvider } from './context/ImagesContext.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
@@ -26,6 +27,14 @@ createRoot(document.getElementById('root')!).render(
           <Route path="/verify" element={<RootLayout><VerifyPage /></RootLayout>} />
           <Route
             path="/"
+            element={
+              <RootLayout contentClassName="app-content">
+                <HomePage />
+              </RootLayout>
+            }
+          />
+          <Route
+            path="/studio"
             element={
               <RootLayout contentClassName="app-content">
                 <App />

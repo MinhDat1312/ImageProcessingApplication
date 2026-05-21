@@ -12,7 +12,8 @@ import { isAdminRole } from '../utils/roleUtils'
 const { Header, Content } = Layout
 
 const baseNavItems = [
-  { key: '/', label: 'Studio', icon: <RocketOutlined /> },
+  { key: '/', label: 'Home', icon: <AppstoreOutlined /> },
+  { key: '/studio', label: 'Studio', icon: <RocketOutlined /> },
   { key: '/my-images', label: 'Gallery', icon: <PictureOutlined /> },
   { key: '/admin', label: 'Admin', icon: <AppstoreOutlined />, adminOnly: true },
 ]
@@ -55,7 +56,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
         <div className="app-orbit app-orbit-two" />
         <div className="app-shell-grid">
           <aside className="app-sidebar" aria-label="Primary navigation">
-            <button type="button" className="brand-mark brand-mark-sidebar" onClick={() => navigate('/')} aria-label="Go to studio home">
+            <button type="button" className="brand-mark brand-mark-sidebar" onClick={() => navigate('/studio')} aria-label="Go to studio">
               <span className="brand-icon brand-logo-wrap">
                 <img className="brand-logo" src={goatLogo} alt="NovaCanvas logo" />
               </span>
@@ -80,7 +81,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
                       <span className="sidebar-link-icon">{item.icon}</span>
                       <span className="sidebar-link-text">
                         <strong>{item.label}</strong>
-                        <span>{item.key === '/' ? 'Processing studio' : item.label === 'Gallery' ? 'Your exports' : 'Platform tools'}</span>
+                        <span>{item.key === '/studio' ? 'Processing studio' : item.key === '/' ? 'Explore feed' : item.label === 'Gallery' ? 'Your exports' : 'Platform tools'}</span>
                       </span>
                     </button>
                   )

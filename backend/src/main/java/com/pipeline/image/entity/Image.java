@@ -1,14 +1,7 @@
 package com.pipeline.image.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.Table;
+import com.pipeline.image.common.Visibility;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -26,6 +19,31 @@ public class Image extends BaseEntity {
     private String imageId;
     @Column(nullable = false, length = 1024)
     private String url;
+
+    @Column(length = 250)
+    private String title;
+
+    @Column(length = 2048)
+    private String prompt;
+
+    @Column(length = 4096)
+    private String description;
+
+    @Column(length = 1024)
+    private String tags; // comma-separated
+
+    @Column(length = 1024)
+    private String thumbnailUrl;
+
+    private Integer width;
+    private Integer height;
+
+    private Long likesCount = 0L;
+    private Long viewsCount = 0L;
+    private Long commentsCount = 0L;
+
+    @Enumerated(EnumType.STRING)
+    private Visibility visibility = Visibility.PRIVATE;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")

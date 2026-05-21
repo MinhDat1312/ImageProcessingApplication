@@ -10,6 +10,9 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import com.pipeline.image.common.Visibility;
 
 @Repository
 public interface ImageRepository extends JpaRepository<Image, String>, JpaSpecificationExecutor<Image> {
@@ -21,4 +24,6 @@ public interface ImageRepository extends JpaRepository<Image, String>, JpaSpecif
 
     @Query("SELECT i FROM Image i LEFT JOIN FETCH i.user u LEFT JOIN FETCH u.role")
     List<Image> findAllWithUser();
+
+    Page<Image> findByVisibilityOrderByCreatedAtDesc(Visibility visibility, Pageable pageable);
 }
