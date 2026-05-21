@@ -4,6 +4,13 @@ import type { UploadChangeParam, UploadFile } from "antd/es/upload/interface";
 import { motion } from "framer-motion";
 import { useState } from "react";
 
+function formatFileSize(bytes: number) {
+  if (!bytes) return '0 KB'
+  const units = ['B', 'KB', 'MB', 'GB']
+  const index = Math.min(Math.floor(Math.log(bytes) / Math.log(1024)), units.length - 1)
+  return `${(bytes / 1024 ** index).toFixed(index === 0 ? 0 : 1)} ${units[index]}`
+}
+
 interface UploadZoneProps {
   file: File | null;
   previewUrl: string | null;
@@ -58,6 +65,7 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
             <span className="upload-preview-name">
               <FileImageOutlined /> {file?.name} - {disabled ? 'Vui lòng đăng nhập để thay đổi' : 'Click or drag to replace image'}
             </span>
+            {file && <span className="upload-preview-meta">{formatFileSize(file.size)}</span>}
           </div>
         ) : (
           <>
@@ -66,13 +74,13 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
             </p>
             <p className="ant-upload-text">
               {disabled 
-                ? 'Vui lòng đăng nhập để tải lên hình ảnh' 
-                : 'Drop image anywhere in this area or click to upload'}
+                ? 'Đăng nhập để mở khóa private workspace' 
+                : 'Drop an image, paste a screenshot, or click to upload'}
             </p>
             <p className="ant-upload-hint">
               {disabled 
-                ? 'Bạn cần đăng nhập để sử dụng tính năng này' 
-                : 'Large drop target for PNG and JPEG files'}
+                ? 'Bạn cần đăng nhập để lưu lịch sử, gallery, và pipeline presets' 
+                : 'PNG, JPG, WEBP • Optimized for instant preview and processing'}
             </p>
           </>
         )}

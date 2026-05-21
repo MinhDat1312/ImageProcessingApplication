@@ -1,11 +1,21 @@
-import { Card, Form, App as AntApp } from 'antd'
+import { App as AntApp, Button, Card, Form, Statistic, Tag } from 'antd'
 import { AnimatePresence } from 'framer-motion'
 import { useRef, useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import './App.css'
 import { ImagePreview } from './components/ImagePreview'
-import { Button } from 'antd'
-import { PictureOutlined } from '@ant-design/icons'
+import {
+  ArrowRightOutlined,
+  CloudUploadOutlined,
+  GlobalOutlined,
+  HistoryOutlined,
+  MonitorOutlined,
+  PictureOutlined,
+  PlayCircleOutlined,
+  RocketOutlined,
+  SafetyOutlined,
+  ThunderboltOutlined,
+} from '@ant-design/icons'
 import { PipelineControls } from './components/PipelineControls'
 import { ProgressPipeline } from './components/ProgressPipeline'
 import { UploadZone } from './components/UploadZone'
@@ -14,6 +24,49 @@ import { useAuth } from './context/AuthContext'
 import { useImages } from './context/ImagesContext'
 import type { ProcessFormValues, ProcessResponse, ApiResponse } from './types'
 import axiosInstance from './api/axiosInstance'
+
+const heroStats = [
+  { label: 'Pipeline uptime', value: '99.9%', prefix: <SafetyOutlined /> },
+  { label: 'Realtime preview', value: '< 1s', prefix: <MonitorOutlined /> },
+  { label: 'AI assisted', value: 'Gemini', prefix: <ThunderboltOutlined /> },
+  { label: 'Storage ready', value: 'S3 / MinIO', prefix: <GlobalOutlined /> },
+]
+
+const studioSignals = [
+  {
+    title: 'Upload studio',
+    description: 'Drag, paste, or browse. The drop zone is optimized for large visual assets and instant preview.',
+    icon: <CloudUploadOutlined />,
+  },
+  {
+    title: 'Smart workflow',
+    description: 'Resize, filter, watermark, and compress in a guided pipeline with animated status feedback.',
+    icon: <PlayCircleOutlined />,
+  },
+  {
+    title: 'History & gallery',
+    description: 'Processed results are saved into a fast gallery experience with lazy loading and pagination.',
+    icon: <HistoryOutlined />,
+  },
+]
+
+const platformCards = [
+  {
+    title: 'Generation canvas',
+    description: 'A future prompt studio for Gemini-assisted generation, style presets, and seed locking.',
+    tag: 'Coming next',
+  },
+  {
+    title: 'Workspace performance',
+    description: 'Motion feedback, code splitting, and responsive layouts keep the studio feeling instant.',
+    tag: 'Optimized',
+  },
+  {
+    title: 'Community gallery',
+    description: 'Featured, saved, and trending assets can become a discovery surface similar to modern AI platforms.',
+    tag: 'Scalable',
+  },
+]
 
 interface ApiError {
   response?: { data?: { error?: string } }
@@ -126,25 +179,85 @@ export default function App() {
 
   return (
     <AntApp>
-      <div className="app-content">
-        <div className="app-shell">
-          <Card variant="borderless" className="upload-hero-card" styles={{ body: { padding: 20 } }}>
-            <UploadZone file={file} previewUrl={previewUrl} onChange={handleUploadChange} disabled={!user} />
-          </Card>
+      <main className="studio-page">
+        <section className="studio-hero">
+          <div className="hero-copy">
+            <div className="hero-kicker-row">
+              <Tag color="magenta">AI Image Processing</Tag>
+              <Tag color="cyan">AI Generation Ready</Tag>
+              <Tag color="geekblue">WebSocket Realtime</Tag>
+            </div>
+            <h1>Build a cinematic AI image studio with processing, generation, and gallery workflows.</h1>
+            <p>
+              A futuristic workspace inspired by Midjourney, Leonardo AI, and Playground AI - designed for fast upload,
+              smart editing, instant preview, and scalable media pipelines.
+            </p>
 
-          <div className="workspace-grid">
-            <Card variant="borderless" className="settings-card" styles={{ body: { padding: 20 } }}>
-              <div className="settings-header">
-                <h2>Pipeline Settings</h2>
-                <p>{user ? 'Adjust each stage, then run processing.' : 'Vui lòng đăng nhập để sử dụng tính năng này'}</p>
-                {user && (
-                  <div style={{ marginTop: 8 }}>
-                    <Button type="default" icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>
-                      Xem ảnh của tôi
-                    </Button>
-                  </div>
-                )}
+            <div className="hero-actions">
+              <Button type="primary" size="large" icon={<RocketOutlined />} onClick={() => navigate('/my-images')}>
+                Open my gallery
+              </Button>
+              <Button size="large" icon={<ArrowRightOutlined />} onClick={() => navigate('/register')}>
+                Create workspace
+              </Button>
+            </div>
+
+            <div className="hero-stats-grid">
+              {heroStats.map(stat => (
+                <Card key={stat.label} className="glass-card stat-card" bordered={false}>
+                  <Statistic title={stat.label} value={stat.value} prefix={stat.prefix} />
+                </Card>
+              ))}
+            </div>
+          </div>
+
+          <div className="hero-panel">
+            <Card className="glass-card hero-panel-card" bordered={false}>
+              <div className="hero-panel-topline">
+                <span className="live-pill">Live studio</span>
+                <span className="hero-panel-note">Gemini + S3 + Redis</span>
               </div>
+              <div className="hero-panel-title">Command center for visual AI workflows</div>
+              <div className="hero-panel-list">
+                {studioSignals.map(signal => (
+                  <div key={signal.title} className="hero-panel-item">
+                    <div className="hero-panel-icon">{signal.icon}</div>
+                    <div>
+                      <strong>{signal.title}</strong>
+                      <p>{signal.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </div>
+        </section>
+
+        <section className="studio-workspace-grid">
+          <div className="studio-workspace-main">
+            <Card className="glass-card workspace-card" bordered={false}>
+              <div className="section-header">
+                <div>
+                  <span className="section-kicker">01. Upload Studio</span>
+                  <h2>Drop an image and start the processing pipeline</h2>
+                  <p>{user ? 'You can remix, preview, and export in a single motion-first workspace.' : 'Sign in to unlock uploads, saved history, and gallery sync.'}</p>
+                </div>
+                <Button type="default" icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>
+                  View gallery
+                </Button>
+              </div>
+              <UploadZone file={file} previewUrl={previewUrl} onChange={handleUploadChange} disabled={!user} />
+            </Card>
+
+            <Card className="glass-card workspace-card" bordered={false}>
+              <div className="section-header">
+                <div>
+                  <span className="section-kicker">02. Processing Pipeline</span>
+                  <h2>Fine-tune the workflow with guided controls</h2>
+                  <p>Resize, filter, watermark, and compress with clear visual feedback and stateful transitions.</p>
+                </div>
+              </div>
+
               {user ? (
                 <AnimatePresence mode="wait">
                   {showProgress ? (
@@ -163,8 +276,16 @@ export default function App() {
                 </AnimatePresence>
               )}
             </Card>
+          </div>
 
-            <Card variant="borderless" className="preview-card" styles={{ body: { padding: 20 } }}>
+          <aside className="studio-workspace-side">
+            <Card className="glass-card workspace-card preview-shell" bordered={false}>
+              <div className="section-header compact">
+                <div>
+                  <span className="section-kicker">03. Preview</span>
+                  <h2>Before / after comparison</h2>
+                </div>
+              </div>
               <ImagePreview
                 originalUrl={previewUrl}
                 processedUrl={processedUrl}
@@ -172,9 +293,27 @@ export default function App() {
                 processedFilename={processedFilename}
               />
             </Card>
-          </div>
-        </div>
-      </div>
+
+            <Card className="glass-card workspace-card side-card" bordered={false}>
+              <div className="section-header compact">
+                <div>
+                  <span className="section-kicker">Platform Signals</span>
+                  <h2>Built for scale and realtime collaboration</h2>
+                </div>
+              </div>
+              <div className="signal-list">
+                {platformCards.map(card => (
+                  <div key={card.title} className="signal-card">
+                    <Tag color="blue" className="signal-tag">{card.tag}</Tag>
+                    <strong>{card.title}</strong>
+                    <p>{card.description}</p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+          </aside>
+        </section>
+      </main>
     </AntApp>
   )
 }

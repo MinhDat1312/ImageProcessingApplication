@@ -1,14 +1,19 @@
 import { Spin } from "antd";
 import { Steps } from "antd";
 import { motion } from "framer-motion";
-import type { StepItem } from "../types";
+import type { StepItem, StepStatus } from "../types";
 
 interface ProgressPipelineProps {
   steps: StepItem[];
 }
 
-function isWaitingStatus(status: string): boolean {
+function isWaitingStatus(status: StepStatus): boolean {
   return status === "waiting";
+}
+
+function toAntStatus(status: StepStatus) {
+  if (status === "waiting") return "process" as const
+  return status
 }
 
 export function ProgressPipeline({ steps }: ProgressPipelineProps) {
@@ -52,7 +57,7 @@ export function ProgressPipeline({ steps }: ProgressPipelineProps) {
         items={steps.map((step) => ({
           title: step.title,
           content: isWaitingStatus(step.status) ? "Waiting..." : step.description,
-          status: isWaitingStatus(step.status) ? "process" as const : step.status,
+          status: toAntStatus(step.status),
         }))}
       />
     </motion.div>

@@ -21,7 +21,8 @@ export function ImagePreview({
     return (
       <div className="empty-preview-state">
         <PictureOutlined style={{ fontSize: 64 }} />
-        <span>Upload an image to preview results</span>
+        <strong>Upload an image to unlock the live preview</strong>
+        <span>The comparison view will appear here after processing.</span>
       </div>
     );
   }
@@ -68,12 +69,12 @@ export function ImagePreview({
               download={processedFilename || "processed.jpg"}
               className="download-btn"
             >
-              Download image
+              Download result
             </Button>
           </motion.div>
         ) : (
           <div className="image-box image-box-pending">
-            Waiting for processing...
+            Waiting for the pipeline to finish...
           </div>
         )}
       </div>

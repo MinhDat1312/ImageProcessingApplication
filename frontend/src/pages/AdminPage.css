@@ -1,178 +1,37 @@
 .admin-page {
-  padding: 24px;
-  background-color: #f5f5f5;
   min-height: 100vh;
 }
 
-.admin-page h1 {
-  margin-bottom: 24px;
-  color: #333;
-  font-size: 28px;
-}
-
-.admin-tab {
-  background: white;
-  padding: 24px;
-  border-radius: 8px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.admin-tab h2,
-.admin-tab h3 {
-  margin-top: 0;
-  color: #333;
-}
-
-.tab-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 24px;
-}
-
-.tab-header h2 {
+.admin-page h1,
+.admin-page h2,
+.admin-page h3 {
   margin: 0;
-  flex: 1;
-}
-
-.tab-header h3 {
-  margin: 0;
-  flex: 1;
-}
-
-.filter-section {
-  display: flex;
-  gap: 12px;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-}
-
-.stats-summary {
-  margin-bottom: 24px;
 }
 
 .stats-content {
-  padding: 20px 0;
-}
-
-/* Responsive Tables */
-.ant-table {
-  font-size: 14px;
-}
-
-.ant-table-cell {
-  padding: 12px 16px !important;
-}
-
-/* Chart Styling */
-.recharts-wrapper {
-  margin-top: 24px;
-}
-
-.recharts-surface {
-  background-color: transparent;
-}
-
-/* Modal Styling */
-.ant-modal-content {
-  border-radius: 8px;
+  padding: 18px 0 6px;
 }
 
 .ant-form-item {
   margin-bottom: 16px;
 }
 
-/* Button Spacing */
-.ant-space {
-  width: 100%;
-}
-
-.ant-space-item {
-  flex-shrink: 0;
-}
-
-/* Responsive Design */
-@media (max-width: 768px) {
-  .admin-page {
-    padding: 16px;
-  }
-
-  .admin-page h1 {
-    font-size: 20px;
-    margin-bottom: 16px;
-  }
-
-  .admin-tab {
-    padding: 16px;
-  }
-
-  .tab-header {
-    flex-direction: column;
-    gap: 12px;
-    align-items: flex-start;
-  }
-
-  .tab-header button {
-    width: 100%;
-  }
-
-  .filter-section {
-    flex-direction: column;
-  }
-
-  .filter-section .ant-picker,
-  .filter-section .ant-btn {
-    width: 100%;
-  }
-
-  .ant-table-cell {
-    padding: 8px 12px !important;
-    font-size: 12px;
-  }
-
-  .ant-table-cell-with-append .ant-btn {
-    padding: 0 8px;
-    font-size: 12px;
-  }
-
-  .recharts-wrapper {
-    height: 300px !important;
-  }
-}
-
-/* Status Colors */
-.status-enabled {
-  color: #52c41a;
-  font-weight: 600;
-}
-
-.status-disabled {
-  color: #f5222d;
-  font-weight: 600;
-}
-
-/* Loading State */
 .ant-skeleton {
   margin-bottom: 16px;
 }
 
-/* Table Row Hover */
-.ant-table-row:hover > td {
-  background-color: #fafafa;
+.status-enabled {
+  color: #34d399;
+  font-weight: 600;
 }
 
-/* Tabs */
-.ant-tabs-tab {
-  padding: 12px 0 !important;
+.status-disabled {
+  color: #fb7185;
+  font-weight: 600;
 }
 
-.ant-tabs-tab-btn {
-  font-weight: 500;
-}
-
-/* Empty State */
-.ant-empty {
-  padding: 40px 20px;
-  background-color: #fafafa;
-  border-radius: 4px;
+@media (max-width: 768px) {
+  .recharts-wrapper {
+    height: 300px !important;
+  }
 }

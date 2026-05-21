@@ -1,6 +1,6 @@
 import { SendOutlined } from "@ant-design/icons";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button, Form, Input, InputNumber, Select, Slider } from "antd";
+import { Button, Form, Input, InputNumber, Select, Slider, Tag } from "antd";
 import type { FormInstance } from "antd";
 import type { ProcessFormValues } from "../types";
 
@@ -33,18 +33,30 @@ export function PipelineControls({
         compressionQuality: 1.0,
       }}
     >
+      <div className="pipeline-intro">
+        <div>
+          <span className="section-kicker">Smart Controls</span>
+          <h3>Shape the output with guided, animation-rich adjustments</h3>
+        </div>
+        <div className="pipeline-badges">
+          <Tag color="blue">Realtime</Tag>
+          <Tag color="purple">Reusable presets</Tag>
+          <Tag color="cyan">Accessible</Tag>
+        </div>
+      </div>
+
       <div className="control-sections-grid">
         <section className="control-section">
-          <h3>1. Resize</h3>
+          <h3>1. Resize canvas</h3>
           <div className="control-fields two-col">
-            <Form.Item name="resizeWidth" label="Width (px)">
+            <Form.Item name="resizeWidth" label="Width">
               <InputNumber
                 placeholder="Keep original"
                 style={{ width: "100%" }}
                 min={1}
               />
             </Form.Item>
-            <Form.Item name="resizeHeight" label="Height (px)">
+            <Form.Item name="resizeHeight" label="Height">
               <InputNumber
                 placeholder="Keep original"
                 style={{ width: "100%" }}
@@ -55,9 +67,9 @@ export function PipelineControls({
         </section>
 
         <section className="control-section">
-          <h3>2. Filter</h3>
+          <h3>2. Filter lens</h3>
           <div className="control-fields one-col">
-            <Form.Item name="filterType" label="Filter type">
+            <Form.Item name="filterType" label="Filter">
               <Select
                 options={[
                   { value: "none", label: "None" },
@@ -97,7 +109,7 @@ export function PipelineControls({
         </section>
 
         <section className="control-section">
-          <h3>3. Watermark</h3>
+          <h3>3. Watermark layer</h3>
           <div className="control-fields one-col">
             <Form.Item name="watermarkText" label="Watermark text">
               <Input placeholder="Leave empty to disable watermark" />
@@ -149,7 +161,7 @@ export function PipelineControls({
           size="large"
           style={{ width: "100%" }}
         >
-          {disabled ? "Đăng nhập để xử lý ảnh" : (processing ? "Processing..." : "Process image")}
+          {disabled ? "Sign in to process" : (processing ? "Processing image..." : "Run pipeline")}
         </Button>
       </Form.Item>
     </Form>

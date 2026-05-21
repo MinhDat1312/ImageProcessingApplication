@@ -10,6 +10,7 @@ interface ThemeToggleProps {
 export function ThemeToggle({ themeMode, onToggle }: ThemeToggleProps) {
   return (
     <Switch
+      aria-label="Toggle theme"
       checked={themeMode === "dark"}
       onChange={onToggle}
       checkedChildren={<MoonOutlined />}
