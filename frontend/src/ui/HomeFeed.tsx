@@ -12,6 +12,26 @@ interface FeedItem extends ImageItem {
   owner?: { username?: string; avatar?: string }
 }
 
+interface FeedPageApiItem {
+  id?: string
+  imageId?: string
+  url?: string
+  createdAt?: string
+  prompt?: string
+  likes?: number
+  comments?: number
+  views?: number
+  owner?: { username?: string; avatar?: string }
+  user?: { username?: string; avatar?: string }
+  username?: string
+}
+
+interface FeedPageResponse {
+  items: FeedPageApiItem[]
+  page: number
+  size: number
+}
+
 export default function HomeFeed() {
   const [items, setItems] = useState<FeedItem[]>([])
   const [page, setPage] = useState(0)
@@ -23,12 +43,21 @@ export default function HomeFeed() {
     setLoading(true)
     try {
       // try public feed first, fallback to /me
-      const resp = await axiosInstance.get<ApiResponse<{ items: any[]; page: number; size: number }>>('/api/v1/images/public', { params: { page: p, size: 12 } }).catch(async () => {
-        return axiosInstance.get<ApiResponse<{ items: any[]; page: number; size: number }>>('/api/v1/images/me', { params: { page: p, size: 12 } })
+      const resp = await axiosInstance.get<ApiResponse<FeedPageResponse>>('/api/v1/images/public', { params: { page: p, size: 12 } }).catch(async () => {
+        return axiosInstance.get<ApiResponse<FeedPageResponse>>('/api/v1/images/me', { params: { page: p, size: 12 } })
       })
 
       const data = resp.data.data
-      const newItems = (data.items ?? []).map((it: any) => ({ id: it.id || it.imageId || it.id, url: it.url, createdAt: it.createdAt, prompt: it.prompt, likes: it.likes ?? Math.floor(Math.random()*128), comments: it.comments ?? Math.floor(Math.random()*24), views: it.views ?? Math.floor(Math.random()*400), owner: it.owner ?? it.user ?? { username: it.username } }))
+      const newItems = (data.items ?? []).map((it: FeedPageApiItem) => ({
+        id: it.id || it.imageId || '',
+        url: it.url || '',
+        createdAt: it.createdAt || new Date().toISOString(),
+        prompt: it.prompt,
+        likes: it.likes ?? Math.floor(Math.random() * 128),
+        comments: it.comments ?? Math.floor(Math.random() * 24),
+        views: it.views ?? Math.floor(Math.random() * 400),
+        owner: it.owner ?? it.user ?? { username: it.username },
+      }))
       setItems(prev => [...prev, ...newItems])
       setHasMore((data.items?.length ?? 0) > 0)
     } catch (err) {

@@ -4,7 +4,7 @@ import { ReloadOutlined, RocketOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
-import { useImages } from '../context/ImagesContext'
+import { useImages } from '../context/useImages'
 import type { ApiResponse, ImageItem } from '../types'
 
 interface ImagePageResponse {

@@ -70,7 +70,7 @@ export function UserMenu() {
       danger: true,
       onClick: handleLogout,
     },
-  ], [user?.avatar, user?.username, user?.email, normalizedRole, initials, navigate, handleLogout])
+  ], [user?.avatar, user?.username, user?.email, user?.role?.name, normalizedRole, initials, navigate, handleLogout])
 
   // Early return AFTER all hooks
   if (!user) return null

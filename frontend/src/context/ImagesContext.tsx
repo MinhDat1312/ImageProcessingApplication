@@ -1,11 +1,5 @@
-import { createContext, useContext, useState, useCallback, type ReactNode } from 'react'
-
-interface ImagesContextValue {
-  refreshKey: number
-  triggerRefresh: () => void
-}
-
-const ImagesContext = createContext<ImagesContextValue | null>(null)
+import { useState, useCallback, type ReactNode } from 'react'
+import { ImagesContext } from './imagesContext'
 
 export function ImagesProvider({ children }: { children: ReactNode }) {
   const [refreshKey, setRefreshKey] = useState(0)
@@ -21,8 +15,3 @@ export function ImagesProvider({ children }: { children: ReactNode }) {
   )
 }
 
-export function useImages() {
-  const ctx = useContext(ImagesContext)
-  if (!ctx) throw new Error('useImages must be used within ImagesProvider')
-  return ctx
-}

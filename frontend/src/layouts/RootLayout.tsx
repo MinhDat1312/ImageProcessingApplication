@@ -1,4 +1,4 @@
-import { AppstoreOutlined, BellOutlined, PictureOutlined, RocketOutlined, SafetyOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, BellOutlined, CommentOutlined, CompassOutlined, PictureOutlined, RocketOutlined, SafetyOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { Button, ConfigProvider, Layout, Tag, theme } from 'antd'
 import { type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -14,6 +14,8 @@ const { Header, Content } = Layout
 const baseNavItems = [
   { key: '/', label: 'Home', icon: <AppstoreOutlined /> },
   { key: '/studio', label: 'Studio', icon: <RocketOutlined /> },
+  { key: '/explore', label: 'Explore', icon: <CompassOutlined /> },
+  { key: '/chat', label: 'AI Chat', icon: <CommentOutlined /> },
   { key: '/my-images', label: 'Gallery', icon: <PictureOutlined /> },
   { key: '/admin', label: 'Admin', icon: <AppstoreOutlined />, adminOnly: true },
 ]
@@ -93,7 +95,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
               <span className="sidebar-label">System</span>
               <div className="sidebar-stat-card">
                 <Tag color="success" className="sidebar-stat-tag"><ThunderboltOutlined /> Realtime ready</Tag>
-                <p>Glassmorphism workspace, pipeline sync, and responsive command center.</p>
+                <p>Glassmorphism workspace, prompt studio, and responsive command center.</p>
               </div>
             </div>
           </aside>

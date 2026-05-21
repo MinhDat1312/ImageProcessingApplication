@@ -41,7 +41,7 @@ export function VerifyPage() {
   useEffect(() => {
     startExpireTimer()
     return () => { if (expireRef.current) clearInterval(expireRef.current) }
-  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }

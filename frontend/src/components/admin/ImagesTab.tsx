@@ -19,7 +19,7 @@ export function ImagesTab() {
     try {
       const res = await axiosInstance.get<ApiResponse<{ images: AdminImage[] }>>('/api/v1/admin/images')
       setImages(res.data.data.images)
-    } catch (error) {
+    } catch {
       message.error('Lỗi khi tải danh sách hình ảnh')
     } finally {
       setLoading(false)
@@ -31,7 +31,7 @@ export function ImagesTab() {
       await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/images/${imageId}`)
       message.success('Xóa hình ảnh thành công')
       fetchImages()
-    } catch (error) {
+    } catch {
       message.error('Lỗi khi xóa hình ảnh')
     }
   }
@@ -79,7 +79,7 @@ export function ImagesTab() {
     {
       title: 'Hành Động',
       key: 'action',
-      render: (_: any, record: AdminImage) => (
+      render: (_value: unknown, record: AdminImage) => (
         <Space>
           <Tooltip title="Xem">
             <Button
