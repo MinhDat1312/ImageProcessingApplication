@@ -2,20 +2,82 @@
   min-height: 100vh;
   position: relative;
   overflow: clip;
+  background: var(--background-base);
+  color: var(--foreground);
+  transition: background-color 300ms ease, color 300ms ease;
 }
 
 .app-layout.theme-dark {
+  --background-deep: #020203;
+  --background-base: #050506;
+  --background-elevated: #0a0a0c;
   --surface: rgba(10, 15, 29, 0.74);
   --surface-strong: rgba(15, 21, 39, 0.92);
   --surface-soft: rgba(20, 28, 51, 0.66);
+  --surface-hover: rgba(255, 255, 255, 0.08);
+  --foreground: #EDEDEF;
+  --foreground-muted: #8A8F98;
+  --foreground-subtle: rgba(255, 255, 255, 0.6);
+  --accent: #5E6AD2;
+  --accent-bright: #6872D9;
+  --accent-glow: rgba(94, 106, 210, 0.3);
+  --border-default: rgba(255, 255, 255, 0.06);
+  --border-hover: rgba(255, 255, 255, 0.10);
+  --border-accent: rgba(94, 106, 210, 0.30);
   --canvas-accent: rgba(57, 214, 255, 0.08);
+  --bg-surface-2: rgba(255, 255, 255, 0.08);
+  --bg-surface-3: rgba(255, 255, 255, 0.12);
+  --border-soft: rgba(255, 255, 255, 0.06);
+  --border-strong: rgba(94, 106, 210, 0.30);
+  --text-primary: #EDEDEF;
+  --text-secondary: #8A8F98;
+  --text-tertiary: rgba(255, 255, 255, 0.6);
+  --primary: #5E6AD2;
+  --primary-hover: #6872D9;
+  
+  --shadow-sidebar: 0 30px 80px rgba(4, 8, 20, 0.34);
+  --shadow-header: 0 24px 70px rgba(4, 8, 20, 0.24);
+  --shadow-mobile-nav: 0 18px 36px rgba(4, 8, 20, 0.24);
+  --glass-shadow: 0 22px 50px rgba(4, 8, 20, 0.18);
+  --shadow-card-default: 0 2px 20px rgba(0,0,0,0.4), 0 0 0 1px var(--border-default);
+  --shadow-card-hover: 0 8px 40px rgba(0,0,0,0.5), 0 0 80px rgba(94,106,210,0.1), 0 0 0 1px rgba(255,255,255,0.1);
 }
 
 .app-layout.theme-light {
-  --surface: rgba(255, 255, 255, 0.74);
-  --surface-strong: rgba(255, 255, 255, 0.94);
-  --surface-soft: rgba(243, 246, 255, 0.88);
-  --canvas-accent: rgba(29, 78, 216, 0.08);
+  color-scheme: light;
+  --background-deep: #eaedf6;
+  --background-base: #eef3f8; /* slightly warmer, reduce blown-out white */
+  --background-elevated: #fbfdff; /* almost-white but softer */
+  --surface: rgba(245,247,250,0.9); /* soft, slightly gray surface */
+  --surface-strong: rgba(243,246,250,0.97);
+  --surface-soft: rgba(240,244,249,0.9);
+  --surface-hover: rgba(15, 23, 42, 0.04);
+  --foreground: #0f172a;
+  --foreground-muted: #475569;
+  --foreground-subtle: rgba(15, 23, 42, 0.65);
+  --accent: #5E6AD2;
+  --accent-bright: #4f46e5;
+  --accent-glow: rgba(94, 106, 210, 0.15);
+  --border-default: rgba(15, 23, 42, 0.07);
+  --border-hover: rgba(15, 23, 42, 0.12);
+  --border-accent: rgba(94, 106, 210, 0.18);
+  --canvas-accent: rgba(29, 78, 216, 0.04);
+  --bg-surface-2: rgba(15, 23, 42, 0.04);
+  --bg-surface-3: rgba(15, 23, 42, 0.06);
+  --border-soft: rgba(15, 23, 42, 0.08);
+  --border-strong: rgba(94, 106, 210, 0.25);
+  --text-primary: #0f172a;
+  --text-secondary: #475569;
+  --text-tertiary: rgba(15, 23, 42, 0.6);
+  --primary: #5E6AD2;
+  --primary-hover: #4f46e5;
+  
+  --shadow-sidebar: 0 30px 80px rgba(15, 23, 42, 0.06);
+  --shadow-header: 0 24px 70px rgba(15, 23, 42, 0.04);
+  --shadow-mobile-nav: 0 18px 36px rgba(15, 23, 42, 0.04);
+  --glass-shadow: 0 22px 50px rgba(15, 23, 42, 0.05);
+  --shadow-card-default: 0 4px 20px rgba(15, 23, 42, 0.03), 0 0 0 1px var(--border-default);
+  --shadow-card-hover: 0 10px 40px rgba(94, 106, 210, 0.06), 0 0 0 1px rgba(94, 106, 210, 0.15);
 }
 
 .app-orbit {
@@ -45,7 +107,7 @@
   border-radius: 28px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, transparent), color-mix(in srgb, var(--surface-strong) 88%, transparent));
   backdrop-filter: blur(22px);
-  box-shadow: 0 30px 80px rgba(4, 8, 20, 0.34);
+  box-shadow: var(--shadow-sidebar);
 }
 
 .brand-mark {
@@ -198,41 +260,94 @@
   margin: 0;
 }
 
-.app-shell-main {
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
-  min-width: 0;
+.app-shell-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 22px;
+  min-height: 100vh;
+  /* Reserve space for the fixed header: header height (68px) + original top padding (22px) */
+  padding: calc(22px + 68px) 22px 22px 22px;
 }
 
 .app-header {
-  position: sticky;
-  top: 22px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
   z-index: 15;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  min-height: 76px;
-  padding: 14px 18px;
+  min-height: 68px;
+  padding: 0;
   border: 1px solid var(--border-soft);
-  border-radius: 24px;
+  border-radius: 0;
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent), color-mix(in srgb, var(--surface-strong) 82%, transparent));
   backdrop-filter: blur(22px);
-  box-shadow: 0 24px 70px rgba(4, 8, 20, 0.24);
+  box-shadow: var(--shadow-header);
+}
+
+.app-header-inner {
+  width: min(100%, 1680px);
+  margin: 0 auto;
+  padding: 0 18px;
+  height: 68px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
 }
 
 .app-topbar-left,
 .app-topbar-center,
 .app-actions {
-  display: flex;
   align-items: center;
   gap: 10px;
   min-width: 0;
+  display: flex;
 }
 
+/* Topbar navigation tabs */
+.topbar-nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: center;
+  justify-self: center;
+  width: fit-content;
+  min-width: 0;
+  max-width: min(72vw, 900px);
+  overflow: hidden;
+  white-space: nowrap;
+  pointer-events: auto;
+}
+
+.topbar-nav-item {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+  padding: 6px 10px;
+  min-height: 32px;
+  line-height: 1;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 0.94rem;
+  cursor: pointer;
+  transition: color 160ms ease;
+}
+.topbar-nav-item:hover {
+  color: var(--primary);
+}
+.topbar-nav-item.is-active {
+  color: var(--primary);
+}
+.topbar-nav-label { display: inline-block }
+
 .app-topbar-left {
-  flex: 1;
+  flex: 0 0 auto;
+  justify-self: start;
 }
 
 .topbar-page-title {
@@ -253,6 +368,8 @@
 
 .app-actions {
   justify-content: flex-end;
+  flex: 0 0 auto;
+  justify-self: end;
 }
 
 .app-content {
@@ -279,7 +396,7 @@
 .rail-card {
   border: 1px solid var(--border-soft);
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 88%, transparent), color-mix(in srgb, var(--surface-strong) 88%, transparent));
-  box-shadow: 0 22px 50px rgba(4, 8, 20, 0.18);
+  box-shadow: var(--glass-shadow);
   backdrop-filter: blur(20px);
 }
 
@@ -1238,7 +1355,7 @@
   border-radius: 22px;
   background: linear-gradient(180deg, color-mix(in srgb, var(--surface) 92%, transparent), color-mix(in srgb, var(--surface-strong) 90%, transparent));
   backdrop-filter: blur(22px);
-  box-shadow: 0 18px 36px rgba(4, 8, 20, 0.24);
+  box-shadow: var(--shadow-mobile-nav);
 }
 
 .mobile-nav-item {
@@ -1365,11 +1482,22 @@
     flex-wrap: wrap;
   }
 
-  .app-topbar-center {
+  .app-header-inner {
+    padding: 0 14px;
+    gap: 10px;
+  }
+
+  .app-topbar-left,
+  .app-actions {
+    flex: 0 0 auto;
+  }
+
+  .topbar-nav {
     order: 3;
     width: 100%;
-    overflow-x: auto;
     padding-bottom: 2px;
+    overflow-x: auto;
+    justify-content: flex-start;
   }
 
   .hero-stat-grid,
@@ -1390,14 +1518,19 @@
 
 @media (max-width: 760px) {
   .app-shell-grid {
-    padding: 14px;
+    padding: 12px;
     gap: 14px;
   }
 
   .app-header {
     top: 14px;
-    padding: 12px 14px;
+    padding: 6px 0;
     border-radius: 20px;
+  }
+
+  .app-header-inner {
+    padding: 0 14px;
+    gap: 12px;
   }
 
   .app-sidebar {
@@ -1450,6 +1583,10 @@
 @media (max-width: 560px) {
   .app-shell-grid {
     padding: 10px;
+  }
+
+  .app-header-inner {
+    padding: 0 12px;
   }
 
   .app-header,
@@ -1873,6 +2010,27 @@
   z-index: 1;
 }
 
+/* Topbar brand styling when moved into the fixed header */
+.brand-mark-topbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 8px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: var(--text-primary);
+}
+.brand-mark-topbar .brand-logo-wrap {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  box-shadow: none;
+}
+.brand-mark-topbar .brand-copy strong {
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+}
 .generator-glow {
   background: radial-gradient(circle, #ff007f 0%, transparent 70%);
 }

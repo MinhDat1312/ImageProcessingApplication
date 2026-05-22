@@ -69,7 +69,7 @@ export function ProfilePage() {
   const targetUserId = userId || currentUser?.userId
 
   useEffect(() => {
-    document.title = 'NovaCanvas AI — User Profile'
+    document.title = 'Goat Image AI — User Profile'
   }, [])
 
   // Fetch Profile and Images

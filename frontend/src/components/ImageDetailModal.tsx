@@ -232,7 +232,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `novacanvas-creation-${item.id}.png`
+      a.download = `goatimageai-creation-${item.id}.png`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

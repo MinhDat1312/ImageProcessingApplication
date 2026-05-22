@@ -43,7 +43,7 @@ export default function GeneratePage() {
   const [aiOutput, setAiOutput] = useState<{ title: string; content: string } | null>(null)
 
   useEffect(() => {
-    document.title = 'NovaCanvas AI — AI Generator'
+    document.title = 'Goat Image AI — AI Generator'
   }, [])
 
   const handleAssistantAction = async (title: string) => {
@@ -164,7 +164,7 @@ export default function GeneratePage() {
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `novacanvas-gen-${Date.now()}.png`
+      a.download = `goatimageai-gen-${Date.now()}.png`
       document.body.appendChild(a)
       a.click()
       document.body.removeChild(a)

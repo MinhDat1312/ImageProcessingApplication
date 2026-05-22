@@ -14,7 +14,7 @@ export function ExplorePage() {
   const [inputVal, setInputVal] = useState(urlQuery)
 
   useEffect(() => {
-    document.title = 'NovaCanvas — Explore'
+    document.title = 'Goat Image AI — Explore'
   }, [])
 
   // Sync local input value with URL parameter changes

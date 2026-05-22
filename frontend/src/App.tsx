@@ -53,10 +53,10 @@ const systemPresets = [
     title: 'Cinematic enhancement',
     description: 'Sharpen, contrast, watermark, and compress for gallery-ready exports.',
     tag: 'System',
-    values: {
+      values: {
       filterType: 'contrast',
       contrastLevel: 1.4,
-      watermarkText: 'NovaCanvas AI',
+      watermarkText: 'Goat Image AI',
       watermarkPosition: 'bottom-right',
       watermarkSize: 24,
       compressionQuality: 0.85,
@@ -303,7 +303,7 @@ export default function App() {
   }
 
   useEffect(() => {
-    document.title = 'NovaCanvas AI — Studio'
+    document.title = 'Goat Image AI — Studio'
   }, [])
 
   useEffect(() => {

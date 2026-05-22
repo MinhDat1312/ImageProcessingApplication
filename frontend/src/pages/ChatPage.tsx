@@ -47,7 +47,7 @@ export function ChatPage() {
   }
 
   useEffect(() => {
-    document.title = 'NovaCanvas — AI Chat'
+    document.title = 'Goat Image AI — AI Chat'
     if (user) {
       fetchHistory()
     }
@@ -153,7 +153,7 @@ export function ChatPage() {
           <div className="message-list" style={{ minHeight: 250, maxHeight: 450, overflowY: 'auto' }}>
             {messages.map((message, index) => (
               <div key={index} className={`chat-message chat-message-${message.role}`}>
-                <span>{message.role === 'assistant' ? 'NovaCanvas AI' : 'You'}</span>
+                <span>{message.role === 'assistant' ? 'Goat Image AI' : 'You'}</span>
                 <p style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
               </div>
             ))}

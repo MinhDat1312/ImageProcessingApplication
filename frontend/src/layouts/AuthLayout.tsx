@@ -39,7 +39,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
                 <img className="brand-logo" src={goatLogo} alt="Goat logo" />
               </span>
               <span className="brand-copy">
-                <strong>NovaCanvas AI</strong>
+                <strong>Goat Image AI</strong>
                 <span>Secure AI image platform</span>
               </span>
             </button>

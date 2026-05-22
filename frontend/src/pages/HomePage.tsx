@@ -24,7 +24,7 @@ export default function HomePage() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    document.title = 'NovaCanvas AI — Home'
+    document.title = 'Goat Image AI — Home'
   }, [])
 
   return (
@@ -37,7 +37,7 @@ export default function HomePage() {
         transition={{ duration: 0.4 }}
       >
         <span className="section-kicker">Unified AI Dashboard</span>
-        <h1>Welcome to NovaCanvas AI</h1>
+        <h1>Welcome to Goat Image AI</h1>
         <p>A next-generation platform for generative AI art creation and high-performance image processing.</p>
       </motion.div>
 

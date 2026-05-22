@@ -1,5 +1,5 @@
-import { AppstoreOutlined, BellOutlined, CommentOutlined, CompassOutlined, PictureOutlined, RocketOutlined, SafetyOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
-import { Button, ConfigProvider, Layout, Tag, theme } from 'antd'
+import { AppstoreOutlined, BellOutlined, CommentOutlined, CompassOutlined, PictureOutlined, RocketOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { Button, ConfigProvider, Layout, theme } from 'antd'
 import { type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import goatLogo from '../assets/goat.png'
@@ -60,69 +60,41 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
         <div className="app-orbit app-orbit-one" />
         <div className="app-orbit app-orbit-two" />
         <div className="app-shell-grid">
-          <aside className="app-sidebar" aria-label="Primary navigation">
-            <button type="button" className="brand-mark brand-mark-sidebar" onClick={() => navigate('/studio')} aria-label="Go to studio">
-              <span className="brand-icon brand-logo-wrap">
-                <img className="brand-logo" src={goatLogo} alt="NovaCanvas logo" />
-              </span>
-              <span className="brand-copy">
-                <strong>NovaCanvas AI</strong>
-                <span>Futuristic image studio</span>
-              </span>
-            </button>
-
-            <div className="sidebar-section">
-              <span className="sidebar-label">Workspace</span>
-              <div className="sidebar-nav">
-                {navItems.map(item => {
-                  const active = location.pathname === item.key || (item.key !== '/' && location.pathname.startsWith(item.key))
-                  return (
-                    <button
-                      key={item.key}
-                      type="button"
-                      className={`sidebar-link ${active ? 'is-active' : ''}`}
-                      onClick={() => navigate(item.key)}
-                    >
-                      <span className="sidebar-link-icon">{item.icon}</span>
-                      <span className="sidebar-link-text">
-                        <strong>{item.label}</strong>
-                        <span>{item.key === '/generate' ? 'AI Image Generator' : item.key === '/studio' ? 'Processing studio' : item.key === '/' ? 'Explore feed' : item.label === 'Gallery' ? 'Your creations' : 'Platform tools'}</span>
-                      </span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-
-            <div className="sidebar-section sidebar-section-stats">
-              <span className="sidebar-label">System</span>
-              <div className="sidebar-stat-card">
-                <Tag color="success" className="sidebar-stat-tag"><ThunderboltOutlined /> Realtime ready</Tag>
-                <p>Glassmorphism workspace, prompt studio, and responsive command center.</p>
-              </div>
-            </div>
-          </aside>
-
-          <div className="app-shell-main">
+          <div className="app-shell-main fullwidth">
             <Header className="app-header">
-              <div className="app-topbar-left">
-                <div className="topbar-page-title">
-                  <span className="section-kicker">AI Dashboard</span>
-                  <strong>Visual workspace</strong>
+              <div className="app-header-inner">
+                <div className="app-topbar-left">
+                  <button type="button" className="brand-mark brand-mark-topbar" onClick={() => navigate('/studio')} aria-label="Go to studio">
+                    <span className="brand-icon brand-logo-wrap">
+                      <img className="brand-logo" src={goatLogo} alt="Goat logo" />
+                    </span>
+                    <span className="brand-copy">
+                      <strong>Goat Image AI</strong>
+                    </span>
+                  </button>
                 </div>
-                <Tag color="processing" className="nav-status"><SafetyOutlined /> Secure workspace</Tag>
-              </div>
 
-              <div className="app-topbar-center">
-                <Tag color="cyan" className="topbar-chip">Dark mode futuristic</Tag>
-                <Tag color="purple" className="topbar-chip">Glass UI</Tag>
-                <Tag color="geekblue" className="topbar-chip">Framer Motion</Tag>
-              </div>
+                <nav className="app-topbar-center topbar-nav" aria-label="Primary navigation">
+                  {navItems.map(item => {
+                    const active = location.pathname === item.key || (item.key !== '/' && location.pathname.startsWith(item.key))
+                    return (
+                      <button
+                        key={item.key}
+                        type="button"
+                        className={`topbar-nav-item ${active ? 'is-active' : ''}`}
+                        onClick={() => navigate(item.key)}
+                      >
+                        <span className="topbar-nav-label">{item.label}</span>
+                      </button>
+                    )
+                  })}
+                </nav>
 
-              <div className="app-actions">
-                <Button type="text" icon={<BellOutlined />} aria-label="Notifications" />
-                {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Sign In</Button>}
-                <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
+                <div className="app-actions">
+                  <Button type="text" icon={<BellOutlined />} aria-label="Notifications" />
+                  {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Sign In</Button>}
+                  <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
+                </div>
               </div>
             </Header>
 
