@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import axiosInstance from '../api/axiosInstance'
 import type { ApiResponse, ImageItem } from '../types'
 import GalleryCard from './GalleryCard'
+import Spotlight from '../components/ui/Spotlight'
 import { Skeleton } from 'antd'
 
 interface FeedItem extends ImageItem {
@@ -9,6 +10,7 @@ interface FeedItem extends ImageItem {
   likes?: number
   comments?: number
   views?: number
+  likedByCurrentUser?: boolean
   owner?: { userId?: string; username?: string; avatar?: string }
 }
 
@@ -21,6 +23,7 @@ interface FeedPageApiItem {
   likes?: number
   comments?: number
   views?: number
+  likedByCurrentUser?: boolean
   ownerId?: string
   ownerName?: string
   ownerAvatar?: string
@@ -76,6 +79,7 @@ export default function HomeFeed({ searchQuery }: HomeFeedProps) {
           likes: it.likes ?? Math.floor(Math.random() * 128),
           comments: it.comments ?? Math.floor(Math.random() * 24),
           views: it.views ?? Math.floor(Math.random() * 400),
+          likedByCurrentUser: it.likedByCurrentUser ?? false,
           owner: {
             userId: it.ownerId || it.owner?.userId || it.user?.userId || '',
             username: it.ownerName || it.owner?.username || it.user?.username || it.username || 'Anonymous',
@@ -119,7 +123,9 @@ export default function HomeFeed({ searchQuery }: HomeFeedProps) {
     <section>
       <div className="masonry">
         {items.map(item => (
-          <GalleryCard key={item.id} item={item} />
+          <Spotlight key={item.id} enabled>
+            <GalleryCard key={item.id} item={item} />
+          </Spotlight>
         ))}
       </div>
 

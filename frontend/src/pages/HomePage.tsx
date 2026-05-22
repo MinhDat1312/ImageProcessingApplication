@@ -1,4 +1,4 @@
-import { Button, Card, Statistic, Tag } from 'antd'
+import { Button, Statistic, Tag } from 'antd'
 import { useEffect } from 'react'
 import { 
   CompassOutlined, 
@@ -11,6 +11,8 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import HomeFeed from '../ui/HomeFeed'
 import TrendingSection from '../ui/TrendingSection'
+import Card from '../components/ui/Card'
+import { Button as DnaButton } from '../components/ui/Button'
 
 const communityStats = [
   { title: 'Creations generated', value: '150k+', icon: <ThunderboltOutlined style={{ color: '#ff007f' }} /> },
@@ -68,15 +70,15 @@ export default function HomePage() {
             <li><span>✓</span> Prompt suggestions & negative prompts</li>
             <li><span>✓</span> One-click Remix in Studio</li>
           </ul>
-          <Button 
-            type="primary" 
-            size="large" 
-            icon={<RightOutlined />} 
+          <DnaButton
+            variant="primary"
+            size="large"
+            icon={<RightOutlined />}
             onClick={() => navigate('/generate')}
             className="portal-cta-btn generator-btn"
           >
             Launch Generator
-          </Button>
+          </DnaButton>
         </motion.div>
 
         {/* Card 2: Studio */}
@@ -106,15 +108,15 @@ export default function HomePage() {
             <li><span>✓</span> Precise watermark & compression layers</li>
             <li><span>✓</span> Real-time before/after side-by-side</li>
           </ul>
-          <Button 
-            type="primary" 
-            size="large" 
-            icon={<RightOutlined />} 
+          <DnaButton
+            variant="primary"
+            size="large"
+            icon={<RightOutlined />}
             onClick={() => navigate('/studio')}
             className="portal-cta-btn studio-btn"
           >
             Open Studio
-          </Button>
+          </DnaButton>
         </motion.div>
       </div>
 

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Button, Card, Input, Segmented, notification as antNotification } from 'antd'
+import { Segmented, notification as antNotification } from 'antd'
 import { 
   ThunderboltOutlined, BulbOutlined, DownloadOutlined, 
   ShareAltOutlined, RocketOutlined, LoadingOutlined, PictureOutlined 
@@ -9,6 +9,11 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useImages } from '../context/useImages'
 import axiosInstance from '../api/axiosInstance'
+import Card from '../components/ui/Card'
+import Input from '../components/ui/Input'
+import { Button } from '../components/ui/Button'
+import Spotlight from '../components/ui/Spotlight'
+import Image from '../components/ui/Image'
 
 const promptSuggestions = [
   'Cinematic portrait of a cyberpunk explorer, volumetric purple light, detailed matte canvas',
@@ -238,16 +243,18 @@ export default function GeneratePage() {
             </div>
 
             <div className="generator-actions-row">
-              <Button
-                type="primary"
-                icon={generatingAI ? <LoadingOutlined /> : <ThunderboltOutlined />}
-                onClick={handleGenerateImage}
-                loading={generatingAI}
-                disabled={generatingAI || !user}
-                className="btn-generate-main"
-              >
-                {user ? 'Generate Image' : 'Sign in to generate'}
-              </Button>
+              <Spotlight enabled={!generatingAI}>
+                <Button
+                  variant="primary"
+                  icon={generatingAI ? <LoadingOutlined /> : <ThunderboltOutlined />}
+                  onClick={handleGenerateImage}
+                  loading={generatingAI}
+                  disabled={generatingAI || !user}
+                  className="btn-generate-main"
+                >
+                  {user ? 'Generate Image' : 'Sign in to generate'}
+                </Button>
+              </Spotlight>
             </div>
           </Card>
 
@@ -341,7 +348,9 @@ export default function GeneratePage() {
                   initial={{ opacity: 0, scale: 0.98 }}
                   animate={{ opacity: 1, scale: 1 }}
                 >
-                  <img src={generatedImageUrl} alt="Generated asset" />
+                  <div className="generated-asset-wrap">
+                    <Image src={generatedImageUrl} alt="Generated asset" placeholder aspectRatio={16/9} />
+                  </div>
                 </motion.div>
               ) : (
                 <div className="render-empty-state">

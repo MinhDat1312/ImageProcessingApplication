@@ -51,6 +51,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
   const [liked, setLiked] = useState(item.likedByCurrentUser ?? false)
   const [comments, setComments] = useState<CommentItem[]>([])
   const [loadingComments, setLoadingComments] = useState(false)
+  const [commentsError, setCommentsError] = useState<string | null>(null)
   const [newComment, setNewComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
 
@@ -81,9 +82,28 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
     setLoadingComments(true)
     try {
       const res = await axiosInstance.get(`/api/v1/images/${item.id}/comments`)
-      setComments(res.data?.items ?? [])
+      // Support multiple response shapes: { items: [...] } or { data: { items: [...] } } or array
+      const payload = res.data ?? {}
+      let rawItems: any[] = []
+      if (Array.isArray(payload)) rawItems = payload
+      else if (Array.isArray(payload.items)) rawItems = payload.items
+      else if (payload.data && Array.isArray(payload.data.items)) rawItems = payload.data.items
+      else rawItems = []
+
+      // Normalize comment shape to CommentItem
+      const normalized = rawItems.map((it: any) => ({
+        id: it.id ?? it.commentId ?? String(Math.random()),
+        user: it.user ? { id: it.user.userId || it.user.id, username: it.user.username || it.user.name, avatar: it.user.avatar } : (it.owner ? { id: it.owner.userId, username: it.owner.username, avatar: it.owner.avatar } : null),
+        content: it.content ?? it.body ?? it.text ?? '',
+        createdAt: it.createdAt ?? it.created_at ?? it.timestamp ?? new Date().toISOString(),
+      }))
+
+      setComments(normalized)
     } catch (err) {
       console.error('Failed to load comments', err)
+      // Surface a friendly message to the UI so users can retry
+      const messageText = (err as any)?.response?.data?.error || (err as Error).message || 'Failed to load comments'
+      setCommentsError(messageText)
     } finally {
       setLoadingComments(false)
     }
@@ -96,19 +116,13 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
     }
 
     try {
-      if (liked) {
-        const res = await axiosInstance.delete(`/api/v1/images/${item.id}/like`)
-        const newLikesCount = res.data?.likes ?? Math.max(0, likes - 1)
-        setLikes(newLikesCount)
-        setLiked(false)
-        if (onUpdateLikes) onUpdateLikes(newLikesCount, false)
-      } else {
-        const res = await axiosInstance.post(`/api/v1/images/${item.id}/like`)
-        const newLikesCount = res.data?.likes ?? (likes + 1)
-        setLikes(newLikesCount)
-        setLiked(true)
-        if (onUpdateLikes) onUpdateLikes(newLikesCount, true)
-      }
+      const res = await axiosInstance.post(`/api/v1/images/${item.id}/like`)
+      const newLikesCount = typeof res.data?.likes === 'number' ? res.data.likes : (liked ? Math.max(0, likes - 1) : likes + 1)
+      const newLikedState = typeof res.data?.liked === 'boolean' ? res.data.liked : !liked
+
+      setLikes(newLikesCount)
+      setLiked(newLikedState)
+      if (onUpdateLikes) onUpdateLikes(newLikesCount, newLikedState)
     } catch (err) {
       const errorMsg = (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to toggle like'
       message.error(errorMsg)
@@ -241,29 +255,36 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
           {/* Comments section */}
           <div className="modal-comments-container">
             <h5>Comments</h5>
-            <List
-              loading={loadingComments}
-              dataSource={comments}
-              locale={{ emptyText: 'No comments yet. Start the conversation!' }}
-              renderItem={(c: CommentItem) => (
-                <List.Item className="comment-list-item">
-                  <List.Item.Meta
-                    avatar={
-                      <Avatar src={c.user?.avatar || undefined}>
-                        {c.user?.username?.slice(0, 2).toUpperCase() || 'AN'}
-                      </Avatar>
-                    }
-                    title={
-                      <div className="comment-user-meta">
-                        <span className="comment-username">{c.user?.username || 'Anonymous'}</span>
-                        <span className="comment-time">{new Date(c.createdAt).toLocaleDateString()}</span>
-                      </div>
-                    }
-                    description={<p className="comment-content-text">{c.content}</p>}
-                  />
-                </List.Item>
-              )}
-            />
+            {commentsError ? (
+              <div style={{ color: 'var(--text-secondary)', display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div>Failed to load comments: {commentsError}</div>
+                <Button type="link" onClick={() => { setCommentsError(null); fetchComments(); }}>Retry</Button>
+              </div>
+            ) : (
+              <List
+                loading={loadingComments}
+                dataSource={comments}
+                locale={{ emptyText: 'No comments yet. Start the conversation!' }}
+                renderItem={(c: CommentItem) => (
+                  <List.Item className="comment-list-item">
+                    <List.Item.Meta
+                      avatar={
+                        <Avatar src={c.user?.avatar || undefined}>
+                          {c.user?.username?.slice(0, 2).toUpperCase() || 'AN'}
+                        </Avatar>
+                      }
+                      title={
+                        <div className="comment-user-meta">
+                          <span className="comment-username">{c.user?.username || 'Anonymous'}</span>
+                          <span className="comment-time">{new Date(c.createdAt).toLocaleDateString()}</span>
+                        </div>
+                      }
+                      description={<p className="comment-content-text">{c.content}</p>}
+                    />
+                  </List.Item>
+                )}
+              />
+            )}
           </div>
 
           {/* Send comment section */}

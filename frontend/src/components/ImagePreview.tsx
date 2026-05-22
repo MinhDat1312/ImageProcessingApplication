@@ -1,5 +1,6 @@
 import { DownloadOutlined, PictureOutlined } from "@ant-design/icons";
-import { Button, Image as AntImage, Skeleton, Tag, Typography } from "antd";
+import { Image as AntImage, Skeleton, Tag, Typography } from "antd";
+import { Button } from "./ui/Button";
 import { motion } from "framer-motion";
 import { ImageComparisonSlider } from "./ImageComparisonSlider";
 
@@ -56,13 +57,12 @@ export function ImagePreview({
               )}
             </div>
             <Button
-              type="primary"
+              variant="primary"
               icon={<DownloadOutlined />}
-              href={processedUrl}
+              href={processedUrl as any}
               target="_blank"
               rel="noopener noreferrer"
               download={processedFilename || "processed.png"}
-              className="download-btn"
               size="large"
             >
               Download result

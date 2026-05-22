@@ -8,6 +8,7 @@ import { UserMenu } from '../components/UserMenu'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import { isAdminRole } from '../utils/roleUtils'
+import AmbientBackground from '../components/AmbientBackground'
 
 const { Header, Content } = Layout
 
@@ -55,6 +56,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
       }}
     >
       <Layout className={`app-layout ${themeMode === 'dark' ? 'theme-dark' : 'theme-light'}`}>
+        <AmbientBackground />
         <div className="app-orbit app-orbit-one" />
         <div className="app-orbit app-orbit-two" />
         <div className="app-shell-grid">

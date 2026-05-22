@@ -1,4 +1,6 @@
-import { Tag, Card, Button } from 'antd'
+import { Tag } from 'antd'
+import Card from '../components/ui/Card'
+import { Button } from '../components/ui/Button'
 import { useNavigate } from 'react-router-dom'
 
 export default function TrendingSection() {
@@ -11,14 +13,7 @@ export default function TrendingSection() {
 
   return (
     <aside>
-      <Card className="glass-card" bordered={false} style={{ marginBottom: 16 }}>
-        <div className="section-header compact">
-          <div>
-            <span className="section-kicker">Trending</span>
-            <h3>Popular prompts</h3>
-          </div>
-        </div>
-
+      <Card className="glass-card" bordered={false} header={<><span className="section-kicker">Trending</span><h3>Popular prompts</h3></>} style={{ marginBottom: 16 }}>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
           {trending.map(tag => (
             <Tag 
@@ -33,13 +28,7 @@ export default function TrendingSection() {
         </div>
       </Card>
 
-      <Card className="glass-card" bordered={false}>
-        <div className="section-header compact">
-          <div>
-            <span className="section-kicker">Explore</span>
-            <h3>Prompt showcase</h3>
-          </div>
-        </div>
+      <Card className="glass-card" bordered={false} header={<><span className="section-kicker">Explore</span><h3>Prompt showcase</h3></>} footer={<Button ghost onClick={() => navigate('/explore')}>See more</Button>}>
         <div style={{ display: 'grid', gap: 8 }}>
           <div 
             className="prompt-sample" 
@@ -62,9 +51,6 @@ export default function TrendingSection() {
           >
             "Macro shot of insect, photoreal, shallow depth"
           </div>
-        </div>
-        <div style={{ marginTop: 12 }}>
-          <Button type="text" onClick={() => navigate('/explore')}>See more</Button>
         </div>
       </Card>
     </aside>

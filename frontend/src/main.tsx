@@ -2,6 +2,7 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import './index.css'
+import './styles/design-tokens.css'
 import App from './App.tsx'
 import HomePage from './pages/HomePage.tsx'
 import GeneratePage from './pages/GeneratePage.tsx'
@@ -19,6 +20,7 @@ import { VerifyPage } from './pages/VerifyPage.tsx'
 import { MyImagesPage } from './pages/MyImagesPage.tsx'
 import { AdminPage } from './pages/AdminPage.tsx'
 import { ProfilePage } from './pages/ProfilePage.tsx'
+import DesignSystemDemo from './pages/DesignSystemDemo'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -98,6 +100,14 @@ createRoot(document.getElementById('root')!).render(
               element={
                 <RootLayout contentClassName="profile-page">
                   <ProfilePage />
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/design-system"
+              element={
+                <RootLayout contentClassName="design-system-page">
+                  <DesignSystemDemo />
                 </RootLayout>
               }
             />

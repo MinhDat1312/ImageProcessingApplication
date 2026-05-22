@@ -1,6 +1,6 @@
-import { Empty, Pagination, Skeleton, Button } from 'antd'
+import { Empty, Pagination, Skeleton, Button, Tabs, Badge } from 'antd'
 import { useEffect, useState } from 'react'
-import { ReloadOutlined, RocketOutlined } from '@ant-design/icons'
+import { ReloadOutlined, RocketOutlined, HeartFilled } from '@ant-design/icons'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
@@ -9,8 +9,21 @@ import { useAuth } from '../context/AuthContext'
 import { ImageDetailModal } from '../components/ImageDetailModal'
 import type { ApiResponse, ImageItem } from '../types'
 
+interface GalleryItem extends ImageItem {
+  prompt?: string
+  likes?: number
+  comments?: number
+  views?: number
+  likedByCurrentUser?: boolean
+  owner?: {
+    userId?: string
+    username?: string
+    avatar?: string
+  }
+}
+
 interface ImagePageResponse {
-  items: ImageItem[]
+  items: GalleryItem[]
   page: number
   size: number
   totalItems: number
@@ -37,11 +50,13 @@ function timeAgo(dateStr: string): string {
 export function MyImagesPage() {
   const { refreshKey, triggerRefresh } = useImages()
   const { user } = useAuth()
-  const [images, setImages] = useState<ImageItem[]>([])
+  const [images, setImages] = useState<GalleryItem[]>([])
   const [total, setTotal] = useState(0)
+  const [likedTotal, setLikedTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
-  const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
+  const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null)
+  const [activeTab, setActiveTab] = useState<'created' | 'liked'>('created')
   const navigate = useNavigate()
 
   const refreshImages = () => {
@@ -53,7 +68,8 @@ export function MyImagesPage() {
     const fetchImages = async () => {
       setLoading(true)
       try {
-        const res = await axiosInstance.get<ApiResponse<ImagePageResponse>>('/api/v1/images/me', {
+        const endpoint = activeTab === 'created' ? '/api/v1/images/me' : '/api/v1/images/me/liked'
+        const res = await axiosInstance.get<ApiResponse<ImagePageResponse>>(endpoint, {
           params: { page: page - 1, size: PAGE_SIZE },
           signal: controller.signal,
         })
@@ -74,7 +90,32 @@ export function MyImagesPage() {
     }
     fetchImages()
     return () => controller.abort()
-  }, [page, refreshKey])
+  }, [page, refreshKey, activeTab])
+
+  useEffect(() => {
+    const controller = new AbortController()
+    const fetchLikedTotal = async () => {
+      try {
+        const res = await axiosInstance.get<ApiResponse<ImagePageResponse>>('/api/v1/images/me/liked', {
+          params: { page: 0, size: 1 },
+          signal: controller.signal,
+        })
+        setLikedTotal(res.data.data?.totalItems ?? 0)
+      } catch (err) {
+        if (!controller.signal.aborted) {
+          console.error('Error fetching liked total:', err)
+          setLikedTotal(0)
+        }
+      }
+    }
+
+    fetchLikedTotal()
+    return () => controller.abort()
+  }, [refreshKey])
+
+  useEffect(() => {
+    setPage(1)
+  }, [activeTab])
 
   // Format selected item for modal compatibility
   const getModalItem = () => {
@@ -82,17 +123,17 @@ export function MyImagesPage() {
     return {
       id: selectedImage.id,
       url: selectedImage.url,
-      prompt: '',
-      likes: 0,
-      comments: 0,
-      views: 0,
+      prompt: selectedImage.prompt ?? '',
+      likes: selectedImage.likes ?? 0,
+      comments: selectedImage.comments ?? 0,
+      views: selectedImage.views ?? 0,
       createdAt: selectedImage.createdAt,
       owner: {
-        userId: user?.userId || '',
-        username: user?.username || 'Me',
-        avatar: user?.avatar || '',
+        userId: selectedImage.owner?.userId || user?.userId || '',
+        username: selectedImage.owner?.username || user?.username || 'Me',
+        avatar: selectedImage.owner?.avatar || user?.avatar || '',
       },
-      likedByCurrentUser: false,
+      likedByCurrentUser: selectedImage.likedByCurrentUser ?? activeTab === 'liked',
     }
   }
 
@@ -109,8 +150,12 @@ export function MyImagesPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <span className="section-kicker">Gallery</span>
-            <h1>My Creations</h1>
-            <p>{total > 0 ? `${total} processed images` : 'No images in your workspace yet'}</p>
+            <h1>{activeTab === 'created' ? 'My Creations' : 'Liked Images'}</h1>
+            <p>
+              {activeTab === 'created'
+                ? (total > 0 ? `${total} processed images` : 'No images in your workspace yet')
+                : (total > 0 ? `${total} liked images` : 'No liked images yet')}
+            </p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Button
@@ -130,6 +175,15 @@ export function MyImagesPage() {
         </div>
       </motion.div>
 
+      <Tabs
+        activeKey={activeTab}
+        onChange={(key) => setActiveTab(key as 'created' | 'liked')}
+        items={[
+          { key: 'created', label: 'My Creations' },
+          { key: 'liked', label: <span><HeartFilled style={{ color: '#ff4d6d' }} /> Liked <Badge count={likedTotal} style={{ marginLeft: 8, backgroundColor: '#ff4d6d' }} /></span> },
+        ]}
+      />
+
       {loading ? (
         <div className="images-grid">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (
@@ -139,11 +193,13 @@ export function MyImagesPage() {
       ) : images.length === 0 ? (
         <div style={{ display: 'grid', placeItems: 'center', minHeight: '48vh' }}>
           <Empty
-            description="You haven't processed any images yet. Open the studio to create your first asset."
+            description={activeTab === 'created'
+              ? "You haven't processed any images yet. Open the studio to create your first asset."
+              : "You haven't liked any image yet. Explore and hit the heart to save favorites."}
             style={{ margin: '48px auto' }}
           >
             <Button type="primary" icon={<RocketOutlined />} onClick={() => navigate('/')}>
-              Go to studio
+              {activeTab === 'created' ? 'Go to studio' : 'Explore gallery'}
             </Button>
           </Empty>
         </div>
@@ -184,6 +240,27 @@ export function MyImagesPage() {
           visible={!!selectedImage}
           onClose={() => setSelectedImage(null)}
           item={modalItem}
+          onUpdateLikes={(newLikes, isLiked) => {
+            if (!selectedImage) return
+            setLikedTotal(prev => {
+              const delta = isLiked ? 1 : -1
+              return Math.max(0, prev + (selectedImage.likedByCurrentUser === isLiked ? 0 : delta))
+            })
+            setImages(prev => {
+              const updated = prev
+                .map(img => img.id === selectedImage.id
+                  ? { ...img, likes: newLikes, likedByCurrentUser: isLiked }
+                  : img
+                )
+
+              if (activeTab === 'liked' && !isLiked) {
+                const filtered = updated.filter(img => img.id !== selectedImage.id)
+                setTotal(t => Math.max(0, t - 1))
+                return filtered
+              }
+              return updated
+            })
+          }}
         />
       )}
     </div>

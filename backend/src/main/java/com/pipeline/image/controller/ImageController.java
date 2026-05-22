@@ -300,7 +300,13 @@ public class ImageController {
             Image image = imageRepository.findById(id).orElseThrow(() -> new InvalidException("Image not found"));
             Optional<com.pipeline.image.entity.ImageLike> existing = imageLikeRepository.findByImage_ImageIdAndUser_UserId(id, user.getUserId());
             if (existing.isPresent()) {
-                return ResponseEntity.badRequest().body(Map.of("error", "Already liked"));
+                imageLikeRepository.delete(existing.get());
+                image.setLikesCount(Math.max(0L, image.getLikesCount() == null ? 0L : image.getLikesCount() - 1));
+                imageRepository.save(image);
+                return ResponseEntity.ok(Map.of(
+                        "likes", image.getLikesCount(),
+                        "liked", false
+                ));
             }
             com.pipeline.image.entity.ImageLike like = new com.pipeline.image.entity.ImageLike();
             like.setImage(image);
@@ -308,7 +314,10 @@ public class ImageController {
             imageLikeRepository.save(like);
             image.setLikesCount(image.getLikesCount() == null ? 1L : image.getLikesCount() + 1);
             imageRepository.save(image);
-            return ResponseEntity.ok(Map.of("likes", image.getLikesCount()));
+            return ResponseEntity.ok(Map.of(
+                    "likes", image.getLikesCount(),
+                    "liked", true
+            ));
         } catch (InvalidException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
@@ -358,7 +367,6 @@ public class ImageController {
         Image image = imageRepository.findById(id).orElse(null);
         if (image == null) return ResponseEntity.notFound().build();
 
-        // derive client key: userId if logged in else remote IP
         String clientKey = "anon:" + httpServletRequest.getRemoteAddr();
         try {
             Optional<User> u = Optional.empty();
@@ -374,23 +382,44 @@ public class ImageController {
     }
 
     @GetMapping("/{id}/comments")
+    @Transactional(readOnly = true)
     public ResponseEntity<?> getComments(@PathVariable("id") String id) {
-        Image image = imageRepository.findById(id).orElse(null);
-        if (image == null) return ResponseEntity.notFound().build();
-        var comments = imageCommentRepository.findByImage_ImageIdOrderByCreatedAtDesc(id).stream().map(c -> Map.<String, Object>of(
-                "id", c.getId(),
-                "user", c.getUser() != null ? Map.of("id", c.getUser().getUserId(), "username", c.getUser().getUsername(), "avatar", c.getUser().getAvatar()) : null,
-                "content", c.getContent(),
-                "createdAt", c.getCreatedAt()
-        )).toList();
-        return ResponseEntity.ok(Map.of("items", comments));
+        try {
+            Image image = imageRepository.findById(id).orElse(null);
+            if (image == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            var comments = imageCommentRepository.findByImage_ImageIdOrderByCreatedAtDesc(id).stream().map(c -> {
+                java.util.Map<String, Object> commentMap = new java.util.LinkedHashMap<>();
+                commentMap.put("id", c.getId());
+
+                java.util.Map<String, Object> userMap = new java.util.LinkedHashMap<>();
+                if (c.getUser() != null) {
+                    userMap.put("id", c.getUser().getUserId());
+                    userMap.put("username", c.getUser().getUsername());
+                    userMap.put("avatar", c.getUser().getAvatar());
+                    commentMap.put("user", userMap);
+                } else {
+                    commentMap.put("user", null);
+                }
+
+                commentMap.put("content", c.getContent());
+                commentMap.put("createdAt", c.getCreatedAt());
+                return commentMap;
+            }).toList();
+
+            return ResponseEntity.ok(Map.of("items", comments));
+        } catch (Exception e) {
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to fetch comments"));
+        }
     }
 
-        @GetMapping("/me")
-        public ResponseEntity<Map<String, Object>> myImages(
+    @GetMapping("/me")
+    public ResponseEntity<Map<String, Object>> myImages(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "9") int size
-        ) {
+    ) {
         try {
             User currentUser = currentUser();
             int normalizedPage = Math.max(page, 0);
@@ -399,26 +428,74 @@ public class ImageController {
 
             Page<Image> imagePage = imageRepository.findByUser_UserIdOrderByCreatedAtDesc(currentUser.getUserId(), pageable);
 
-            var items = imagePage.getContent()
-                    .stream()
-                    .map(image -> Map.<String, Object>of(
-                            "id", image.getImageId(),
-                            "url", image.getUrl(),
-                            "createdAt", image.getCreatedAt()
-                    ))
-                    .toList();
+            Optional<User> currentUserOpt = userRepository.findByEmailWithRole(currentUser.getEmail());
+            var items = imageService.toFeedItems(imagePage, currentUserOpt);
 
             return ResponseEntity.ok(Map.of(
-                "items", items,
-                "page", imagePage.getNumber(),
-                "size", imagePage.getSize(),
-                "totalItems", imagePage.getTotalElements(),
-                "totalPages", imagePage.getTotalPages()
+                    "items", items,
+                    "page", imagePage.getNumber(),
+                    "size", imagePage.getSize(),
+                    "totalItems", imagePage.getTotalElements(),
+                    "totalPages", imagePage.getTotalPages()
             ));
         } catch (InvalidException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
+
+    @GetMapping("/me/liked")
+    public ResponseEntity<Map<String, Object>> myLikedImages(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "9") int size
+    ) {
+        try {
+            User currentUser = currentUser();
+            int normalizedPage = Math.max(page, 0);
+            int normalizedSize = Math.min(Math.max(size, 1), 50);
+            Pageable pageable = PageRequest.of(normalizedPage, normalizedSize);
+
+            Page<com.pipeline.image.entity.ImageLike> likePage = imageLikeRepository
+                    .findByUser_UserIdOrderByCreatedAtDesc(currentUser.getUserId(), pageable);
+
+            var items = likePage.getContent()
+                    .stream()
+                    .map(like -> {
+                        Image image = like.getImage();
+                        java.util.Map<String, Object> item = new java.util.LinkedHashMap<>();
+                        item.put("id", image.getImageId());
+                        item.put("url", image.getUrl());
+                        item.put("createdAt", image.getCreatedAt());
+                        item.put("prompt", image.getPrompt());
+                        item.put("likes", image.getLikesCount());
+                        item.put("comments", image.getCommentsCount());
+                        item.put("views", image.getViewsCount());
+                        item.put("likedByCurrentUser", true);
+
+                        if (image.getUser() != null) {
+                            java.util.Map<String, Object> owner = new java.util.LinkedHashMap<>();
+                            owner.put("userId", image.getUser().getUserId());
+                            owner.put("username", image.getUser().getUsername());
+                            owner.put("avatar", image.getUser().getAvatar());
+                            item.put("owner", owner);
+                        } else {
+                            item.put("owner", null);
+                        }
+
+                        return item;
+                    })
+                    .toList();
+
+            return ResponseEntity.ok(Map.of(
+                    "items", items,
+                    "page", likePage.getNumber(),
+                    "size", likePage.getSize(),
+                    "totalItems", likePage.getTotalElements(),
+                    "totalPages", likePage.getTotalPages()
+            ));
+        } catch (InvalidException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
+    }
 
     private User currentUser() throws InvalidException {
         String currentEmail = SecurityUtil.getCurrentUserEmail();

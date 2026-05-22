@@ -63,9 +63,9 @@ export default function GalleryCard({ item }: GalleryCardProps) {
         onClick={handleCardClick}
         style={{ cursor: 'pointer' }}
       >
-        <div className="gallery-image-wrap">
-          <img src={item.url} alt={item.id} loading="lazy" style={{ width: '100%', display: 'block', borderRadius: 12 }} />
-        </div>
+          <div className="gallery-image-wrap">
+            <img src={item.url} alt={item.id} loading="lazy" />
+          </div>
         <div className="gallery-card-body">
           <p className="prompt-preview" title={item.prompt}>{item.prompt ?? '—'}</p>
           <div className="gallery-meta">
