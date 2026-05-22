@@ -4,15 +4,18 @@ import com.pipeline.image.common.FilterType;
 import com.pipeline.image.core.ImagePipeline;
 import com.pipeline.image.core.PipelineContext;
 import com.pipeline.image.entity.Image;
+import com.pipeline.image.entity.ImageVersion;
 import com.pipeline.image.entity.User;
 import com.pipeline.image.dto.request.ProcessRequestDto;
 import com.pipeline.image.dto.response.ProcessResponseDto;
 import com.pipeline.image.exception.InvalidException;
 import com.pipeline.image.repository.ImageRepository;
 import com.pipeline.image.repository.UserRepository;
+import com.pipeline.image.repository.ImageVersionRepository;
 import com.pipeline.image.service.StorageService;
 import com.pipeline.image.stages.*;
 import com.pipeline.image.util.SecurityUtil;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -26,9 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Map;
 import java.util.Optional;
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
 import com.pipeline.image.repository.ImageLikeRepository;
 import com.pipeline.image.repository.ImageCommentRepository;
 import com.pipeline.image.repository.ImageSaveRepository;
@@ -51,6 +51,8 @@ public class ImageController {
     private final ImageCommentRepository imageCommentRepository;
     private final ImageSaveRepository imageSaveRepository;
     private final ImageService imageService;
+    private final ImageVersionRepository imageVersionRepository;
+    private final ObjectMapper objectMapper;
     private final HttpServletRequest httpServletRequest;
 
     @PostMapping("/process")
@@ -65,28 +67,63 @@ public class ImageController {
             User currentUser = this.currentUser();
             log.info("User authenticated: {}", currentUser.getEmail());
 
+            // 1. Upload original file to S3 first for version tracking
+            log.info("Uploading original file to S3...");
+            var originalUpload = storageService.handleUploadFile(file, currentUser.getUserId()).join();
+            String originalUrl = originalUpload.getUrl();
+            log.info("Original file uploaded to S3: {}", originalUrl);
+
+            // 2. Load the input image to get original dimensions before processing
             PipelineContext context = new PipelineContext(file);
             context.setUserId(currentUser.getUserId());
 
+            InputStage inputStage = new InputStage();
+            context = inputStage.process(context);
+            if (context.isHasError()) {
+                log.error("Input stage error: {}", context.getErrorMessage());
+                return ResponseEntity.badRequest().body(Map.of("error", context.getErrorMessage()));
+            }
+
+            int origWidth = context.getImage() != null ? context.getImage().getWidth() : 0;
+            int origHeight = context.getImage() != null ? context.getImage().getHeight() : 0;
+
+            // 3. Build and execute processing pipeline
             ImagePipeline pipeline = new ImagePipeline();
 
-            pipeline.addStage(new InputStage());
-            log.info("Added InputStage");
+            // Crop
+            if (requestDto.getCropX() != null && requestDto.getCropY() != null &&
+                    requestDto.getCropWidth() != null && requestDto.getCropHeight() != null) {
+                pipeline.addStage(new CropStage(
+                        requestDto.getCropX(),
+                        requestDto.getCropY(),
+                        requestDto.getCropWidth(),
+                        requestDto.getCropHeight()
+                ));
+                log.info("Added CropStage: x={}, y={}, w={}, h={}",
+                        requestDto.getCropX(), requestDto.getCropY(), requestDto.getCropWidth(), requestDto.getCropHeight());
+            }
 
+            // Rotate
+            if (requestDto.getRotateAngle() != null) {
+                pipeline.addStage(new RotateStage(requestDto.getRotateAngle()));
+                log.info("Added RotateStage: {} degrees", requestDto.getRotateAngle());
+            }
+
+            // Resize
             if (requestDto.getResizeWidth() != null && requestDto.getResizeHeight() != null) {
                 pipeline.addStage(new ResizeStage(requestDto.getResizeWidth(), requestDto.getResizeHeight()));
                 log.info("Added ResizeStage: {}x{}", requestDto.getResizeWidth(), requestDto.getResizeHeight());
             }
 
-            if (FilterType.grayscale.equals(requestDto.getFilterType()) ||
-                    FilterType.sepia.equals(requestDto.getFilterType()) ||
-                    FilterType.brightness.equals(requestDto.getFilterType())
-            ) {
+            // Filter (Grayscale, Sepia, Brightness, Contrast, Blur, Sharpen)
+            if (requestDto.getFilterType() != null && !FilterType.none.equals(requestDto.getFilterType())) {
                 float brightness = requestDto.getBrightnessLevel() != null ? requestDto.getBrightnessLevel() : 1.0f;
-                pipeline.addStage(new FilterStage(requestDto.getFilterType(), brightness));
-                log.info("Added FilterStage: {} brightness: {}", requestDto.getFilterType(), brightness);
+                float contrast = requestDto.getContrastLevel() != null ? requestDto.getContrastLevel() : 1.0f;
+                pipeline.addStage(new FilterStage(requestDto.getFilterType(), brightness, contrast));
+                log.info("Added FilterStage: {}, brightness={}, contrast={}", requestDto.getFilterType(), brightness, contrast);
             }
 
+            // Watermark
             if (requestDto.getWatermarkText() != null && !requestDto.getWatermarkText().trim().isEmpty()) {
                 pipeline.addStage(new WatermarkStage(
                         requestDto.getWatermarkText(),
@@ -96,13 +133,15 @@ public class ImageController {
                 log.info("Added WatermarkStage: {}", requestDto.getWatermarkText());
             }
 
+            // Compression
             if (requestDto.getCompressionQuality() != null) {
                 pipeline.addStage(new CompressionStage(requestDto.getCompressionQuality()));
                 log.info("Added CompressionStage: quality {}", requestDto.getCompressionQuality());
             }
 
+            // Output S3 Upload
             pipeline.addStage(new OutputStage(storageService));
-            log.info("Added OutputStage, executing pipeline...");
+            log.info("Executing processing pipeline...");
 
             context = pipeline.execute(context);
 
@@ -119,11 +158,41 @@ public class ImageController {
                 return ResponseEntity.internalServerError().body(Map.of("error", "Processed image URL was not generated"));
             }
 
+            // 4. Save Main Image Metadata
             Image savedImage = new Image();
             savedImage.setUser(currentUser);
             savedImage.setUrl(context.getOutputUrl());
+            savedImage.setWidth(context.getImage() != null ? context.getImage().getWidth() : 0);
+            savedImage.setHeight(context.getImage() != null ? context.getImage().getHeight() : 0);
+            savedImage.setTitle(file.getOriginalFilename());
+            savedImage.setVisibility(Visibility.PUBLIC); // Default public to show in feed
             Image persistedImage = this.imageRepository.save(savedImage);
             log.info("Image saved to DB: {}", persistedImage.getImageId());
+
+            // 5. Save ORIGINAL and PROCESSED versions in DB
+            ImageVersion originalVersion = new ImageVersion();
+            originalVersion.setImage(persistedImage);
+            originalVersion.setVersionNumber(1);
+            originalVersion.setUrl(originalUrl);
+            originalVersion.setWidth(origWidth);
+            originalVersion.setHeight(origHeight);
+            originalVersion.setFileSize(file.getSize());
+            originalVersion.setVersionType("ORIGINAL");
+            originalVersion.setPipelineStepsJson("[]");
+            imageVersionRepository.save(originalVersion);
+            log.info("Saved original version tracking record");
+
+            ImageVersion processedVersion = new ImageVersion();
+            processedVersion.setImage(persistedImage);
+            processedVersion.setVersionNumber(2);
+            processedVersion.setUrl(context.getOutputUrl());
+            processedVersion.setWidth(context.getImage() != null ? context.getImage().getWidth() : 0);
+            processedVersion.setHeight(context.getImage() != null ? context.getImage().getHeight() : 0);
+            processedVersion.setFileSize(null);
+            processedVersion.setVersionType("PROCESSED");
+            processedVersion.setPipelineStepsJson(objectMapper.writeValueAsString(requestDto));
+            imageVersionRepository.save(processedVersion);
+            log.info("Saved processed version tracking record");
 
             ProcessResponseDto response = ProcessResponseDto.builder()
                     .url(context.getOutputUrl())
@@ -147,7 +216,64 @@ public class ImageController {
         int normalizedPage = Math.max(page, 0);
         int normalizedSize = Math.min(Math.max(size, 1), 50);
         Pageable pageable = PageRequest.of(normalizedPage, normalizedSize);
-        Page<Image> imagePage = imageService.getPublicImages(pageable);
+        Page<Image> imagePage = imageService.getPublicImages(null, pageable);
+
+        Optional<User> currentUserOpt = Optional.empty();
+        String email = SecurityUtil.getCurrentUserEmail();
+        if (email != null && !email.isBlank()) {
+            currentUserOpt = userRepository.findByEmailWithRole(email);
+        }
+
+        List<ImageFeedItem> items = imageService.toFeedItems(imagePage, currentUserOpt);
+
+        return ResponseEntity.ok(Map.of(
+                "items", items,
+                "page", imagePage.getNumber(),
+                "size", imagePage.getSize(),
+                "totalItems", imagePage.getTotalElements(),
+                "totalPages", imagePage.getTotalPages()
+        ));
+    }
+
+    @GetMapping("/search")
+    public ResponseEntity<?> searchFeed(
+            @RequestParam(name = "q", required = false) String query,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        int normalizedPage = Math.max(page, 0);
+        int normalizedSize = Math.min(Math.max(size, 1), 50);
+        Pageable pageable = PageRequest.of(normalizedPage, normalizedSize);
+        Page<Image> imagePage = imageService.getPublicImages(query, pageable);
+
+        Optional<User> currentUserOpt = Optional.empty();
+        String email = SecurityUtil.getCurrentUserEmail();
+        if (email != null && !email.isBlank()) {
+            currentUserOpt = userRepository.findByEmailWithRole(email);
+        }
+
+        List<ImageFeedItem> items = imageService.toFeedItems(imagePage, currentUserOpt);
+
+        return ResponseEntity.ok(Map.of(
+                "items", items,
+                "page", imagePage.getNumber(),
+                "size", imagePage.getSize(),
+                "totalItems", imagePage.getTotalElements(),
+                "totalPages", imagePage.getTotalPages()
+        ));
+    }
+
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<?> userPublicImages(
+            @PathVariable String userId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        int normalizedPage = Math.max(page, 0);
+        int normalizedSize = Math.min(Math.max(size, 1), 50);
+        Pageable pageable = PageRequest.of(normalizedPage, normalizedSize);
+        Page<Image> imagePage = imageRepository.findByVisibilityAndUser_UserIdOrderByCreatedAtDesc(
+                com.pipeline.image.common.Visibility.PUBLIC, userId, pageable);
 
         Optional<User> currentUserOpt = Optional.empty();
         String email = SecurityUtil.getCurrentUserEmail();

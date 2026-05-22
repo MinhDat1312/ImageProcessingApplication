@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import './index.css'
 import App from './App.tsx'
 import HomePage from './pages/HomePage.tsx'
+import GeneratePage from './pages/GeneratePage.tsx'
 import ExplorePage from './pages/ExplorePage.tsx'
 import ChatPage from './pages/ChatPage.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
@@ -17,6 +18,7 @@ import { RegisterPage } from './pages/RegisterPage.tsx'
 import { VerifyPage } from './pages/VerifyPage.tsx'
 import { MyImagesPage } from './pages/MyImagesPage.tsx'
 import { AdminPage } from './pages/AdminPage.tsx'
+import { ProfilePage } from './pages/ProfilePage.tsx'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -52,6 +54,14 @@ createRoot(document.getElementById('root')!).render(
               }
             />
             <Route
+              path="/generate"
+              element={
+                <RootLayout contentClassName="generator-page">
+                  <GeneratePage />
+                </RootLayout>
+              }
+            />
+            <Route
               path="/studio"
               element={
                 <RootLayout contentClassName="studio-page">
@@ -72,6 +82,22 @@ createRoot(document.getElementById('root')!).render(
               element={
                 <RootLayout contentClassName="admin-page">
                   <AdminProtectedRoute><AdminPage /></AdminProtectedRoute>
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <RootLayout contentClassName="profile-page">
+                  <ProtectedRoute><ProfilePage /></ProtectedRoute>
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/profile/:userId"
+              element={
+                <RootLayout contentClassName="profile-page">
+                  <ProfilePage />
                 </RootLayout>
               }
             />

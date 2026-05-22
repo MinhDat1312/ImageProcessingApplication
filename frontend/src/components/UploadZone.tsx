@@ -81,7 +81,7 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
                   <FileImageOutlined /> {file?.name ?? 'Selected image'}
                 </Text>
                 <Text type="secondary" className="upload-preview-name">
-                  {disabled ? 'Đăng nhập để thay đổi ảnh' : 'Click or drag to replace this image'}
+                  {disabled ? 'Sign in to change image' : 'Click or drag to replace this image'}
                 </Text>
                 {file && (
                   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -104,12 +104,12 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
               </p>
               <p className="ant-upload-text">
                 {disabled
-                  ? 'Đăng nhập để mở khóa private workspace'
+                  ? 'Sign in to unlock private workspace'
                   : 'Drop an image, paste a screenshot, or click to upload'}
               </p>
               <p className="ant-upload-hint">
                 {disabled
-                  ? 'Bạn cần đăng nhập để lưu lịch sử, gallery, và pipeline presets'
+                  ? 'Please sign in to save history, gallery, and pipeline presets'
                   : 'PNG, JPG, WEBP, AVIF • instant local preview, then process in one flow'}
               </p>
               <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 14 }}>

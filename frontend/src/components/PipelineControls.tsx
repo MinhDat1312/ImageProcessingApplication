@@ -76,10 +76,13 @@ export function PipelineControls({
                   { value: "grayscale", label: "Grayscale" },
                   { value: "sepia", label: "Sepia" },
                   { value: "brightness", label: "Brightness" },
+                  { value: "contrast", label: "Contrast" },
+                  { value: "blur", label: "Blur" },
+                  { value: "sharpen", label: "Sharpen" },
                 ]}
               />
             </Form.Item>
-            <AnimatePresence>
+            <AnimatePresence mode="wait">
               {filterType === "brightness" && (
                 <motion.div
                   key="brightness-slider"
@@ -104,12 +107,72 @@ export function PipelineControls({
                   </Form.Item>
                 </motion.div>
               )}
+              {filterType === "contrast" && (
+                <motion.div
+                  key="contrast-slider"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.25 }}
+                  style={{ overflow: "hidden" }}
+                >
+                  <Form.Item
+                    name="contrastLevel"
+                    label="Contrast level"
+                    initialValue={1.0}
+                  >
+                    <Slider
+                      min={0.1}
+                      max={3.0}
+                      step={0.1}
+                      tooltip={{ formatter: (value) => `${value}x` }}
+                      marks={{ 0.1: "0.1", 1: "1.0", 3: "3.0" }}
+                    />
+                  </Form.Item>
+                </motion.div>
+              )}
             </AnimatePresence>
           </div>
         </section>
 
         <section className="control-section">
-          <h3>3. Watermark layer</h3>
+          <h3>3. Crop image</h3>
+          <div className="control-fields two-col">
+            <Form.Item name="cropX" label="Crop X">
+              <InputNumber placeholder="X offset" style={{ width: "100%" }} min={0} />
+            </Form.Item>
+            <Form.Item name="cropY" label="Crop Y">
+              <InputNumber placeholder="Y offset" style={{ width: "100%" }} min={0} />
+            </Form.Item>
+          </div>
+          <div className="control-fields two-col">
+            <Form.Item name="cropWidth" label="Width">
+              <InputNumber placeholder="Width" style={{ width: "100%" }} min={1} />
+            </Form.Item>
+            <Form.Item name="cropHeight" label="Height">
+              <InputNumber placeholder="Height" style={{ width: "100%" }} min={1} />
+            </Form.Item>
+          </div>
+        </section>
+
+        <section className="control-section">
+          <h3>4. Rotate</h3>
+          <div className="control-fields one-col">
+            <Form.Item name="rotateAngle" label="Rotation angle" initialValue={0}>
+              <Select
+                options={[
+                  { value: 0, label: "0° (None)" },
+                  { value: 90, label: "90°" },
+                  { value: 180, label: "180°" },
+                  { value: 270, label: "270°" },
+                ]}
+              />
+            </Form.Item>
+          </div>
+        </section>
+
+        <section className="control-section">
+          <h3>5. Watermark layer</h3>
           <div className="control-fields one-col">
             <Form.Item name="watermarkText" label="Watermark text">
               <Input placeholder="Leave empty to disable watermark" />
@@ -134,7 +197,7 @@ export function PipelineControls({
         </section>
 
         <section className="control-section">
-          <h3>4. Compression</h3>
+          <h3>6. Compression</h3>
           <div className="control-fields one-col">
             <Form.Item name="compressionQuality" label="JPEG quality">
               <Slider

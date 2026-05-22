@@ -1,4 +1,4 @@
-import { DownOutlined, LogoutOutlined, PictureOutlined, DashboardOutlined } from '@ant-design/icons'
+import { DownOutlined, LogoutOutlined, PictureOutlined, DashboardOutlined, UserOutlined } from '@ant-design/icons'
 import { Avatar, Dropdown, Space, Tag, Typography } from 'antd'
 import type { MenuProps } from 'antd'
 import { useCallback, useMemo } from 'react'
@@ -48,6 +48,12 @@ export function UserMenu() {
     },
     { type: 'divider' },
     {
+      key: 'profile',
+      icon: <UserOutlined />,
+      label: 'My Profile',
+      onClick: () => navigate('/profile'),
+    },
+    {
       key: 'my-images',
       icon: <PictureOutlined />,
       label: 'My Images',
@@ -66,7 +72,7 @@ export function UserMenu() {
     {
       key: 'logout',
       icon: <LogoutOutlined />,
-      label: 'Đăng xuất',
+      label: 'Sign out',
       danger: true,
       onClick: handleLogout,
     },

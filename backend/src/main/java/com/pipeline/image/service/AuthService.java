@@ -5,6 +5,7 @@ import com.pipeline.image.common.Role;
 import com.pipeline.image.dto.request.auth.LoginRequest;
 import com.pipeline.image.dto.request.auth.RegisterRequest;
 import com.pipeline.image.dto.request.auth.VerifyUserRequest;
+import com.pipeline.image.dto.request.auth.UpdateProfileRequest;
 import com.pipeline.image.dto.response.auth.LoginResponse;
 import com.pipeline.image.dto.response.auth.UserResponse;
 import com.pipeline.image.entity.LoginLog;
@@ -266,6 +267,40 @@ public class AuthService {
         return this.convertToUserResponse(user);
     }
 
+    public UserResponse handleGetUserProfile(String userId) throws InvalidException {
+        User user = this.userRepository.findByIdWithRole(userId)
+                .orElseThrow(() -> new InvalidException("User not found"));
+        return this.convertToUserResponse(user);
+    }
+
+    public UserResponse handleUpdateProfile(UpdateProfileRequest request, MultipartFile avatarFile) throws InvalidException {
+        String email = SecurityUtil.getCurrentUserEmail();
+        User user = this.userRepository.findByEmailWithRole(email)
+                .orElseThrow(() -> new InvalidException("Tài khoản không hợp lệ"));
+
+        if (request.getUsername() != null && !request.getUsername().isBlank()) {
+            user.setUsername(request.getUsername());
+        }
+        if (request.getGender() != null) {
+            user.setGender(request.getGender());
+        }
+        if (request.getBio() != null) {
+            user.setBio(request.getBio());
+        }
+
+        if (avatarFile != null && !avatarFile.isEmpty()) {
+            try {
+                String avatarUrl = BasicUtil.uploadImage(avatarFile, "avatars", this.storageService);
+                user.setAvatar(avatarUrl);
+            } catch (InvalidException e) {
+                throw new InvalidException("Lỗi khi upload avatar");
+            }
+        }
+
+        User savedUser = this.userRepository.save(user);
+        return this.convertToUserResponse(savedUser);
+    }
+
     public void handleVerifyUser(VerifyUserRequest verifyUser) throws InvalidException {
         User user = this.userRepository.findByEmailWithRole(verifyUser.getEmail())
                 .orElseThrow(() -> new InvalidException("Tài khoản không hợp lệ"));
@@ -308,6 +343,7 @@ public class AuthService {
         loginResponse.setEmail(user.getEmail());
         loginResponse.setGender(user.getGender());
         loginResponse.setAvatar(Objects.requireNonNullElse(user.getAvatar(), ""));
+        loginResponse.setBio(Objects.requireNonNullElse(user.getBio(), ""));
         loginResponse.setEnabled(user.isEnabled());
 
         if (user.getRole() != null) {
@@ -327,6 +363,7 @@ public class AuthService {
         userResponse.setEmail(user.getEmail());
         userResponse.setGender(user.getGender());
         userResponse.setAvatar(Objects.requireNonNullElse(user.getAvatar(), ""));
+        userResponse.setBio(Objects.requireNonNullElse(user.getBio(), ""));
         userResponse.setEnabled(user.isEnabled());
         userResponse.setCreatedAt(user.getCreatedAt());
         userResponse.setUpdatedAt(user.getUpdatedAt());

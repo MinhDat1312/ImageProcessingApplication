@@ -3,6 +3,7 @@ package com.pipeline.image.controller;
 import com.pipeline.image.dto.request.auth.LoginRequest;
 import com.pipeline.image.dto.request.auth.RegisterRequest;
 import com.pipeline.image.dto.request.auth.VerifyUserRequest;
+import com.pipeline.image.dto.request.auth.UpdateProfileRequest;
 import com.pipeline.image.dto.response.auth.LoginResponse;
 import com.pipeline.image.dto.response.auth.UserResponse;
 import com.pipeline.image.exception.InvalidException;
@@ -15,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.Map;
 
@@ -62,6 +64,29 @@ public class AuthController {
     public ResponseEntity<Object> getCurrentUser() {
         try {
             UserResponse result = this.authService.handleGetCurrentUser();
+            return ResponseEntity.status(HttpStatus.OK).body(result);
+        } catch (InvalidException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/users")
+    public ResponseEntity<Object> updateProfile(
+            @Valid @ModelAttribute UpdateProfileRequest request,
+            @RequestParam(value = "avatar", required = false) MultipartFile avatar
+    ) {
+        try {
+            UserResponse result = this.authService.handleUpdateProfile(request, avatar);
+            return ResponseEntity.status(HttpStatus.OK).body(result);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/users/{userId}")
+    public ResponseEntity<Object> getUserProfile(@PathVariable String userId) {
+        try {
+            UserResponse result = this.authService.handleGetUserProfile(userId);
             return ResponseEntity.status(HttpStatus.OK).body(result);
         } catch (InvalidException e) {
             return ResponseEntity.badRequest().body(e.getMessage());

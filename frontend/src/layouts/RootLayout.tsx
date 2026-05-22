@@ -13,6 +13,7 @@ const { Header, Content } = Layout
 
 const baseNavItems = [
   { key: '/', label: 'Home', icon: <AppstoreOutlined /> },
+  { key: '/generate', label: 'AI Generator', icon: <ThunderboltOutlined /> },
   { key: '/studio', label: 'Studio', icon: <RocketOutlined /> },
   { key: '/explore', label: 'Explore', icon: <CompassOutlined /> },
   { key: '/chat', label: 'AI Chat', icon: <CommentOutlined /> },
@@ -83,7 +84,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
                       <span className="sidebar-link-icon">{item.icon}</span>
                       <span className="sidebar-link-text">
                         <strong>{item.label}</strong>
-                        <span>{item.key === '/studio' ? 'Processing studio' : item.key === '/' ? 'Explore feed' : item.label === 'Gallery' ? 'Your exports' : 'Platform tools'}</span>
+                        <span>{item.key === '/generate' ? 'AI Image Generator' : item.key === '/studio' ? 'Processing studio' : item.key === '/' ? 'Explore feed' : item.label === 'Gallery' ? 'Your creations' : 'Platform tools'}</span>
                       </span>
                     </button>
                   )
@@ -118,7 +119,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
 
               <div className="app-actions">
                 <Button type="text" icon={<BellOutlined />} aria-label="Notifications" />
-                {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Đăng nhập</Button>}
+                {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Sign In</Button>}
                 <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
               </div>
             </Header>

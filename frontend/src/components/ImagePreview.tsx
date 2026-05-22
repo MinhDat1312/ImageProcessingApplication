@@ -1,6 +1,7 @@
 import { DownloadOutlined, PictureOutlined } from "@ant-design/icons";
 import { Button, Image as AntImage, Skeleton, Tag, Typography } from "antd";
 import { motion } from "framer-motion";
+import { ImageComparisonSlider } from "./ImageComparisonSlider";
 
 const { Text } = Typography;
 
@@ -31,62 +32,68 @@ export function ImagePreview({
   }
 
   return (
-    <div className="image-preview-grid">
-      <div className="image-panel">
-        <Text strong className="image-panel-title">
-          Original image
-        </Text>
-        <div className="image-box image-box-original">
-          <AntImage
-            src={originalUrl}
-            style={{ width: "100%", borderRadius: 12, objectFit: "contain" }}
+    <div className="image-preview-container" style={{ width: "100%" }}>
+      {processedUrl ? (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.35 }}
+          style={{ width: "100%" }}
+        >
+          <ImageComparisonSlider
+            originalUrl={originalUrl}
+            processedUrl={processedUrl}
+            height="400px"
           />
-        </div>
-      </div>
-
-      <div className="image-panel">
-        <Text strong className="image-panel-title">
-          Processed image
-          {executionTime !== null && (
-            <Tag color="success" style={{ marginLeft: 6 }}>
-              {executionTime}ms
-            </Tag>
-          )}
-        </Text>
-
-        {processedUrl ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.97 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.35 }}
-          >
-            <div className="image-box image-box-processed">
-              <AntImage
-                src={processedUrl}
-                style={{ width: "100%", borderRadius: 12, objectFit: "contain" }}
-              />
-            </div>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
-              <Tag color="cyan">Result ready</Tag>
-              <Tag color="geekblue">{processedFilename || 'processed.jpg'}</Tag>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+              <Tag color="cyan" style={{ margin: 0 }}>Result ready</Tag>
+              <Tag color="geekblue" style={{ margin: 0 }}>{processedFilename || 'processed.png'}</Tag>
+              {executionTime !== null && (
+                <Tag color="success" style={{ margin: 0 }}>
+                  {executionTime}ms
+                </Tag>
+              )}
             </div>
             <Button
+              type="primary"
               icon={<DownloadOutlined />}
               href={processedUrl}
-              download={processedFilename || "processed.jpg"}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={processedFilename || "processed.png"}
               className="download-btn"
               size="large"
             >
               Download result
             </Button>
-          </motion.div>
-        ) : (
-          <div className="image-box image-box-pending">
-            <Skeleton active title={false} paragraph={{ rows: 4 }} />
-            <div style={{ marginTop: 12 }}>Waiting for the pipeline to finish...</div>
           </div>
-        )}
-      </div>
+        </motion.div>
+      ) : (
+        <div className="image-preview-grid">
+          <div className="image-panel">
+            <Text strong className="image-panel-title">
+              Original image
+            </Text>
+            <div className="image-box image-box-original">
+              <AntImage
+                src={originalUrl}
+                style={{ width: "100%", borderRadius: 12, objectFit: "contain" }}
+              />
+            </div>
+          </div>
+
+          <div className="image-panel">
+            <Text strong className="image-panel-title">
+              Processed image
+            </Text>
+            <div className="image-box image-box-pending">
+              <Skeleton active title={false} paragraph={{ rows: 4 }} />
+              <div style={{ marginTop: 12 }}>Waiting for the pipeline to finish...</div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

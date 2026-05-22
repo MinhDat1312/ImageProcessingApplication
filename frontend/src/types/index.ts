@@ -5,8 +5,14 @@ export const AUTH_LOGOUT_EVENT = 'auth:logout' as const
 export interface ProcessFormValues {
   resizeWidth?: number;
   resizeHeight?: number;
-  filterType: "none" | "grayscale" | "sepia" | "brightness";
+  filterType: "none" | "grayscale" | "sepia" | "brightness" | "contrast" | "blur" | "sharpen";
   brightnessLevel?: number;
+  contrastLevel?: number;
+  cropX?: number;
+  cropY?: number;
+  cropWidth?: number;
+  cropHeight?: number;
+  rotateAngle?: number;
   watermarkText?: string;
   watermarkPosition:
     | "top-left"
@@ -50,6 +56,7 @@ export interface LoginResponse {
   email: string
   gender: 'MALE' | 'FEMALE' | 'OTHER'
   avatar: string
+  bio?: string
   enabled: boolean
   role: { roleId: string; name: string }
 }

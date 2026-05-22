@@ -38,7 +38,7 @@ export function AdminPage() {
               label: (
                 <>
                   <UserOutlined />
-                  Quản Lý Tài Khoản
+                  Accounts Management
                 </>
               ),
               children: <AccountsTab />,
@@ -48,7 +48,7 @@ export function AdminPage() {
               label: (
                 <>
                   <FileImageOutlined />
-                  Quản Lý Hình Ảnh
+                  Images Management
                 </>
               ),
               children: <ImagesTab />,
@@ -58,7 +58,7 @@ export function AdminPage() {
               label: (
                 <>
                   <SafetyOutlined />
-                  Vai Trò & Quyền Hạn
+                  Roles & Permissions
                 </>
               ),
               children: <RolesPermissionsTab />,
@@ -68,7 +68,7 @@ export function AdminPage() {
               label: (
                 <>
                   <BarChartOutlined />
-                  Thống Kê Truy Cập
+                  Access Statistics
                 </>
               ),
               children: <AccessStatsTab />,

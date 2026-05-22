@@ -2,17 +2,43 @@ import { Button, Card, Input, Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { CompassOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
+import { useSearchParams } from 'react-router-dom'
 import HomeFeed from '../ui/HomeFeed'
 import TrendingSection from '../ui/TrendingSection'
 
 const discoveryTags = ['cinematic portrait', 'neo futuristic', 'product render', 'editorial', 'cinematic lighting']
 
 export function ExplorePage() {
-  const [query, setQuery] = useState('')
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlQuery = searchParams.get('q') || ''
+  const [inputVal, setInputVal] = useState(urlQuery)
 
   useEffect(() => {
     document.title = 'NovaCanvas — Explore'
   }, [])
+
+  // Sync local input value with URL parameter changes
+  useEffect(() => {
+    setInputVal(urlQuery)
+  }, [urlQuery])
+
+  const triggerSearch = (val: string) => {
+    setSearchParams(prev => {
+      const value = val.trim()
+      if (value) {
+        prev.set('q', value)
+      } else {
+        prev.delete('q')
+      }
+      return prev
+    })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      triggerSearch(inputVal)
+    }
+  }
 
   return (
     <div className="explore-shell">
@@ -33,17 +59,23 @@ export function ExplorePage() {
             <Input
               size="large"
               prefix={<SearchOutlined />}
-              placeholder="Search prompt, tag, creator, style"
-              value={query}
-              onChange={event => setQuery(event.target.value)}
+              placeholder="Search prompt, tag, creator, style..."
+              value={inputVal}
+              onChange={event => setInputVal(event.target.value)}
+              onKeyDown={handleKeyDown}
             />
-            <Button size="large" type="primary" icon={<CompassOutlined />}>
+            <Button 
+              size="large" 
+              type="primary" 
+              icon={<CompassOutlined />}
+              onClick={() => triggerSearch(inputVal)}
+            >
               Search
             </Button>
           </div>
           <div className="prompt-seed-list prompt-seed-inline">
             {discoveryTags.map(tag => (
-              <Tag key={tag} color="cyan" style={{ cursor: 'pointer' }} onClick={() => setQuery(tag)}>
+              <Tag key={tag} color="cyan" style={{ cursor: 'pointer' }} onClick={() => triggerSearch(tag)}>
                 {tag}
               </Tag>
             ))}
@@ -61,7 +93,7 @@ export function ExplorePage() {
 
       <section className="explore-layout">
         <main>
-          <HomeFeed />
+          <HomeFeed searchQuery={urlQuery} />
         </main>
         <aside>
           <TrendingSection />

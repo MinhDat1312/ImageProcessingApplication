@@ -33,7 +33,7 @@ export function RolesPermissionsTab() {
       setRoles(rolesRes.data.data.roles)
       setPermissions(permsRes.data.data.permissions)
     } catch {
-      message.error('Lỗi khi tải dữ liệu')
+      message.error('Failed to load data')
     } finally {
       setLoading(false)
     }
@@ -48,10 +48,10 @@ export function RolesPermissionsTab() {
   const handleDeleteRole = async (roleId: string) => {
     try {
       await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/roles/${roleId}`)
-      message.success('Xóa vai trò thành công')
+      message.success('Role deleted successfully')
       fetchData()
     } catch {
-      message.error('Lỗi khi xóa vai trò')
+      message.error('Failed to delete role')
     }
   }
 
@@ -59,16 +59,16 @@ export function RolesPermissionsTab() {
     try {
       if (editingRole) {
         await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/roles/${editingRole.roleId}`, values)
-        message.success('Cập nhật vai trò thành công')
+        message.success('Role updated successfully')
       } else {
         await axiosInstance.post<ApiResponse<unknown>>('/api/v1/admin/roles', values)
-        message.success('Tạo vai trò thành công')
+        message.success('Role created successfully')
       }
       setRoleModalVisible(false)
       setEditingRole(null)
       fetchData()
     } catch {
-      message.error('Lỗi khi lưu vai trò')
+      message.error('Failed to save role')
     }
   }
 
@@ -86,10 +86,10 @@ export function RolesPermissionsTab() {
   const handleDeletePermission = async (permissionId: string) => {
     try {
       await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/permissions/${permissionId}`)
-      message.success('Xóa quyền hạn thành công')
+      message.success('Permission deleted successfully')
       fetchData()
     } catch {
-      message.error('Lỗi khi xóa quyền hạn')
+      message.error('Failed to delete permission')
     }
   }
 
@@ -97,34 +97,34 @@ export function RolesPermissionsTab() {
     try {
       if (editingPermission) {
         await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/permissions/${editingPermission.permissionId}`, values)
-        message.success('Cập nhật quyền hạn thành công')
+        message.success('Permission updated successfully')
       } else {
         await axiosInstance.post<ApiResponse<unknown>>('/api/v1/admin/permissions', values)
-        message.success('Tạo quyền hạn thành công')
+        message.success('Permission created successfully')
       }
       setPermissionModalVisible(false)
       setEditingPermission(null)
       fetchData()
     } catch {
-      message.error('Lỗi khi lưu quyền hạn')
+      message.error('Failed to save permission')
     }
   }
 
   const roleColumns = [
-    { title: 'Tên Vai Trò', dataIndex: 'name', key: 'name' },
-    { title: 'Mô Tả', dataIndex: 'description', key: 'description' },
+    { title: 'Role Name', dataIndex: 'name', key: 'name' },
+    { title: 'Description', dataIndex: 'description', key: 'description' },
     {
-      title: 'Hành Động',
+      title: 'Action',
       key: 'action',
       render: (_: unknown, record: AdminRole) => (
         <Space>
           <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => handleEditRole(record)} />
           <Popconfirm
-            title="Xác Nhận Xóa"
-            description="Bạn có chắc chắn muốn xóa vai trò này?"
+            title="Confirm Delete"
+            description="Are you sure you want to delete this role?"
             onConfirm={() => handleDeleteRole(record.roleId)}
-            okText="Có"
-            cancelText="Không"
+            okText="Yes"
+            cancelText="No"
           >
             <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -134,22 +134,22 @@ export function RolesPermissionsTab() {
   ]
 
   const permissionColumns = [
-    { title: 'Tên', dataIndex: 'name', key: 'name' },
+    { title: 'Name', dataIndex: 'name', key: 'name' },
     { title: 'API Path', dataIndex: 'apiPath', key: 'apiPath' },
     { title: 'Method', dataIndex: 'method', key: 'method' },
     { title: 'Module', dataIndex: 'module', key: 'module' },
     {
-      title: 'Hành Động',
+      title: 'Action',
       key: 'action',
       render: (_: unknown, record: Permission) => (
         <Space>
           <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => handleEditPermission(record)} />
           <Popconfirm
-            title="Xác Nhận Xóa"
-            description="Bạn có chắc chắn muốn xóa quyền hạn này?"
+            title="Confirm Delete"
+            description="Are you sure you want to delete this permission?"
             onConfirm={() => handleDeletePermission(record.permissionId)}
-            okText="Có"
-            cancelText="Không"
+            okText="Yes"
+            cancelText="No"
           >
             <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -164,17 +164,17 @@ export function RolesPermissionsTab() {
         items={[
           {
             key: 'roles',
-            label: 'Vai Trò',
+            label: 'Roles',
             children: (
               <>
                 <div className="tab-header">
-                  <h3>Quản Lý Vai Trò</h3>
+                  <h3>Role Management</h3>
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => { setEditingRole(null); roleForm.resetFields(); setRoleModalVisible(true) }}
                   >
-                    Tạo Vai Trò Mới
+                    Create New Role
                   </Button>
                 </div>
                 <Table columns={roleColumns} dataSource={roles} loading={loading} rowKey="roleId" pagination={{ pageSize: 10 }} />
@@ -183,17 +183,17 @@ export function RolesPermissionsTab() {
           },
           {
             key: 'permissions',
-            label: 'Quyền Hạn',
+            label: 'Permissions',
             children: (
               <>
                 <div className="tab-header">
-                  <h3>Quản Lý Quyền Hạn</h3>
+                  <h3>Permission Management</h3>
                   <Button
                     type="primary"
                     icon={<PlusOutlined />}
                     onClick={() => { setEditingPermission(null); permissionForm.resetFields(); setPermissionModalVisible(true) }}
                   >
-                    Tạo Quyền Hạn Mới
+                    Create New Permission
                   </Button>
                 </div>
                 <Table columns={permissionColumns} dataSource={permissions} loading={loading} rowKey="permissionId" pagination={{ pageSize: 10 }} />
@@ -204,38 +204,38 @@ export function RolesPermissionsTab() {
       />
 
       <Modal
-        title={editingRole ? 'Cập Nhật Vai Trò' : 'Tạo Vai Trò Mới'}
+        title={editingRole ? 'Update Role' : 'Create New Role'}
         open={roleModalVisible}
         onCancel={() => setRoleModalVisible(false)}
         onOk={() => roleForm.submit()}
       >
         <Form form={roleForm} layout="vertical" onFinish={handleSubmitRole}>
-          <Form.Item label="Tên Vai Trò" name="name" rules={[{ required: true, message: 'Vui lòng nhập tên vai trò' }]}>
+          <Form.Item label="Role Name" name="name" rules={[{ required: true, message: 'Please enter the role name' }]}>
             <Input />
           </Form.Item>
-          <Form.Item label="Mô Tả" name="description">
+          <Form.Item label="Description" name="description">
             <Input.TextArea rows={3} />
           </Form.Item>
         </Form>
       </Modal>
 
       <Modal
-        title={editingPermission ? 'Cập Nhật Quyền Hạn' : 'Tạo Quyền Hạn Mới'}
+        title={editingPermission ? 'Update Permission' : 'Create New Permission'}
         open={permissionModalVisible}
         onCancel={() => setPermissionModalVisible(false)}
         onOk={() => permissionForm.submit()}
       >
         <Form form={permissionForm} layout="vertical" onFinish={handleSubmitPermission}>
-          <Form.Item label="Tên Quyền Hạn" name="name" rules={[{ required: true, message: 'Vui lòng nhập tên quyền hạn' }]}>
+          <Form.Item label="Permission Name" name="name" rules={[{ required: true, message: 'Please enter the permission name' }]}>
             <Input />
           </Form.Item>
-          <Form.Item label="API Path" name="apiPath" rules={[{ required: true, message: 'Vui lòng nhập API path' }]}>
+          <Form.Item label="API Path" name="apiPath" rules={[{ required: true, message: 'Please enter the API path' }]}>
             <Input placeholder="/api/v1/resource" />
           </Form.Item>
-          <Form.Item label="Method" name="method" rules={[{ required: true, message: 'Vui lòng chọn method' }]}>
+          <Form.Item label="Method" name="method" rules={[{ required: true, message: 'Please select the method' }]}>
             <Select options={['GET', 'POST', 'PUT', 'PATCH', 'DELETE'].map(m => ({ label: m, value: m }))} />
           </Form.Item>
-          <Form.Item label="Module" name="module" rules={[{ required: true, message: 'Vui lòng nhập module' }]}>
+          <Form.Item label="Module" name="module" rules={[{ required: true, message: 'Please enter the module' }]}>
             <Input placeholder="USER / IMAGE / ROLE / PERMISSION" />
           </Form.Item>
         </Form>

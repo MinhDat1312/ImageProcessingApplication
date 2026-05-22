@@ -1,7 +1,10 @@
-import { Button, Card, Input, Tag } from 'antd'
-import { useEffect, useState } from 'react'
+import { Button, Card, Input, Tag, message } from 'antd'
+import { useEffect, useState, useRef } from 'react'
 import { BulbOutlined, MessageOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
+import axiosInstance from '../api/axiosInstance'
 
 const suggestionChips = [
   'Generate a cinematic prompt',
@@ -10,18 +13,103 @@ const suggestionChips = [
   'Write a negative prompt for portraits',
 ]
 
-const messages = [
-  { role: 'assistant', text: 'Tell me what you want to create. I can refine a prompt, recommend a pipeline, or explain an edit.' },
-  { role: 'user', text: 'I need a dramatic product image with neon reflections and premium lighting.' },
-  { role: 'assistant', text: 'Use: cinematic product shot, black reflective surface, neon rim light, high contrast, clean composition. Negative: blur, clutter, low detail.' },
-]
+interface ChatMessage {
+  id?: string
+  role: string // user or assistant
+  content: string
+}
 
 export function ChatPage() {
+  const { user } = useAuth()
+  const navigate = useNavigate()
   const [prompt, setPrompt] = useState('')
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { role: 'assistant', content: 'Tell me what you want to create. I can refine a prompt, recommend a pipeline, or explain an edit.' }
+  ])
+  const [loading, setLoading] = useState(false)
+  const messagesEndRef = useRef<HTMLDivElement | null>(null)
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
+  }
+
+  const fetchHistory = async () => {
+    try {
+      const response = await axiosInstance.get('/api/v1/assistant/history')
+      const responseData = response.data
+      const historyList = responseData && Array.isArray(responseData.data) ? responseData.data : (Array.isArray(responseData) ? responseData : null)
+      if (historyList && historyList.length > 0) {
+        setMessages(historyList)
+      }
+    } catch (err) {
+      console.error('Failed to fetch chat history', err)
+    }
+  }
 
   useEffect(() => {
     document.title = 'NovaCanvas — AI Chat'
-  }, [])
+    if (user) {
+      fetchHistory()
+    }
+  }, [user])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const handleSend = async (textToSend?: string) => {
+    if (!user) {
+      message.warning('Please sign in to chat with the AI assistant')
+      navigate('/login')
+      return
+    }
+
+    const text = textToSend || prompt
+    if (!text.trim() || loading) return
+
+    const userMsg: ChatMessage = { role: 'user', content: text }
+    setMessages(prev => [...prev, userMsg])
+    if (!textToSend) setPrompt('')
+    setLoading(true)
+
+    try {
+      const response = await axiosInstance.post('/api/v1/assistant/chat', {
+        input: text,
+      })
+      const responseData = response.data
+      const content = responseData && responseData.data ? responseData.data.content : (responseData ? responseData.content : '')
+      const assistantMsg: ChatMessage = {
+        role: 'assistant',
+        content: content || 'No response from AI.',
+      }
+      setMessages(prev => [...prev, assistantMsg])
+    } catch (err) {
+      const errorMsg = (err as { response?: { data?: { error?: string } }; message?: string }).response?.data?.error || (err as Error).message || 'Failed to chat with AI'
+      message.error(errorMsg)
+      setMessages(prev => [...prev, { role: 'assistant', content: 'Sorry, I encountered an error. Please try again.' }])
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault()
+      handleSend()
+    }
+  }
+
+  const handleStartNewThread = () => {
+    if (!user) {
+      message.warning('Please sign in to start a chat thread')
+      navigate('/login')
+      return
+    }
+    setMessages([
+      { role: 'assistant', content: 'Let\'s start a new conversation thread. Ask me anything about prompts or pipeline edits.' }
+    ])
+    message.success('Started a fresh local thread.')
+  }
 
   return (
     <div className="chat-shell">
@@ -39,8 +127,14 @@ export function ChatPage() {
             inside the platform.
           </p>
           <div className="chat-actions">
-            <Button type="primary" icon={<ThunderboltOutlined />}>Start new thread</Button>
-            <Button icon={<BulbOutlined />}>Prompt ideas</Button>
+            <Button type="primary" icon={<ThunderboltOutlined />} onClick={handleStartNewThread}>Start new thread</Button>
+            <Button icon={<BulbOutlined />} onClick={() => {
+              if (user) {
+                setPrompt('Give me some creative prompt ideas.')
+              } else {
+                handleSend('Give me some creative prompt ideas.')
+              }
+            }}>Prompt ideas</Button>
           </div>
         </div>
         <Card className="glass-card chat-side-card" bordered={false}>
@@ -56,32 +150,57 @@ export function ChatPage() {
             <span className="section-kicker">Conversation</span>
             <Tag color="processing">Gemini connected</Tag>
           </div>
-          <div className="message-list">
+          <div className="message-list" style={{ minHeight: 250, maxHeight: 450, overflowY: 'auto' }}>
             {messages.map((message, index) => (
               <div key={index} className={`chat-message chat-message-${message.role}`}>
                 <span>{message.role === 'assistant' ? 'NovaCanvas AI' : 'You'}</span>
-                <p>{message.text}</p>
+                <p style={{ whiteSpace: 'pre-wrap' }}>{message.content}</p>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
-          <div className="chat-input-row">
-            <Input.TextArea
-              value={prompt}
-              onChange={event => setPrompt(event.target.value)}
-              autoSize={{ minRows: 2, maxRows: 4 }}
-              placeholder="Ask about prompts, image edits, pipelines, or generation tips"
-            />
-            <Button type="primary" icon={<MessageOutlined />}>
-              Send
-            </Button>
-          </div>
-          <div className="prompt-seed-list prompt-seed-inline">
-            {suggestionChips.map(chip => (
-              <button key={chip} type="button" className="prompt-seed-chip">
-                {chip}
-              </button>
-            ))}
-          </div>
+
+          {!user ? (
+            <div className="chat-signin-banner glass-card">
+              <div className="signin-banner-content">
+                <ThunderboltOutlined style={{ fontSize: 32, color: '#ff007f', marginBottom: 12 }} />
+                <h3>Sign in to unlock AI assistant</h3>
+                <p>Unlock context-aware conversations, customized image pipelines, prompt improvements, and history tracking.</p>
+                <Button type="primary" onClick={() => navigate('/login')} size="large">
+                  Sign in
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <>
+              <div className="chat-input-row">
+                <Input.TextArea
+                  value={prompt}
+                  onChange={event => setPrompt(event.target.value)}
+                  onKeyDown={handleKeyDown}
+                  autoSize={{ minRows: 2, maxRows: 4 }}
+                  placeholder="Ask about prompts, image edits, pipelines, or generation tips..."
+                  disabled={loading}
+                />
+                <Button type="primary" icon={<MessageOutlined />} onClick={() => handleSend()} loading={loading} disabled={loading}>
+                  Send
+                </Button>
+              </div>
+              <div className="prompt-seed-list prompt-seed-inline">
+                {suggestionChips.map(chip => (
+                  <button
+                    key={chip}
+                    type="button"
+                    className="prompt-seed-chip"
+                    onClick={() => handleSend(chip)}
+                    disabled={loading}
+                  >
+                    {chip}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </main>
 
         <aside className="chat-rail">
@@ -99,10 +218,10 @@ export function ChatPage() {
           <Card className="glass-card" bordered={false}>
             <span className="section-kicker">Quick actions</span>
             <div className="chat-list">
-              <div>Generate prompt variations</div>
-              <div>Rewrite for Midjourney style</div>
-              <div>Suggest a cleanup pipeline</div>
-              <div>Explain blur vs sharpen</div>
+              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('Generate 3 variations of a cinematic portrait prompt.')}>Generate prompt variations</div>
+              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('How do I write a prompt in Midjourney style?')}>Rewrite for Midjourney style</div>
+              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('Suggest a cleanup pipeline for noisy scanned documents.')}>Suggest a cleanup pipeline</div>
+              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('Explain the difference between blur and sharpen filters.')}>Explain blur vs sharpen</div>
             </div>
           </Card>
         </aside>

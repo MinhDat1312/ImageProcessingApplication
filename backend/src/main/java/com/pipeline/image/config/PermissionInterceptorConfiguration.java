@@ -51,7 +51,8 @@ public class PermissionInterceptorConfiguration implements WebMvcConfigurer {
                 "/api/v1/admin/**",
 
 //               Các endpoint về image để người dùng có thể tải lên và xem ảnh của chính mình
-                "/api/v1/images/**"
+                "/api/v1/images/**",
+                "/api/v1/assistant/**"
         };
 
         registry.addInterceptor(getPermissionInterceptor())

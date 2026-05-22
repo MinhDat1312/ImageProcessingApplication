@@ -46,8 +46,8 @@ export function RegisterPage() {
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: string } }).response?.data
         ?? (err as Error).message
-        ?? 'Đăng ký thất bại'
-      setServerError(typeof msg === 'string' ? msg : 'Đăng ký thất bại')
+        ?? 'Registration failed'
+      setServerError(typeof msg === 'string' ? msg : 'Registration failed')
     } finally {
       setLoading(false)
     }
@@ -56,8 +56,8 @@ export function RegisterPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-card-title">Tạo tài khoản</div>
-        <div className="auth-card-subtitle">Điền thông tin để đăng ký</div>
+        <div className="auth-card-title">Create Account</div>
+        <div className="auth-card-subtitle">Fill in the details to register</div>
 
         {serverError && (
           <Alert className="auth-server-error" type="error" message={serverError} showIcon />
@@ -66,18 +66,18 @@ export function RegisterPage() {
         <Form layout="vertical" form={form} onFinish={onFinish} requiredMark={false}>
           <Form.Item
             name="username"
-            label="Tên hiển thị"
-            rules={[{ required: true, message: 'Tên hiển thị không được để trống' }]}
+            label="Display Name"
+            rules={[{ required: true, message: 'Display Name is required' }]}
           >
-            <Input placeholder="Nguyễn Văn A" size="large" />
+            <Input placeholder="John Doe" size="large" />
           </Form.Item>
 
           <Form.Item
             name="email"
             label="Email"
             rules={[
-              { required: true, message: 'Email không được để trống' },
-              { type: 'email', message: 'Email không hợp lệ' },
+              { required: true, message: 'Email is required' },
+              { type: 'email', message: 'Invalid email' },
             ]}
           >
             <Input placeholder="your@email.com" size="large" />
@@ -85,10 +85,10 @@ export function RegisterPage() {
 
           <Form.Item
             name="password"
-            label="Mật khẩu"
+            label="Password"
             rules={[
-              { required: true, message: 'Mật khẩu không được để trống' },
-              { pattern: PW_REGEX, message: 'Mật khẩu chưa đáp ứng yêu cầu' },
+              { required: true, message: 'Password is required' },
+              { pattern: PW_REGEX, message: 'Password does not meet requirements' },
             ]}
           >
             <Input.Password
@@ -102,30 +102,30 @@ export function RegisterPage() {
           {password.length > 0 && (
             <div className="pw-rules">
               <div className={`pw-rule ${rules.length ? 'ok' : 'fail'}`}>
-                {rules.length ? '✔' : '✕'} Ít nhất 8 ký tự
+                {rules.length ? '✔' : '✕'} At least 8 characters
               </div>
               <div className={`pw-rule ${rules.upper ? 'ok' : 'fail'}`}>
-                {rules.upper ? '✔' : '✕'} Có chữ hoa và chữ thường
+                {rules.upper ? '✔' : '✕'} Contain uppercase & lowercase
               </div>
               <div className={`pw-rule ${rules.digit ? 'ok' : 'fail'}`}>
-                {rules.digit ? '✔' : '✕'} Có ít nhất 1 chữ số
+                {rules.digit ? '✔' : '✕'} Contain at least 1 digit
               </div>
               <div className={`pw-rule ${rules.special ? 'ok' : 'fail'}`}>
-                {rules.special ? '✔' : '✕'} Có ký tự đặc biệt (@, #, !, ...)
+                {rules.special ? '✔' : '✕'} Contain special character (@, #, !, ...)
               </div>
             </div>
           )}
 
           <Form.Item
             name="confirmPassword"
-            label="Xác nhận mật khẩu"
+            label="Confirm Password"
             dependencies={['password']}
             rules={[
-              { required: true, message: 'Vui lòng xác nhận mật khẩu' },
+              { required: true, message: 'Please confirm your password' },
               ({ getFieldValue }) => ({
                 validator(_, value) {
                   if (!value || getFieldValue('password') === value) return Promise.resolve()
-                  return Promise.reject(new Error('Mật khẩu không khớp'))
+                  return Promise.reject(new Error('Passwords do not match'))
                 },
               }),
             ]}
@@ -135,16 +135,16 @@ export function RegisterPage() {
 
           <Form.Item
             name="gender"
-            label="Giới tính"
-            rules={[{ required: true, message: 'Vui lòng chọn giới tính' }]}
+            label="Gender"
+            rules={[{ required: true, message: 'Please select your gender' }]}
           >
             <Select
               size="large"
-              placeholder="Chọn giới tính"
+              placeholder="Select gender"
               options={[
-                { value: 'MALE', label: 'Nam' },
-                { value: 'FEMALE', label: 'Nữ' },
-                { value: 'OTHER', label: 'Khác' },
+                { value: 'MALE', label: 'Male' },
+                { value: 'FEMALE', label: 'Female' },
+                { value: 'OTHER', label: 'Other' },
               ]}
             />
           </Form.Item>
@@ -158,13 +158,13 @@ export function RegisterPage() {
               size="large"
               block
             >
-              Đăng ký
+              Sign Up
             </Button>
           </Form.Item>
         </Form>
 
         <div className="auth-footer">
-          Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
+          Already have an account? <Link to="/login">Sign In</Link>
         </div>
       </div>
     </div>

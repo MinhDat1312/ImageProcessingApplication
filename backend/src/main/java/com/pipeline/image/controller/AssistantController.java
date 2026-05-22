@@ -6,6 +6,7 @@ import com.pipeline.image.service.AssistantService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -42,6 +43,11 @@ public class AssistantController {
     @PostMapping("/chat")
     public ResponseEntity<AssistantResponseDto> chat(@Valid @RequestBody AssistantRequestDto request) {
         return ResponseEntity.ok(assistantService.chat(request));
+    }
+
+    @GetMapping("/history")
+    public ResponseEntity<?> getChatHistory() {
+        return ResponseEntity.ok(assistantService.getHistory());
     }
 
     @PostMapping("/health")

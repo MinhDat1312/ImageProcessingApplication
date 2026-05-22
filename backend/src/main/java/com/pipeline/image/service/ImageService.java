@@ -29,7 +29,10 @@ public class ImageService {
     private final Map<String, Long> lastView = new ConcurrentHashMap<>();
     private final long VIEW_COOLDOWN_MS = 60 * 1000; // 60 seconds per client per image
 
-    public Page<Image> getPublicImages(Pageable pageable) {
+    public Page<Image> getPublicImages(String query, Pageable pageable) {
+        if (query != null && !query.isBlank()) {
+            return imageRepository.searchPublicImages(com.pipeline.image.common.Visibility.PUBLIC, query, pageable);
+        }
         return imageRepository.findByVisibilityOrderByCreatedAtDesc(com.pipeline.image.common.Visibility.PUBLIC, pageable);
     }
 

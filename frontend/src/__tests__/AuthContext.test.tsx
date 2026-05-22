@@ -25,7 +25,7 @@ beforeEach(() => vi.clearAllMocks())
 
 describe('AuthContext', () => {
   it('sets user when /users succeeds on mount', async () => {
-    mockedAxios.get = vi.fn().mockResolvedValueOnce({ data: fakeUser })
+    mockedAxios.get = vi.fn().mockResolvedValueOnce({ data: { data: fakeUser } })
 
     const { result } = renderHook(() => useAuth(), { wrapper })
 
@@ -54,7 +54,7 @@ describe('AuthContext', () => {
   })
 
   it('logout() clears user and calls /logout', async () => {
-    mockedAxios.get = vi.fn().mockResolvedValueOnce({ data: fakeUser })
+    mockedAxios.get = vi.fn().mockResolvedValueOnce({ data: { data: fakeUser } })
     mockedAxios.post = vi.fn().mockResolvedValueOnce({})
 
     const { result } = renderHook(() => useAuth(), { wrapper })
@@ -66,7 +66,7 @@ describe('AuthContext', () => {
   })
 
   it('clears user when auth:logout event is dispatched', async () => {
-    mockedAxios.get = vi.fn().mockResolvedValueOnce({ data: fakeUser })
+    mockedAxios.get = vi.fn().mockResolvedValueOnce({ data: { data: fakeUser } })
     const { result } = renderHook(() => useAuth(), { wrapper })
     await waitFor(() => expect(result.current.user).toEqual(fakeUser))
 

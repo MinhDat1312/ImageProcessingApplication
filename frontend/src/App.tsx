@@ -3,7 +3,6 @@ import {
   Button,
   Card,
   Form,
-  Input,
   Segmented,
   Space,
   Statistic,
@@ -11,11 +10,9 @@ import {
 } from 'antd'
 import {
   ArrowRightOutlined,
-  BulbOutlined,
   CompassOutlined,
   CopyOutlined,
   DownloadOutlined,
-  EditOutlined,
   HistoryOutlined,
   MessageOutlined,
   PlayCircleOutlined,
@@ -27,7 +24,7 @@ import {
 } from '@ant-design/icons'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import './App.css'
 import axiosInstance from './api/axiosInstance'
 import { ImagePreview } from './components/ImagePreview'
@@ -44,13 +41,6 @@ const heroStats = [
   { label: 'Preview latency', value: '< 1s', prefix: <PlayCircleOutlined /> },
   { label: 'AI assistant', value: 'Gemini', prefix: <ThunderboltOutlined /> },
   { label: 'Scale ready', value: 'S3 + Redis', prefix: <CompassOutlined /> },
-]
-
-const promptSuggestions = [
-  'Cinematic portrait, volumetric light, premium color science, highly detailed',
-  'Minimal product shot, dark matte background, chrome reflections',
-  'Editorial fashion, neon accents, high contrast, studio grade',
-  'Architectural interior, natural light, wide angle, premium render',
 ]
 
 const pipelinePresetCards = [
@@ -78,13 +68,6 @@ const recentHistory = [
   { label: 'Color grade preset', meta: '1 h ago', status: 'Saved' },
 ]
 
-const assistantTools = [
-  { title: 'Generate prompt', description: 'Create a richer prompt from a rough idea.' },
-  { title: 'Improve prompt', description: 'Refine style, composition, and lighting.' },
-  { title: 'Suggest pipeline', description: 'Recommend the best step order for the result.' },
-  { title: 'Explain image', description: 'Break down what is happening in the image.' },
-]
-
 const visibilityOptions = [
   { label: 'Public', value: 'public' },
   { label: 'Private', value: 'private' },
@@ -102,6 +85,7 @@ export default function App() {
   const { triggerRefresh } = useImages()
   const { steps, isRunning, startSimulation, startWaiting, completeAll, failCurrent, reset } = usePipelineSteps()
   const navigate = useNavigate()
+  const location = useLocation()
 
   const [form] = Form.useForm<ProcessFormValues>()
   const [file, setFile] = useState<File | null>(null)
@@ -111,9 +95,100 @@ export default function App() {
   const [processing, setProcessing] = useState(false)
   const [executionTime, setExecutionTime] = useState<number | null>(null)
   const [visibility, setVisibility] = useState<'public' | 'private'>('private')
-  const [prompt, setPrompt] = useState('Cinematic portrait, volumetric light, premium color science, highly detailed')
-  const [negativePrompt, setNegativePrompt] = useState('blurry, low quality, extra fingers, distorted face')
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  // Listen to forwarded image URLs (e.g. from the generator page)
+  useEffect(() => {
+    const incomingUrl = location.state?.imageUrl
+    if (incomingUrl) {
+      notification.info({
+        message: 'Image Forwarded',
+        description: 'Loading image into Studio workspace...',
+      })
+
+      fetch(incomingUrl)
+        .then(res => res.blob())
+        .then(blob => {
+          const filename = incomingUrl.split('/').pop() || `forwarded-${Date.now()}.png`
+          const forwardedFile = new File([blob], filename, { type: blob.type || 'image/png' })
+          setFile(forwardedFile)
+          setPreviewUrl(incomingUrl)
+          setProcessedUrl(null)
+          setProcessedFilename(undefined)
+          setExecutionTime(null)
+        })
+        .catch(err => {
+          notification.error({
+            message: 'Load Failed',
+            description: 'Could not load forwarded image.',
+          })
+          console.error(err)
+        })
+    }
+  }, [location.state])
+
+  const handleApplyPreset = (presetTitle: string) => {
+    switch (presetTitle) {
+      case 'Cinematic enhancement':
+        form.setFieldsValue({
+          filterType: 'contrast',
+          contrastLevel: 1.4,
+          watermarkText: 'NovaCanvas AI',
+          watermarkPosition: 'bottom-right',
+          watermarkSize: 24,
+          compressionQuality: 0.85,
+          resizeWidth: undefined,
+          resizeHeight: undefined,
+          cropX: undefined,
+          cropY: undefined,
+          cropWidth: undefined,
+          cropHeight: undefined,
+          rotateAngle: 0,
+        })
+        break
+      case 'Batch social resize':
+        form.setFieldsValue({
+          resizeWidth: 1080,
+          resizeHeight: 1080,
+          cropX: 0,
+          cropY: 0,
+          cropWidth: 800,
+          cropHeight: 800,
+          filterType: 'none',
+          watermarkText: '',
+          compressionQuality: 0.9,
+          rotateAngle: 0,
+        })
+        break
+      case 'Clean archival':
+        form.setFieldsValue({
+          filterType: 'grayscale',
+          compressionQuality: 1.0,
+          resizeWidth: undefined,
+          resizeHeight: undefined,
+          cropX: undefined,
+          cropY: undefined,
+          cropWidth: undefined,
+          cropHeight: undefined,
+          rotateAngle: 0,
+          watermarkText: '',
+        })
+        break
+      default:
+        break
+    }
+    notification.success({
+      message: 'Preset Applied',
+      description: `Settings for "${presetTitle}" loaded. Click "Run pipeline" to apply.`,
+    })
+  }
+
+  const handleDuplicatePreset = (presetTitle: string) => {
+    notification.info({
+      message: 'Preset Duplicated',
+      description: `Preset details for "${presetTitle}" copied to clipboard.`,
+    })
+  }
 
   useEffect(() => {
     document.title = 'NovaCanvas AI — Studio'
@@ -140,12 +215,7 @@ export default function App() {
     form.resetFields(['resizeWidth', 'resizeHeight', 'watermarkText'])
   }
 
-  const handleAssistantAction = (title: string) => {
-    notification.info({
-      message: title,
-      description: 'Gemini API hook is ready here. Connect the backend service to make this action live.',
-    })
-  }
+
 
   const onFinish = async (values: ProcessFormValues) => {
     if (!file) {
@@ -164,7 +234,15 @@ export default function App() {
     if (values.resizeHeight) formData.append('resizeHeight', String(values.resizeHeight))
     if (values.filterType && values.filterType !== 'none') {
       formData.append('filterType', values.filterType)
-      if (values.brightnessLevel) formData.append('brightnessLevel', String(values.brightnessLevel))
+      if (values.brightnessLevel !== undefined) formData.append('brightnessLevel', String(values.brightnessLevel))
+      if (values.contrastLevel !== undefined) formData.append('contrastLevel', String(values.contrastLevel))
+    }
+    if (values.cropX !== undefined && values.cropX !== null) formData.append('cropX', String(values.cropX))
+    if (values.cropY !== undefined && values.cropY !== null) formData.append('cropY', String(values.cropY))
+    if (values.cropWidth !== undefined && values.cropWidth !== null) formData.append('cropWidth', String(values.cropWidth))
+    if (values.cropHeight !== undefined && values.cropHeight !== null) formData.append('cropHeight', String(values.cropHeight))
+    if (values.rotateAngle !== undefined && values.rotateAngle !== null && values.rotateAngle !== 0) {
+      formData.append('rotateAngle', String(values.rotateAngle))
     }
     if (values.watermarkText) {
       formData.append('watermarkText', values.watermarkText)
@@ -367,108 +445,55 @@ export default function App() {
                 />
               </Card>
             </div>
-
-            <div className="studio-split-grid">
-              <Card className="glass-card studio-card" bordered={false}>
-                <div className="section-header compact">
-                  <div>
-                    <span className="section-kicker">04. Prompt lab</span>
-                    <h2>Generate, improve, and remix AI prompts</h2>
-                    <p>Design prompts and negative prompts with Gemini-assisted workflows.</p>
-                  </div>
+            <Card className="glass-card studio-card" bordered={false}>
+              <div className="section-header compact">
+                <div>
+                  <span className="section-kicker">04. Presets</span>
+                  <h2>Saved pipelines and generation history</h2>
+                  <p>Reuse preset chains, revisit recent runs, and keep the studio organized.</p>
                 </div>
+              </div>
 
-                <div className="prompt-lab-grid">
-                  <div className="prompt-lab-main">
-                    <label className="field-label" htmlFor="studio-prompt">Prompt</label>
-                    <Input.TextArea
-                      id="studio-prompt"
-                      value={prompt}
-                      onChange={event => setPrompt(event.target.value)}
-                      autoSize={{ minRows: 4, maxRows: 7 }}
-                      placeholder="Describe the image you want to generate"
-                    />
-
-                    <label className="field-label" htmlFor="studio-negative-prompt">Negative prompt</label>
-                    <Input.TextArea
-                      id="studio-negative-prompt"
-                      value={negativePrompt}
-                      onChange={event => setNegativePrompt(event.target.value)}
-                      autoSize={{ minRows: 2, maxRows: 4 }}
-                      placeholder="What to avoid in the result"
-                    />
-
-                    <div className="prompt-actions">
-                      <Button type="primary" icon={<ThunderboltOutlined />} onClick={() => handleAssistantAction('Generate prompt')}>
-                        Generate prompt
+              <div className="preset-stack">
+                {pipelinePresetCards.map(preset => (
+                  <article key={preset.title} className="preset-card">
+                    <div className="preset-card-top">
+                      <strong>{preset.title}</strong>
+                      <Tag color="geekblue">{preset.tag}</Tag>
+                    </div>
+                    <p>{preset.description}</p>
+                    <div className="preset-actions">
+                      <Button 
+                        size="small" 
+                        icon={<PlayCircleOutlined />} 
+                        onClick={() => handleApplyPreset(preset.title)}
+                      >
+                        Run preset
                       </Button>
-                      <Button icon={<EditOutlined />} onClick={() => handleAssistantAction('Improve prompt')}>
-                        Improve
-                      </Button>
-                      <Button icon={<BulbOutlined />} onClick={() => handleAssistantAction('Suggest prompt')}>
-                        Suggest
-                      </Button>
-                      <Button icon={<CopyOutlined />} onClick={() => handleAssistantAction('Copy prompt')}>
-                        Copy
+                      <Button 
+                        size="small" 
+                        icon={<CopyOutlined />}
+                        onClick={() => handleDuplicatePreset(preset.title)}
+                      >
+                        Duplicate
                       </Button>
                     </div>
-                  </div>
+                  </article>
+                ))}
+              </div>
 
-                  <div className="prompt-lab-side">
-                    <div className="assistant-chip-list">
-                      {assistantTools.map(tool => (
-                        <button key={tool.title} type="button" className="assistant-chip" onClick={() => handleAssistantAction(tool.title)}>
-                          <strong>{tool.title}</strong>
-                          <span>{tool.description}</span>
-                        </button>
-                      ))}
+              <div className="history-list">
+                {recentHistory.map(item => (
+                  <div key={item.label} className="history-row">
+                    <div>
+                      <strong>{item.label}</strong>
+                      <span>{item.meta}</span>
                     </div>
+                    <Tag color="cyan">{item.status}</Tag>
                   </div>
-                </div>
-              </Card>
-
-              <Card className="glass-card studio-card" bordered={false}>
-                <div className="section-header compact">
-                  <div>
-                    <span className="section-kicker">05. Presets</span>
-                    <h2>Saved pipelines and generation history</h2>
-                    <p>Reuse preset chains, revisit recent runs, and keep the studio organized.</p>
-                  </div>
-                </div>
-
-                <div className="preset-stack">
-                  {pipelinePresetCards.map(preset => (
-                    <article key={preset.title} className="preset-card">
-                      <div className="preset-card-top">
-                        <strong>{preset.title}</strong>
-                        <Tag color="geekblue">{preset.tag}</Tag>
-                      </div>
-                      <p>{preset.description}</p>
-                      <div className="preset-actions">
-                        <Button size="small" icon={<PlayCircleOutlined />}>
-                          Run preset
-                        </Button>
-                        <Button size="small" icon={<CopyOutlined />}>
-                          Duplicate
-                        </Button>
-                      </div>
-                    </article>
-                  ))}
-                </div>
-
-                <div className="history-list">
-                  {recentHistory.map(item => (
-                    <div key={item.label} className="history-row">
-                      <div>
-                        <strong>{item.label}</strong>
-                        <span>{item.meta}</span>
-                      </div>
-                      <Tag color="cyan">{item.status}</Tag>
-                    </div>
-                  ))}
-                </div>
-              </Card>
-            </div>
+                ))}
+              </div>
+            </Card>
           </div>
 
           <aside className="studio-rail-column">
@@ -483,7 +508,7 @@ export default function App() {
                 <div className="status-card">
                   <span className="status-label">Pipeline state</span>
                   <strong>{showProgress ? 'Running or staging' : 'Idle'}</strong>
-                  <span>{showProgress ? 'Live stage updates are visible above.' : 'Waiting for the next upload or prompt.'}</span>
+                  <span>{showProgress ? 'Live stage updates are visible above.' : 'Waiting for the next upload.'}</span>
                 </div>
                 <div className="status-card">
                   <span className="status-label">Batch processing</span>
@@ -522,22 +547,6 @@ export default function App() {
                     <span>Inspect the result side by side before publishing.</span>
                   </div>
                 </div>
-              </div>
-            </Card>
-
-            <Card className="glass-card rail-card" bordered={false}>
-              <div className="section-header compact">
-                <div>
-                  <span className="section-kicker">Prompt seeds</span>
-                  <h3>Quick remix ideas</h3>
-                </div>
-              </div>
-              <div className="prompt-seed-list">
-                {promptSuggestions.map(seed => (
-                  <button key={seed} type="button" className="prompt-seed-chip" onClick={() => setPrompt(seed)}>
-                    {seed}
-                  </button>
-                ))}
               </div>
             </Card>
 

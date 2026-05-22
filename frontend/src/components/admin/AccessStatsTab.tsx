@@ -49,7 +49,7 @@ export function AccessStatsTab() {
       setTotalAccess(res.data.data.totalAccess ?? 0)
       setTodayAccess(res.data.data.todayAccess ?? 0)
     } catch {
-      message.error('Lỗi khi tải thống kê')
+      message.error('Failed to load statistics')
     } finally {
       setLoading(false)
     }
@@ -61,18 +61,18 @@ export function AccessStatsTab() {
   return (
     <div className="admin-tab">
       <div className="tab-header">
-        <h2>Thống Kê Truy Cập</h2>
+        <h2>Access Statistics</h2>
       </div>
 
       <Row gutter={16} className="stats-summary">
         <Col xs={24} sm={12}>
           <Card>
-            <Statistic title="Tổng Lượt Truy Cập" value={totalAccess} suffix="lượt" styles={{ content: { color: '#1890ff' } }} />
+            <Statistic title="Total Accesses" value={totalAccess} suffix="visits" styles={{ content: { color: '#1890ff' } }} />
           </Card>
         </Col>
         <Col xs={24} sm={12}>
           <Card>
-            <Statistic title="Lượt Truy Cập Hôm Nay" value={todayAccess} suffix="lượt" styles={{ content: { color: '#52c41a' } }} />
+            <Statistic title="Today's Accesses" value={todayAccess} suffix="visits" styles={{ content: { color: '#52c41a' } }} />
           </Card>
         </Col>
       </Row>
@@ -81,12 +81,12 @@ export function AccessStatsTab() {
         items={[
           {
             key: 'hourly',
-            label: 'Thống Kê Theo Giờ',
+            label: 'Hourly Statistics',
             children: (
               <div className="stats-content">
                 <Space className="filter-section">
                   <DatePicker
-                    placeholder="Chọn ngày"
+                    placeholder="Select date"
                     value={selectedDate}
                     onChange={(d: Dayjs | null) => setSelectedDate(d)}
                   />
@@ -97,7 +97,7 @@ export function AccessStatsTab() {
                     disabled={!selectedDate}
                     onClick={() => selectedDate && fetchStats({ date: selectedDate.format('YYYY-MM-DD') })}
                   >
-                    Xem
+                    View
                   </Button>
                 </Space>
                 {hourlyStats.length > 0 ? (
@@ -108,24 +108,24 @@ export function AccessStatsTab() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Line type="monotone" dataKey="count" stroke="#1890ff" name="Lượt Truy Cập" dot={false} />
+                      <Line type="monotone" dataKey="count" stroke="#1890ff" name="Access Count" dot={false} />
                     </LineChart>
                   </ResponsiveContainer>
                 ) : (
-                  <Empty description="Không có dữ liệu" style={{ marginTop: '50px' }} />
+                  <Empty description="No data available" style={{ marginTop: '50px' }} />
                 )}
               </div>
             ),
           },
           {
             key: 'daily',
-            label: 'Thống Kê Theo Tháng',
+            label: 'Monthly Statistics',
             children: (
               <div className="stats-content">
                 <Space className="filter-section">
                   <DatePicker
                     picker="month"
-                    placeholder="Chọn tháng"
+                    placeholder="Select month"
                     value={selectedMonth}
                     onChange={(d: Dayjs | null) => setSelectedMonth(d)}
                   />
@@ -136,7 +136,7 @@ export function AccessStatsTab() {
                     disabled={!selectedMonth}
                     onClick={() => selectedMonth && fetchStats({ month: selectedMonth.format('YYYY-MM') })}
                   >
-                    Xem
+                    View
                   </Button>
                 </Space>
                 {dailyStats.length > 0 ? (
@@ -147,24 +147,24 @@ export function AccessStatsTab() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="count" fill="#1890ff" name="Lượt Truy Cập" />
+                      <Bar dataKey="count" fill="#1890ff" name="Access Count" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <Empty description="Không có dữ liệu" style={{ marginTop: '50px' }} />
+                  <Empty description="No data available" style={{ marginTop: '50px' }} />
                 )}
               </div>
             ),
           },
           {
             key: 'yearly',
-            label: 'Thống Kê Theo Năm',
+            label: 'Yearly Statistics',
             children: (
               <div className="stats-content">
                 <Space className="filter-section">
                   <DatePicker
                     picker="year"
-                    placeholder="Chọn năm"
+                    placeholder="Select year"
                     value={selectedYear}
                     onChange={(d: Dayjs | null) => setSelectedYear(d)}
                   />
@@ -175,7 +175,7 @@ export function AccessStatsTab() {
                     disabled={!selectedYear}
                     onClick={() => selectedYear && fetchStats({ year: selectedYear.year() })}
                   >
-                    Xem
+                    View
                   </Button>
                 </Space>
                 {monthlyStats.length > 0 ? (
@@ -186,11 +186,11 @@ export function AccessStatsTab() {
                       <YAxis />
                       <Tooltip />
                       <Legend />
-                      <Bar dataKey="count" fill="#52c41a" name="Lượt Truy Cập" />
+                      <Bar dataKey="count" fill="#52c41a" name="Access Count" />
                     </BarChart>
                   </ResponsiveContainer>
                 ) : (
-                  <Empty description="Không có dữ liệu" style={{ marginTop: '50px' }} />
+                  <Empty description="No data available" style={{ marginTop: '50px' }} />
                 )}
               </div>
             ),

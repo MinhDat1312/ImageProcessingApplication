@@ -4,6 +4,11 @@ import com.google.genai.Client;
 import com.google.genai.types.GenerateContentResponse;
 import com.pipeline.image.dto.request.assistant.AssistantRequestDto;
 import com.pipeline.image.dto.response.assistant.AssistantResponseDto;
+import com.pipeline.image.entity.User;
+import com.pipeline.image.entity.ChatbotHistory;
+import com.pipeline.image.repository.UserRepository;
+import com.pipeline.image.repository.ChatbotHistoryRepository;
+import com.pipeline.image.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,6 +24,8 @@ public class AssistantService {
     private static final String DEFAULT_MODEL = "gemini-2.5-flash";
 
     private final Client googleClient;
+    private final UserRepository userRepository;
+    private final ChatbotHistoryRepository chatbotHistoryRepository;
 
     @Value("${assistant.model:" + DEFAULT_MODEL + "}")
     private String modelName;
@@ -50,7 +57,70 @@ public class AssistantService {
     public AssistantResponseDto chat(AssistantRequestDto request) {
         String systemPrompt = "You are NovaCanvas AI, a context-aware assistant for image processing and image generation. " +
                 "Help with prompts, negative prompts, pipeline suggestions, and image editing explanations.";
-        return callModel("chat", systemPrompt, request);
+
+        // Retrieve current user and load history
+        String email = SecurityUtil.getCurrentUserEmail();
+        User currentUser = null;
+        if (email != null && !email.isBlank()) {
+            currentUser = userRepository.findByEmailWithRole(email).orElse(null);
+        }
+
+        StringBuilder contextBuilder = new StringBuilder();
+        if (currentUser != null) {
+            List<ChatbotHistory> history = chatbotHistoryRepository.findByUser_UserIdOrderByCreatedAtAsc(currentUser.getUserId());
+            if (history != null && !history.isEmpty()) {
+                // limit to last 20 messages for context size limit
+                int start = Math.max(0, history.size() - 20);
+                contextBuilder.append("Previous chat history:\n");
+                for (int i = start; i < history.size(); i++) {
+                    ChatbotHistory h = history.get(i);
+                    contextBuilder.append(h.getRole().toUpperCase()).append(": ").append(h.getContent()).append("\n");
+                }
+                contextBuilder.append("\n");
+            }
+        }
+
+        String fullContext = contextBuilder.toString() + (request.getContext() != null ? request.getContext() : "");
+        AssistantRequestDto contextualRequest = new AssistantRequestDto();
+        contextualRequest.setInput(request.getInput());
+        contextualRequest.setContext(fullContext);
+        contextualRequest.setNegativePrompt(request.getNegativePrompt());
+
+        AssistantResponseDto responseDto = callModel("chat", systemPrompt, contextualRequest);
+
+        // Save to DB
+        if (currentUser != null && responseDto != null && responseDto.getContent() != null && !responseDto.getContent().isBlank()) {
+            try {
+                ChatbotHistory userMsg = new ChatbotHistory();
+                userMsg.setUser(currentUser);
+                userMsg.setRole("user");
+                userMsg.setContent(request.getInput());
+                chatbotHistoryRepository.save(userMsg);
+
+                ChatbotHistory assistantMsg = new ChatbotHistory();
+                assistantMsg.setUser(currentUser);
+                assistantMsg.setRole("assistant");
+                assistantMsg.setContent(responseDto.getContent());
+                chatbotHistoryRepository.save(assistantMsg);
+                log.info("Saved chatbot conversation history for user {}", currentUser.getEmail());
+            } catch (Exception ex) {
+                log.error("Failed to save chatbot history", ex);
+            }
+        }
+
+        return responseDto;
+    }
+
+    public List<ChatbotHistory> getHistory() {
+        String email = SecurityUtil.getCurrentUserEmail();
+        if (email == null || email.isBlank()) {
+            return List.of();
+        }
+        User currentUser = userRepository.findByEmailWithRole(email).orElse(null);
+        if (currentUser == null) {
+            return List.of();
+        }
+        return chatbotHistoryRepository.findByUser_UserIdOrderByCreatedAtAsc(currentUser.getUserId());
     }
 
     private AssistantResponseDto callModel(String mode, String systemPrompt, AssistantRequestDto request) {

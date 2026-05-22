@@ -1,7 +1,13 @@
 import { Tag, Card, Button } from 'antd'
+import { useNavigate } from 'react-router-dom'
 
 export default function TrendingSection() {
+  const navigate = useNavigate()
   const trending = ['cinematic portrait', 'neo-tokyo', 'vaporwave', 'photorealistic', 'lowpoly']
+
+  const handleSearch = (query: string) => {
+    navigate(`/explore?q=${encodeURIComponent(query)}`)
+  }
 
   return (
     <aside>
@@ -15,7 +21,14 @@ export default function TrendingSection() {
 
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 12 }}>
           {trending.map(tag => (
-            <Tag key={tag} color="purple" style={{ cursor: 'pointer' }}>{tag}</Tag>
+            <Tag 
+              key={tag} 
+              color="purple" 
+              style={{ cursor: 'pointer' }}
+              onClick={() => handleSearch(tag)}
+            >
+              {tag}
+            </Tag>
           ))}
         </div>
       </Card>
@@ -28,12 +41,30 @@ export default function TrendingSection() {
           </div>
         </div>
         <div style={{ display: 'grid', gap: 8 }}>
-          <div className="prompt-sample">"Cinematic portrait, volumetric lighting, film grain, 35mm"</div>
-          <div className="prompt-sample">"Landscape, neon skyline, fog, ultra-detailed"</div>
-          <div className="prompt-sample">"Macro shot of insect, photoreal, shallow depth"</div>
+          <div 
+            className="prompt-sample" 
+            style={{ cursor: 'pointer' }}
+            onClick={() => handleSearch("Cinematic portrait, volumetric lighting, film grain, 35mm")}
+          >
+            "Cinematic portrait, volumetric lighting, film grain, 35mm"
+          </div>
+          <div 
+            className="prompt-sample" 
+            style={{ cursor: 'pointer' }}
+            onClick={() => handleSearch("Landscape, neon skyline, fog, ultra-detailed")}
+          >
+            "Landscape, neon skyline, fog, ultra-detailed"
+          </div>
+          <div 
+            className="prompt-sample" 
+            style={{ cursor: 'pointer' }}
+            onClick={() => handleSearch("Macro shot of insect, photoreal, shallow depth")}
+          >
+            "Macro shot of insect, photoreal, shallow depth"
+          </div>
         </div>
         <div style={{ marginTop: 12 }}>
-          <Button type="text">See more</Button>
+          <Button type="text" onClick={() => navigate('/explore')}>See more</Button>
         </div>
       </Card>
     </aside>

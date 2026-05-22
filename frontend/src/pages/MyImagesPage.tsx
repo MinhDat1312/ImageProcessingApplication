@@ -5,6 +5,8 @@ import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useImages } from '../context/useImages'
+import { useAuth } from '../context/AuthContext'
+import { ImageDetailModal } from '../components/ImageDetailModal'
 import type { ApiResponse, ImageItem } from '../types'
 
 interface ImagePageResponse {
@@ -21,23 +23,25 @@ function timeAgo(dateStr: string): string {
   const date = new Date(dateStr)
   if (isNaN(date.getTime())) return ''
   const diff = Date.now() - date.getTime()
-  if (diff < 0) return 'Vừa xong'
+  if (diff < 0) return 'Just now'
   const mins = Math.floor(diff / 60000)
-  if (mins < 1) return 'Vừa xong'
-  if (mins < 60) return `${mins} phút trước`
+  if (mins < 1) return 'Just now'
+  if (mins < 60) return `${mins}m ago`
   const hours = Math.floor(mins / 60)
-  if (hours < 24) return `${hours} giờ trước`
+  if (hours < 24) return `${hours}h ago`
   const days = Math.floor(hours / 24)
-  if (days < 7) return `${days} ngày trước`
-  return new Date(dateStr).toLocaleDateString('vi-VN')
+  if (days < 7) return `${days}d ago`
+  return new Date(dateStr).toLocaleDateString('en-US')
 }
 
 export function MyImagesPage() {
   const { refreshKey, triggerRefresh } = useImages()
+  const { user } = useAuth()
   const [images, setImages] = useState<ImageItem[]>([])
   const [total, setTotal] = useState(0)
   const [page, setPage] = useState(1)
   const [loading, setLoading] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<ImageItem | null>(null)
   const navigate = useNavigate()
 
   const refreshImages = () => {
@@ -72,6 +76,28 @@ export function MyImagesPage() {
     return () => controller.abort()
   }, [page, refreshKey])
 
+  // Format selected item for modal compatibility
+  const getModalItem = () => {
+    if (!selectedImage) return null
+    return {
+      id: selectedImage.id,
+      url: selectedImage.url,
+      prompt: '',
+      likes: 0,
+      comments: 0,
+      views: 0,
+      createdAt: selectedImage.createdAt,
+      owner: {
+        userId: user?.userId || '',
+        username: user?.username || 'Me',
+        avatar: user?.avatar || '',
+      },
+      likedByCurrentUser: false,
+    }
+  }
+
+  const modalItem = getModalItem()
+
   return (
     <div className="my-images-shell">
       <motion.div
@@ -83,8 +109,8 @@ export function MyImagesPage() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' }}>
           <div>
             <span className="section-kicker">Gallery</span>
-            <h1>Ảnh của tôi</h1>
-            <p>{total > 0 ? `${total} ảnh đã xử lý` : 'Chưa có ảnh nào trong workspace'}</p>
+            <h1>My Creations</h1>
+            <p>{total > 0 ? `${total} processed images` : 'No images in your workspace yet'}</p>
           </div>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Button
@@ -98,7 +124,7 @@ export function MyImagesPage() {
               onClick={refreshImages}
               loading={loading}
             >
-              Làm mới
+              Refresh
             </Button>
           </div>
         </div>
@@ -113,7 +139,7 @@ export function MyImagesPage() {
       ) : images.length === 0 ? (
         <div style={{ display: 'grid', placeItems: 'center', minHeight: '48vh' }}>
           <Empty
-            description="Bạn chưa xử lý ảnh nào. Mở studio để tạo ảnh đầu tiên."
+            description="You haven't processed any images yet. Open the studio to create your first asset."
             style={{ margin: '48px auto' }}
           >
             <Button type="primary" icon={<RocketOutlined />} onClick={() => navigate('/')}>
@@ -131,6 +157,8 @@ export function MyImagesPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22 }}
               whileHover={{ y: -3, scale: 1.01 }}
+              onClick={() => setSelectedImage(img)}
+              style={{ cursor: 'pointer' }}
             >
               <img src={img.url} alt={img.id} loading="lazy" />
               <div className="image-grid-item-overlay">{timeAgo(img.createdAt)}</div>
@@ -149,6 +177,14 @@ export function MyImagesPage() {
             showSizeChanger={false}
           />
         </div>
+      )}
+
+      {modalItem && (
+        <ImageDetailModal
+          visible={!!selectedImage}
+          onClose={() => setSelectedImage(null)}
+          item={modalItem}
+        />
       )}
     </div>
   )

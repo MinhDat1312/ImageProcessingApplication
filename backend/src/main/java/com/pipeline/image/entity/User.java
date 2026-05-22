@@ -39,6 +39,7 @@ public class User extends BaseEntity {
     @Enumerated(EnumType.STRING)
     protected Gender gender;
     protected String avatar;
+    protected String bio;
     protected boolean enabled = false;
 
     @ManyToOne(fetch = LAZY)

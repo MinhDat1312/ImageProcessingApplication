@@ -20,7 +20,7 @@ export function ImagesTab() {
       const res = await axiosInstance.get<ApiResponse<{ images: AdminImage[] }>>('/api/v1/admin/images')
       setImages(res.data.data.images)
     } catch {
-      message.error('Lỗi khi tải danh sách hình ảnh')
+      message.error('Error fetching images list')
     } finally {
       setLoading(false)
     }
@@ -29,10 +29,10 @@ export function ImagesTab() {
   const handleDeleteImage = async (imageId: string) => {
     try {
       await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/images/${imageId}`)
-      message.success('Xóa hình ảnh thành công')
+      message.success('Image deleted successfully')
       fetchImages()
     } catch {
-      message.error('Lỗi khi xóa hình ảnh')
+      message.error('Error deleting image')
     }
   }
 
@@ -45,22 +45,22 @@ export function ImagesTab() {
 
   const columns = [
     {
-      title: 'Tên File',
+      title: 'Filename',
       dataIndex: 'filename',
       key: 'filename',
     },
     {
-      title: 'Chủ Sở Hữu',
+      title: 'Owner',
       dataIndex: ['owner', 'username'],
       key: 'owner',
     },
     {
-      title: 'Email Chủ Sở Hữu',
+      title: 'Owner Email',
       dataIndex: ['owner', 'email'],
       key: 'ownerEmail',
     },
     {
-      title: 'Kích Thước',
+      title: 'Size',
       dataIndex: 'size',
       key: 'size',
       render: (size?: number) => {
@@ -71,17 +71,17 @@ export function ImagesTab() {
       },
     },
     {
-      title: 'Ngày Tạo',
+      title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
+      render: (date: string) => new Date(date).toLocaleDateString('en-US'),
     },
     {
-      title: 'Hành Động',
+      title: 'Actions',
       key: 'action',
       render: (_value: unknown, record: AdminImage) => (
         <Space>
-          <Tooltip title="Xem">
+          <Tooltip title="View">
             <Button
               type="primary"
               size="small"
@@ -89,7 +89,7 @@ export function ImagesTab() {
               onClick={() => setPreviewImage(record.url)}
             />
           </Tooltip>
-          <Tooltip title="Tải Xuống">
+          <Tooltip title="Download">
             <Button
               type="default"
               size="small"
@@ -98,11 +98,11 @@ export function ImagesTab() {
             />
           </Tooltip>
           <Popconfirm
-            title="Xác Nhận Xóa"
-            description="Bạn có chắc chắn muốn xóa hình ảnh này?"
+            title="Confirm Delete"
+            description="Are you sure you want to delete this image?"
             onConfirm={() => handleDeleteImage(record.id)}
-            okText="Có"
-            cancelText="Không"
+            okText="Yes"
+            cancelText="No"
           >
             <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
@@ -114,7 +114,7 @@ export function ImagesTab() {
   return (
     <div className="admin-tab">
       <div className="tab-header">
-        <h2>Quản Lý Hình Ảnh</h2>
+        <h2>Images Management</h2>
       </div>
       <Table
         columns={columns}
@@ -125,7 +125,7 @@ export function ImagesTab() {
       />
 
       <Modal
-        title="Xem Hình Ảnh"
+        title="View Image"
         open={!!previewImage}
         footer={null}
         onCancel={() => setPreviewImage(null)}

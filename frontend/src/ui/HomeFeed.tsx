@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import axiosInstance from '../api/axiosInstance'
 import type { ApiResponse, ImageItem } from '../types'
 import GalleryCard from './GalleryCard'
@@ -9,7 +9,7 @@ interface FeedItem extends ImageItem {
   likes?: number
   comments?: number
   views?: number
-  owner?: { username?: string; avatar?: string }
+  owner?: { userId?: string; username?: string; avatar?: string }
 }
 
 interface FeedPageApiItem {
@@ -21,8 +21,11 @@ interface FeedPageApiItem {
   likes?: number
   comments?: number
   views?: number
-  owner?: { username?: string; avatar?: string }
-  user?: { username?: string; avatar?: string }
+  ownerId?: string
+  ownerName?: string
+  ownerAvatar?: string
+  owner?: { userId?: string; username?: string; avatar?: string }
+  user?: { userId?: string; username?: string; avatar?: string }
   username?: string
 }
 
@@ -32,45 +35,76 @@ interface FeedPageResponse {
   size: number
 }
 
-export default function HomeFeed() {
+interface HomeFeedProps {
+  searchQuery?: string
+}
+
+export default function HomeFeed({ searchQuery }: HomeFeedProps) {
   const [items, setItems] = useState<FeedItem[]>([])
   const [page, setPage] = useState(0)
   const [loading, setLoading] = useState(false)
   const [hasMore, setHasMore] = useState(true)
   const loaderRef = useRef<HTMLDivElement | null>(null)
 
-  const fetchPage = useCallback(async (p: number) => {
-    setLoading(true)
-    try {
-      // try public feed first, fallback to /me
-      const resp = await axiosInstance.get<ApiResponse<FeedPageResponse>>('/api/v1/images/public', { params: { page: p, size: 12 } }).catch(async () => {
-        return axiosInstance.get<ApiResponse<FeedPageResponse>>('/api/v1/images/me', { params: { page: p, size: 12 } })
-      })
+  useEffect(() => {
+    let active = true
+    const load = async () => {
+      setLoading(true)
+      try {
+        let resp
+        if (searchQuery && searchQuery.trim() !== '') {
+          resp = await axiosInstance.get<ApiResponse<FeedPageResponse>>('/api/v1/images/search', {
+            params: { q: searchQuery, page: page, size: 12 }
+          })
+        } else {
+          resp = await axiosInstance.get<ApiResponse<FeedPageResponse>>('/api/v1/images/public', {
+            params: { page: page, size: 12 }
+          }).catch(async () => {
+            return axiosInstance.get<ApiResponse<FeedPageResponse>>('/api/v1/images/me', {
+              params: { page: page, size: 12 }
+            })
+          })
+        }
 
-      const data = resp.data.data
-      const newItems = (data.items ?? []).map((it: FeedPageApiItem) => ({
-        id: it.id || it.imageId || '',
-        url: it.url || '',
-        createdAt: it.createdAt || new Date().toISOString(),
-        prompt: it.prompt,
-        likes: it.likes ?? Math.floor(Math.random() * 128),
-        comments: it.comments ?? Math.floor(Math.random() * 24),
-        views: it.views ?? Math.floor(Math.random() * 400),
-        owner: it.owner ?? it.user ?? { username: it.username },
-      }))
-      setItems(prev => [...prev, ...newItems])
-      setHasMore((data.items?.length ?? 0) > 0)
-    } catch (err) {
-      console.error('Feed fetch failed', err)
-      setHasMore(false)
-    } finally {
-      setLoading(false)
+        if (!active) return
+        const data = resp.data.data
+        const newItems = (data.items ?? []).map((it: FeedPageApiItem) => ({
+          id: it.id || it.imageId || '',
+          url: it.url || '',
+          createdAt: it.createdAt || new Date().toISOString(),
+          prompt: it.prompt,
+          likes: it.likes ?? Math.floor(Math.random() * 128),
+          comments: it.comments ?? Math.floor(Math.random() * 24),
+          views: it.views ?? Math.floor(Math.random() * 400),
+          owner: {
+            userId: it.ownerId || it.owner?.userId || it.user?.userId || '',
+            username: it.ownerName || it.owner?.username || it.user?.username || it.username || 'Anonymous',
+            avatar: it.ownerAvatar || it.owner?.avatar || it.user?.avatar || '',
+          },
+        }))
+
+        setItems(prev => page === 0 ? newItems : [...prev, ...newItems])
+        setHasMore((data.items?.length ?? 0) > 0)
+      } catch (err) {
+        console.error('Feed fetch failed', err)
+        setHasMore(false)
+      } finally {
+        if (active) setLoading(false)
+      }
     }
-  }, [])
+
+    load()
+
+    return () => {
+      active = false
+    }
+  }, [page, searchQuery])
 
   useEffect(() => {
-    fetchPage(page)
-  }, [page, fetchPage])
+    setPage(0)
+    setItems([])
+    setHasMore(true)
+  }, [searchQuery])
 
   useEffect(() => {
     if (!loaderRef.current) return
