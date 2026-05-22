@@ -1,6 +1,7 @@
 package com.pipeline.image.dto.request;
 
 import com.pipeline.image.common.FilterType;
+import com.pipeline.image.common.Visibility;
 import lombok.Data;
 
 @Data
@@ -24,4 +25,6 @@ public class ProcessRequestDto {
     private Integer watermarkSize;
     
     private Float compressionQuality; // 0.1 to 1.0
+
+    private Visibility visibility;
 }

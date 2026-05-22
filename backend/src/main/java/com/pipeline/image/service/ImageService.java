@@ -62,6 +62,7 @@ public class ImageService {
                 it.setOwnerAvatar(image.getUser().getAvatar());
             }
             it.setLikedByCurrentUser(likedSet.contains(image.getImageId()));
+            it.setVisibility(image.getVisibility() != null ? image.getVisibility().name() : null);
             return it;
         }).collect(Collectors.toList());
     }

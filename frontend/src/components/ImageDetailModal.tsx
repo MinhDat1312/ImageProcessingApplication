@@ -25,9 +25,11 @@ interface ImageDetailModalProps {
       avatar: string
     }
     likedByCurrentUser?: boolean
+    visibility?: 'PUBLIC' | 'PRIVATE' | 'UNLISTED'
   }
   onUpdateLikes?: (newLikes: number, liked: boolean) => void
   onUpdateComments?: (newComments: number) => void
+  onUpdateVisibility?: (id: string, visibility: 'PUBLIC' | 'PRIVATE' | 'UNLISTED') => void
 }
 
 interface CommentItem {
@@ -41,7 +43,7 @@ interface CommentItem {
   createdAt: string
 }
 
-export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpdateComments }: ImageDetailModalProps) {
+export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpdateComments, onUpdateVisibility }: ImageDetailModalProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
   
@@ -54,6 +56,8 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
   const [commentsError, setCommentsError] = useState<string | null>(null)
   const [newComment, setNewComment] = useState('')
   const [submittingComment, setSubmittingComment] = useState(false)
+  const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE' | 'UNLISTED'>(item.visibility ?? 'PUBLIC')
+  const [updatingVisibility, setUpdatingVisibility] = useState(false)
 
   useEffect(() => {
     if (visible && item.id) {
@@ -62,6 +66,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
       setViews(item.views ?? 0)
       setCommentsCount(item.comments ?? 0)
       setLiked(item.likedByCurrentUser ?? false)
+      setVisibility(item.visibility ?? 'PUBLIC')
       setNewComment('')
       
       // Increment views
@@ -126,6 +131,26 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
     } catch (err) {
       const errorMsg = (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to toggle like'
       message.error(errorMsg)
+    }
+  }
+
+  const handleVisibilityToggle = async () => {
+    const nextVisibility = visibility === 'PUBLIC' ? 'PRIVATE' : 'PUBLIC'
+    setUpdatingVisibility(true)
+    try {
+      await axiosInstance.put(`/api/v1/images/${item.id}/visibility`, null, {
+        params: { visibility: nextVisibility }
+      })
+      setVisibility(nextVisibility)
+      message.success(`Image is now ${nextVisibility.toLowerCase()}`)
+      if (onUpdateVisibility) {
+        onUpdateVisibility(item.id, nextVisibility)
+      }
+    } catch (err) {
+      const errorMsg = (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to update visibility'
+      message.error(errorMsg)
+    } finally {
+      setUpdatingVisibility(false)
     }
   }
 
@@ -233,6 +258,33 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
           </div>
 
           <Divider style={{ margin: '12px 0', borderColor: 'rgba(255,255,255,0.08)' }} />
+
+          {user && user.userId === item.owner.userId && (
+            <>
+              <div className="visibility-settings-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Visibility</span>
+                  <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', marginTop: '2px' }}>
+                    {visibility === 'PUBLIC' ? '🌐 Public' : '🔒 Private'}
+                  </span>
+                </div>
+                <Button
+                  size="small"
+                  type={visibility === 'PUBLIC' ? 'default' : 'primary'}
+                  onClick={handleVisibilityToggle}
+                  loading={updatingVisibility}
+                  style={{
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    borderColor: visibility === 'PUBLIC' ? 'rgba(255,255,255,0.15)' : undefined
+                  }}
+                >
+                  Make {visibility === 'PUBLIC' ? 'Private' : 'Public'}
+                </Button>
+              </div>
+              <Divider style={{ margin: '12px 0', borderColor: 'rgba(255,255,255,0.08)' }} />
+            </>
+          )}
 
           {/* Quick metrics */}
           <div className="modal-metrics-row">

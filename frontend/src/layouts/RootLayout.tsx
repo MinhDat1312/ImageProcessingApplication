@@ -41,17 +41,17 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
       theme={{
         algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#39d6ff',
-          colorInfo: '#8b7dff',
+          colorPrimary: '#5E6AD2',
+          colorInfo: '#5E6AD2',
           colorSuccess: '#30e3a6',
           colorError: '#ff6b7a',
           colorWarning: '#f5b942',
-          borderRadius: 18,
-          fontFamily: 'Manrope, sans-serif',
+          borderRadius: 12,
+          fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
           fontSize: 14,
           colorBgLayout: 'transparent',
-          colorBgContainer: 'rgba(9, 14, 31, 0.72)',
-          colorBorder: 'rgba(255, 255, 255, 0.09)',
+          colorBgContainer: 'rgba(10, 10, 12, 0.8)',
+          colorBorder: 'rgba(255, 255, 255, 0.06)',
         },
       }}
     >

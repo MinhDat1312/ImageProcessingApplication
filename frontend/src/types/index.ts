@@ -22,6 +22,7 @@ export interface ProcessFormValues {
     | "bottom-right";
   watermarkSize: number;
   compressionQuality: number;
+  visibility?: 'public' | 'private' | 'unlisted';
 }
 
 export type StepStatus = "wait" | "process" | "finish" | "error" | "waiting";
@@ -70,6 +71,7 @@ export interface ImageItem {
   id: string
   url: string
   createdAt: string
+  visibility?: 'PUBLIC' | 'PRIVATE' | 'UNLISTED'
 }
 
 export interface Role {

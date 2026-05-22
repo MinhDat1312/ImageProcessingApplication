@@ -19,29 +19,7 @@
 }
 
 .app-orbit {
-  position: fixed;
-  inset: auto;
-  pointer-events: none;
-  border-radius: 999px;
-  filter: blur(36px);
-  opacity: 0.85;
-  z-index: 0;
-}
-
-.app-orbit-one {
-  top: -140px;
-  right: -120px;
-  width: 380px;
-  height: 380px;
-  background: radial-gradient(circle, rgba(139, 125, 255, 0.3), transparent 68%);
-}
-
-.app-orbit-two {
-  left: -120px;
-  bottom: 80px;
-  width: 320px;
-  height: 320px;
-  background: radial-gradient(circle, rgba(57, 214, 255, 0.22), transparent 70%);
+  display: none;
 }
 
 .app-shell-grid {
@@ -1091,6 +1069,24 @@
   color: #fff;
   font-size: 0.82rem;
   backdrop-filter: blur(16px);
+}
+
+.image-grid-item-visibility {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(4, 8, 20, 0.56);
+  color: #fff;
+  font-size: 0.8rem;
+  backdrop-filter: blur(16px);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  z-index: 2;
 }
 
 .images-pagination {

@@ -22,4 +22,5 @@ public class ImageFeedItem {
     private String ownerName;
     private String ownerAvatar;
     private boolean likedByCurrentUser;
+    private String visibility;
 }

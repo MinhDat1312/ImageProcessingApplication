@@ -7,6 +7,8 @@ import {
   Space,
   Statistic,
   Tag,
+  Modal,
+  Input,
 } from 'antd'
 import {
   ArrowRightOutlined,
@@ -21,6 +23,8 @@ import {
   SafetyOutlined,
   ThunderboltOutlined,
   UngroupOutlined,
+  DeleteOutlined,
+  PlusOutlined,
 } from '@ant-design/icons'
 import { AnimatePresence, motion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
@@ -43,22 +47,47 @@ const heroStats = [
   { label: 'Scale ready', value: 'S3 + Redis', prefix: <CompassOutlined /> },
 ]
 
-const pipelinePresetCards = [
+const systemPresets = [
   {
+    id: 'system-cinematic',
     title: 'Cinematic enhancement',
     description: 'Sharpen, contrast, watermark, and compress for gallery-ready exports.',
-    tag: 'Popular',
+    tag: 'System',
+    values: {
+      filterType: 'contrast',
+      contrastLevel: 1.4,
+      watermarkText: 'NovaCanvas AI',
+      watermarkPosition: 'bottom-right',
+      watermarkSize: 24,
+      compressionQuality: 0.85,
+    }
   },
   {
+    id: 'system-social',
     title: 'Batch social resize',
     description: 'Resize and crop for square social posts, stories, and thumbnails.',
-    tag: 'Batch',
+    tag: 'System',
+    values: {
+      resizeWidth: 1080,
+      resizeHeight: 1080,
+      cropX: 0,
+      cropY: 0,
+      cropWidth: 800,
+      cropHeight: 800,
+      filterType: 'none',
+      compressionQuality: 0.9,
+    }
   },
   {
+    id: 'system-archival',
     title: 'Clean archival',
     description: 'Grayscale, mild sharpen, and lossless preservation for document workflows.',
-    tag: 'Archive',
-  },
+    tag: 'System',
+    values: {
+      filterType: 'grayscale',
+      compressionQuality: 1.0,
+    }
+  }
 ]
 
 const recentHistory = [
@@ -97,6 +126,73 @@ export default function App() {
   const [visibility, setVisibility] = useState<'public' | 'private'>('private')
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
+  const [customPresets, setCustomPresets] = useState<any[]>([])
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false)
+  const [savePresetName, setSavePresetName] = useState('')
+
+  const fetchPresets = async () => {
+    if (!user) {
+      setCustomPresets([])
+      return
+    }
+    try {
+      const response = await axiosInstance.get<ApiResponse<any[]>>('/api/v1/presets')
+      setCustomPresets(response.data.data || [])
+    } catch (error) {
+      console.error('Failed to fetch presets', error)
+    }
+  }
+
+  useEffect(() => {
+    fetchPresets()
+  }, [user])
+
+  const handleSavePreset = async () => {
+    if (!savePresetName.trim()) {
+      notification.warning({ message: 'Preset name is required' })
+      return
+    }
+    
+    const formValues = form.getFieldsValue()
+    
+    try {
+      await axiosInstance.post('/api/v1/presets', {
+        name: savePresetName,
+        stepsJson: JSON.stringify(formValues),
+      })
+      notification.success({
+        message: 'Preset Saved',
+        description: `Pipeline configuration "${savePresetName}" saved successfully.`,
+      })
+      setIsSaveModalOpen(false)
+      setSavePresetName('')
+      fetchPresets()
+    } catch (error) {
+      console.error('Failed to save preset', error)
+      notification.error({
+        message: 'Save Failed',
+        description: 'Could not save the pipeline preset.',
+      })
+    }
+  }
+
+  const handleDeletePreset = async (presetId: string) => {
+    try {
+      await axiosInstance.delete(`/api/v1/presets/${presetId}`)
+      notification.success({
+        message: 'Preset Deleted',
+        description: 'Your custom preset has been successfully removed.',
+      })
+      fetchPresets()
+    } catch (err) {
+      console.error(err)
+      notification.error({
+        message: 'Delete Failed',
+        description: 'Could not delete the custom preset.',
+      })
+    }
+  }
+
   // Listen to forwarded image URLs (e.g. from the generator page)
   useEffect(() => {
     const incomingUrl = location.state?.imageUrl
@@ -127,67 +223,83 @@ export default function App() {
     }
   }, [location.state])
 
-  const handleApplyPreset = (presetTitle: string) => {
-    switch (presetTitle) {
-      case 'Cinematic enhancement':
+  const handleApplyPreset = (preset: any) => {
+    let presetTitle = '';
+    if (preset.values) {
+      // System preset
+      presetTitle = preset.title;
+      form.setFieldsValue({
+        filterType: 'none',
+        brightnessLevel: 1.0,
+        contrastLevel: 1.0,
+        rotateAngle: 0,
+        watermarkText: '',
+        watermarkPosition: 'bottom-right',
+        watermarkSize: 18,
+        compressionQuality: 0.9,
+        resizeWidth: undefined,
+        resizeHeight: undefined,
+        cropX: undefined,
+        cropY: undefined,
+        cropWidth: undefined,
+        cropHeight: undefined,
+        ...preset.values
+      });
+    } else {
+      // Custom user preset
+      presetTitle = preset.name;
+      try {
+        const values = JSON.parse(preset.stepsJson);
         form.setFieldsValue({
-          filterType: 'contrast',
-          contrastLevel: 1.4,
-          watermarkText: 'NovaCanvas AI',
-          watermarkPosition: 'bottom-right',
-          watermarkSize: 24,
-          compressionQuality: 0.85,
-          resizeWidth: undefined,
-          resizeHeight: undefined,
-          cropX: undefined,
-          cropY: undefined,
-          cropWidth: undefined,
-          cropHeight: undefined,
-          rotateAngle: 0,
-        })
-        break
-      case 'Batch social resize':
-        form.setFieldsValue({
-          resizeWidth: 1080,
-          resizeHeight: 1080,
-          cropX: 0,
-          cropY: 0,
-          cropWidth: 800,
-          cropHeight: 800,
           filterType: 'none',
-          watermarkText: '',
-          compressionQuality: 0.9,
+          brightnessLevel: 1.0,
+          contrastLevel: 1.0,
           rotateAngle: 0,
-        })
-        break
-      case 'Clean archival':
-        form.setFieldsValue({
-          filterType: 'grayscale',
-          compressionQuality: 1.0,
+          watermarkText: '',
+          watermarkPosition: 'bottom-right',
+          watermarkSize: 18,
+          compressionQuality: 0.9,
           resizeWidth: undefined,
           resizeHeight: undefined,
           cropX: undefined,
           cropY: undefined,
           cropWidth: undefined,
           cropHeight: undefined,
-          rotateAngle: 0,
-          watermarkText: '',
-        })
-        break
-      default:
-        break
+          ...values
+        });
+      } catch (err) {
+        console.error(err);
+        notification.error({
+          message: 'Error Loading Preset',
+          description: 'The saved configuration could not be parsed.',
+        });
+        return;
+      }
     }
     notification.success({
       message: 'Preset Applied',
       description: `Settings for "${presetTitle}" loaded. Click "Run pipeline" to apply.`,
-    })
+    });
   }
 
-  const handleDuplicatePreset = (presetTitle: string) => {
-    notification.info({
-      message: 'Preset Duplicated',
-      description: `Preset details for "${presetTitle}" copied to clipboard.`,
-    })
+  const handleDuplicatePreset = (preset: any) => {
+    const title = preset.title || preset.name;
+    const configString = preset.values 
+      ? JSON.stringify(preset.values, null, 2) 
+      : JSON.stringify(JSON.parse(preset.stepsJson), null, 2);
+    
+    navigator.clipboard.writeText(configString).then(() => {
+      notification.info({
+        message: 'Preset Copied',
+        description: `Configuration JSON for "${title}" copied to clipboard.`,
+      });
+    }).catch(err => {
+      console.error('Failed to copy', err);
+      notification.warning({
+        message: 'Copy Failed',
+        description: `Preset details for "${title}" could not be written to clipboard automatically.`,
+      });
+    });
   }
 
   useEffect(() => {
@@ -250,6 +362,7 @@ export default function App() {
       formData.append('watermarkSize', String(values.watermarkSize))
     }
     formData.append('compressionQuality', String(values.compressionQuality))
+    formData.append('visibility', visibility.toUpperCase())
 
     try {
       const response = await axiosInstance.post<ApiResponse<ProcessResponse>>('/api/v1/images/process', formData, {
@@ -446,37 +559,65 @@ export default function App() {
               </Card>
             </div>
             <Card className="glass-card studio-card" bordered={false}>
-              <div className="section-header compact">
+              <div className="section-header compact" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <div>
                   <span className="section-kicker">04. Presets</span>
                   <h2>Saved pipelines and generation history</h2>
                   <p>Reuse preset chains, revisit recent runs, and keep the studio organized.</p>
                 </div>
+                {user && (
+                  <Button 
+                    type="primary" 
+                    icon={<PlusOutlined />} 
+                    onClick={() => setIsSaveModalOpen(true)}
+                  >
+                    Save Preset
+                  </Button>
+                )}
               </div>
 
               <div className="preset-stack">
-                {pipelinePresetCards.map(preset => (
-                  <article key={preset.title} className="preset-card">
+                {[
+                  ...systemPresets,
+                  ...customPresets.map(cp => ({
+                    id: cp.id,
+                    title: cp.name,
+                    description: `Custom preset created on ${new Date(cp.createdAt).toLocaleDateString()}`,
+                    tag: 'Custom',
+                    stepsJson: cp.stepsJson
+                  }))
+                ].map(preset => (
+                  <article key={preset.id || preset.title} className="preset-card">
                     <div className="preset-card-top">
                       <strong>{preset.title}</strong>
-                      <Tag color="geekblue">{preset.tag}</Tag>
+                      <Tag color={preset.tag === 'System' ? 'geekblue' : 'purple'}>{preset.tag}</Tag>
                     </div>
                     <p>{preset.description}</p>
                     <div className="preset-actions">
                       <Button 
                         size="small" 
                         icon={<PlayCircleOutlined />} 
-                        onClick={() => handleApplyPreset(preset.title)}
+                        onClick={() => handleApplyPreset(preset)}
                       >
                         Run preset
                       </Button>
                       <Button 
                         size="small" 
                         icon={<CopyOutlined />}
-                        onClick={() => handleDuplicatePreset(preset.title)}
+                        onClick={() => handleDuplicatePreset(preset)}
                       >
                         Duplicate
                       </Button>
+                      {preset.tag === 'Custom' && (
+                        <Button 
+                          size="small" 
+                          danger
+                          icon={<DeleteOutlined />}
+                          onClick={() => handleDeletePreset(preset.id)}
+                        >
+                          Delete
+                        </Button>
+                      )}
                     </div>
                   </article>
                 ))}
@@ -569,6 +710,31 @@ export default function App() {
           </aside>
         </section>
       </main>
+      <Modal
+        title="Save Current Pipeline Configuration"
+        open={isSaveModalOpen}
+        onOk={handleSavePreset}
+        onCancel={() => {
+          setIsSaveModalOpen(false)
+          setSavePresetName('')
+        }}
+        okText="Save Preset"
+        cancelText="Cancel"
+        destroyOnClose
+      >
+        <div style={{ marginTop: '16px' }}>
+          <label style={{ display: 'block', marginBottom: '8px', color: 'var(--foreground-muted)' }}>
+            Preset Name
+          </label>
+          <Input
+            placeholder="e.g. Vintage Matte, Editorial Glow"
+            value={savePresetName}
+            onChange={e => setSavePresetName(e.target.value)}
+            onPressEnter={handleSavePreset}
+            autoFocus
+          />
+        </div>
+      </Modal>
     </AntApp>
   )
 }

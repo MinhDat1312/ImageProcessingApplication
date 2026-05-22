@@ -165,7 +165,7 @@ public class ImageController {
             savedImage.setWidth(context.getImage() != null ? context.getImage().getWidth() : 0);
             savedImage.setHeight(context.getImage() != null ? context.getImage().getHeight() : 0);
             savedImage.setTitle(file.getOriginalFilename());
-            savedImage.setVisibility(Visibility.PUBLIC); // Default public to show in feed
+            savedImage.setVisibility(requestDto.getVisibility() != null ? requestDto.getVisibility() : Visibility.PUBLIC);
             Image persistedImage = this.imageRepository.save(savedImage);
             log.info("Image saved to DB: {}", persistedImage.getImageId());
 
@@ -492,6 +492,37 @@ public class ImageController {
                     "totalItems", likePage.getTotalElements(),
                     "totalPages", likePage.getTotalPages()
             ));
+        } catch (InvalidException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/visibility")
+    @Transactional
+    public ResponseEntity<?> updateVisibility(
+            @PathVariable("id") String id,
+            @RequestParam("visibility") String visibilityStr
+    ) {
+        try {
+            User currentUser = currentUser();
+            Image image = imageRepository.findById(id)
+                    .orElseThrow(() -> new InvalidException("Image not found"));
+
+            if (image.getUser() == null || !image.getUser().getUserId().equals(currentUser.getUserId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "You do not own this image"));
+            }
+
+            try {
+                Visibility newVisibility = Visibility.valueOf(visibilityStr.toUpperCase());
+                image.setVisibility(newVisibility);
+                imageRepository.save(image);
+                return ResponseEntity.ok(Map.of(
+                        "id", image.getImageId(),
+                        "visibility", image.getVisibility().name()
+                ));
+            } catch (IllegalArgumentException e) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid visibility value. Allowed: PUBLIC, PRIVATE, UNLISTED"));
+            }
         } catch (InvalidException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

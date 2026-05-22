@@ -1,6 +1,6 @@
 import { Empty, Pagination, Skeleton, Button, Tabs, Badge } from 'antd'
 import { useEffect, useState } from 'react'
-import { ReloadOutlined, RocketOutlined, HeartFilled } from '@ant-design/icons'
+import { ReloadOutlined, RocketOutlined, HeartFilled, LockOutlined, GlobalOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
@@ -134,6 +134,7 @@ export function MyImagesPage() {
         avatar: selectedImage.owner?.avatar || user?.avatar || '',
       },
       likedByCurrentUser: selectedImage.likedByCurrentUser ?? activeTab === 'liked',
+      visibility: selectedImage.visibility,
     }
   }
 
@@ -217,6 +218,18 @@ export function MyImagesPage() {
               style={{ cursor: 'pointer' }}
             >
               <img src={img.url} alt={img.id} loading="lazy" />
+              {img.visibility && (
+                <div className="image-grid-item-visibility">
+                  {img.visibility === 'PRIVATE' ? (
+                    <LockOutlined style={{ color: '#ff4d6d' }} />
+                  ) : (
+                    <GlobalOutlined style={{ color: '#5E6AD2' }} />
+                  )}
+                  <span style={{ marginLeft: '4px', textTransform: 'capitalize', fontSize: '11px', fontWeight: 500 }}>
+                    {img.visibility.toLowerCase()}
+                  </span>
+                </div>
+              )}
               <div className="image-grid-item-overlay">{timeAgo(img.createdAt)}</div>
             </motion.div>
           ))}
@@ -260,6 +273,13 @@ export function MyImagesPage() {
               }
               return updated
             })
+          }}
+          onUpdateVisibility={(id, nextVisibility) => {
+            if (!selectedImage) return
+            setImages(prev => 
+              prev.map(img => img.id === id ? { ...img, visibility: nextVisibility } : img)
+            )
+            setSelectedImage(prev => prev && prev.id === id ? { ...prev, visibility: nextVisibility } : prev)
           }}
         />
       )}
