@@ -30,6 +30,56 @@ public class AssistantService {
     @Value("${assistant.model:" + DEFAULT_MODEL + "}")
     private String modelName;
 
+    public static class ImageAiMetadata {
+        private final String description;
+        private final String tags;
+        public ImageAiMetadata(String description, String tags) {
+            this.description = description;
+            this.tags = tags;
+        }
+        public String getDescription() { return description; }
+        public String getTags() { return tags; }
+    }
+
+    public ImageAiMetadata generateAiMetadata(String title, String details, boolean isAiGeneration) {
+        String inputDetails = isAiGeneration ? "Generation Prompt: " + details : "Image Title: " + title + ", Processing: " + details;
+        String systemPrompt = "You are an AI assistant for an image gallery platform. " +
+                "Based on the following input, write a creative, concise description (1-2 sentences) " +
+                "and generate 3-5 relevant keywords/tags (comma-separated, single words, no hashtag symbol). " +
+                "Format your response exactly like this:\n" +
+                "Description: [Your description]\n" +
+                "Tags: [tag1, tag2, tag3]\n" +
+                "Input details:\n" + inputDetails;
+        
+        try {
+            GenerateContentResponse response = googleClient.models.generateContent("gemini-2.5-flash", systemPrompt, null);
+            String text = response.text();
+            if (text != null && !text.isBlank()) {
+                String description = "";
+                String tags = "";
+                String[] lines = text.split("\n");
+                for (String line : lines) {
+                    String trimmed = line.trim();
+                    if (trimmed.toLowerCase().startsWith("description:")) {
+                        description = trimmed.substring("description:".length()).trim();
+                    } else if (trimmed.toLowerCase().startsWith("tags:")) {
+                        tags = trimmed.substring("tags:".length()).trim();
+                    }
+                }
+                if (!description.isBlank() && !tags.isBlank()) {
+                    return new ImageAiMetadata(description, tags);
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Failed to generate AI metadata: {}", e.getMessage());
+        }
+        
+        // Fallback
+        String fallbackDesc = isAiGeneration ? "AI Generated image using prompt: " + details : "Processed image: " + title;
+        String fallbackTags = isAiGeneration ? "ai, generated, digital-art" : "processed, edit, custom";
+        return new ImageAiMetadata(fallbackDesc, fallbackTags);
+    }
+
     public AssistantResponseDto generatePrompt(AssistantRequestDto request) {
         String systemPrompt = "You are an expert prompt engineer for AI image generation. " +
                 "Create a polished image prompt from the user's idea. Return only the final prompt and no markdown.";

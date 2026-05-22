@@ -135,6 +135,9 @@ export function MyImagesPage() {
       },
       likedByCurrentUser: selectedImage.likedByCurrentUser ?? activeTab === 'liked',
       visibility: selectedImage.visibility,
+      title: selectedImage.title ?? '',
+      description: selectedImage.description ?? '',
+      tags: selectedImage.tags ?? '',
     }
   }
 
@@ -280,6 +283,13 @@ export function MyImagesPage() {
               prev.map(img => img.id === id ? { ...img, visibility: nextVisibility } : img)
             )
             setSelectedImage(prev => prev && prev.id === id ? { ...prev, visibility: nextVisibility } : prev)
+          }}
+          onUpdateMetadata={(id, updatedFields) => {
+            if (!selectedImage) return
+            setImages(prev => 
+              prev.map(img => img.id === id ? { ...img, ...updatedFields } : img)
+            )
+            setSelectedImage(prev => prev && prev.id === id ? { ...prev, ...updatedFields } : prev)
           }}
         />
       )}

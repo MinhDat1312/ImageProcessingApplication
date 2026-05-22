@@ -14,6 +14,7 @@ public class ImageFeedItem {
     private String title;
     private String prompt;
     private String tags;
+    private String description;
     private Instant createdAt;
     private Long likes;
     private Long views;

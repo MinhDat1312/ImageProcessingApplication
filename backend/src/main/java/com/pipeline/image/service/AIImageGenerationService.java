@@ -37,6 +37,7 @@ public class AIImageGenerationService {
     private final ImageRepository imageRepository;
     private final ImageVersionRepository imageVersionRepository;
     private final UserRepository userRepository;
+    private final AssistantService assistantService;
 
     public Image generateAIImage(AIImageGenerationRequestDto requestDto) {
         String email = SecurityUtil.getCurrentUserEmail();
@@ -48,30 +49,10 @@ public class AIImageGenerationService {
 
         try {
             log.info("Requesting AI Image Generation for user: {}, prompt: '{}'", currentUser.getEmail(), requestDto.getPrompt());
-
-            GenerateImagesConfig config = GenerateImagesConfig.builder()
-                    .numberOfImages(1)
-                    .outputMimeType("image/png")
-                    .aspectRatio(requestDto.getAspectRatio() != null ? requestDto.getAspectRatio() : "1:1")
-                    .build();
-
-            GenerateImagesResponse response = googleClient.models.generateImages(
-                    "imagen-3.0-generate-002",
-                    requestDto.getPrompt(),
-                    config
-            );
-
-            if (response != null && response.generatedImages() != null && response.generatedImages().isPresent() && !response.generatedImages().get().isEmpty()) {
-                imgBytes = response.generatedImages().get().get(0).image().get().imageBytes().get();
-                log.info("AI Image successfully generated via Imagen 3");
-            } else {
-                log.warn("Imagen 3 returned empty images list, falling back to programmatic canvas");
-                imgBytes = generateFallbackImage(requestDto.getPrompt());
-                isFallback = true;
-            }
-
+            imgBytes = generatePollinationsImage(requestDto.getPrompt(), requestDto.getAspectRatio());
+            log.info("AI Image successfully generated via Pollinations.ai");
         } catch (Exception ex) {
-            log.warn("Imagen 3 generation failed: {}, using fallback canvas", ex.getMessage());
+            log.warn("Pollinations.ai generation failed: {}, using fallback canvas", ex.getMessage());
             imgBytes = generateFallbackImage(requestDto.getPrompt());
             isFallback = true;
         }
@@ -94,8 +75,24 @@ public class AIImageGenerationService {
         image.setUser(currentUser);
         image.setUrl(imageUrl);
         image.setPrompt(requestDto.getPrompt());
-        image.setTitle(requestDto.getPrompt().substring(0, Math.min(30, requestDto.getPrompt().length())) + "...");
-        image.setDescription("AI Generated using Imagen 3 model. Prompts: " + requestDto.getPrompt());
+        
+        String title = requestDto.getTitle();
+        if (title == null || title.trim().isEmpty()) {
+            title = requestDto.getPrompt().substring(0, Math.min(30, requestDto.getPrompt().length())) + "...";
+        }
+        image.setTitle(title);
+        
+        // Generate description and tags using AI
+        try {
+            AssistantService.ImageAiMetadata aiMetadata = assistantService.generateAiMetadata(title, requestDto.getPrompt(), true);
+            image.setDescription(aiMetadata.getDescription());
+            image.setTags(aiMetadata.getTags());
+        } catch (Exception ex) {
+            log.warn("Failed to generate AI metadata for generated image, using fallback", ex);
+            image.setDescription("AI Generated using Imagen 3 model. Prompt: " + requestDto.getPrompt());
+            image.setTags("ai, generated, digital-art");
+        }
+        
         image.setVisibility(Visibility.PUBLIC);
         
         // Try reading dimensions
@@ -121,7 +118,7 @@ public class AIImageGenerationService {
         version.setHeight(image.getHeight());
         version.setFileSize((long) imgBytes.length);
         version.setVersionType("AI_GENERATED");
-        version.setPipelineStepsJson(isFallback ? "{\"model\":\"programmatic-fallback\"}" : "{\"model\":\"imagen-3.0-generate-002\"}");
+        version.setPipelineStepsJson(isFallback ? "{\"model\":\"programmatic-fallback\"}" : "{\"model\":\"pollinations-ai-flux\"}");
         imageVersionRepository.save(version);
 
         return savedImage;
@@ -209,5 +206,54 @@ public class AIImageGenerationService {
             lines.add(currentLine.toString());
         }
         return lines;
+    }
+
+    private byte[] generatePollinationsImage(String prompt, String aspectRatio) {
+        try {
+            int width = 1024;
+            int height = 1024;
+            if ("16:9".equals(aspectRatio)) {
+                width = 1024;
+                height = 576;
+            } else if ("9:16".equals(aspectRatio)) {
+                width = 576;
+                height = 1024;
+            } else if ("4:3".equals(aspectRatio)) {
+                width = 1024;
+                height = 768;
+            }
+
+            String encodedPrompt = java.net.URLEncoder.encode(prompt, java.nio.charset.StandardCharsets.UTF_8.toString());
+            String urlString = String.format("https://image.pollinations.ai/prompt/%s?width=%d&height=%d&nologo=true", 
+                encodedPrompt, width, height);
+
+            log.info("Fetching image from Pollinations.ai: {}", urlString);
+            
+            java.net.URL url = new java.net.URL(urlString);
+            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(30000);
+            connection.setReadTimeout(30000);
+            
+            int responseCode = connection.getResponseCode();
+            if (responseCode == 200) {
+                try (java.io.InputStream inputStream = connection.getInputStream();
+                     java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream()) {
+                    byte[] buffer = new byte[4096];
+                    int bytesRead;
+                    while ((bytesRead = inputStream.read(buffer)) != -1) {
+                        outputStream.write(buffer, 0, bytesRead);
+                    }
+                    byte[] imgBytes = outputStream.toByteArray();
+                    log.info("Successfully generated image from Pollinations.ai, size: {} bytes", imgBytes.length);
+                    return imgBytes;
+                }
+            } else {
+                throw new RuntimeException("Pollinations.ai returned status: " + responseCode);
+            }
+        } catch (Exception e) {
+            log.error("Failed to generate image via Pollinations.ai: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
     }
 }

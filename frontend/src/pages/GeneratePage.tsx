@@ -36,6 +36,7 @@ export default function GeneratePage() {
   const [prompt, setPrompt] = useState('Cinematic portrait of a cyberpunk explorer, volumetric purple light, detailed matte canvas')
   const [negativePrompt, setNegativePrompt] = useState('blurry, low quality, distorted, bad proportions')
   const [aspectRatio, setAspectRatio] = useState('1:1')
+  const [imageTitle, setImageTitle] = useState('')
   const [generatingAI, setGeneratingAI] = useState(false)
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null)
   const [generatedImageId, setGeneratedImageId] = useState<string | null>(null)
@@ -126,6 +127,7 @@ export default function GeneratePage() {
         prompt,
         negativePrompt,
         aspectRatio,
+        title: imageTitle.trim() || undefined,
       })
 
       const responseData = response.data
@@ -202,6 +204,17 @@ export default function GeneratePage() {
               <h2>1. Prompt Settings</h2>
             </div>
             
+            <div className="field-group" style={{ marginBottom: 16 }}>
+              <label className="field-label" htmlFor="gen-title">Title (Optional)</label>
+              <Input
+                id="gen-title"
+                value={imageTitle}
+                onChange={e => setImageTitle(e.target.value)}
+                placeholder="Give your generated image a title..."
+                disabled={generatingAI}
+              />
+            </div>
+
             <div className="field-group">
               <label className="field-label" htmlFor="gen-prompt">Prompt</label>
               <Input.TextArea

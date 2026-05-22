@@ -27,4 +27,10 @@ public class ProcessRequestDto {
     private Float compressionQuality; // 0.1 to 1.0
 
     private Visibility visibility;
+
+    private String title;
+    private String prompt;
+    private String tags;
+    private String description;
+    private String thumbnailUrl;
 }

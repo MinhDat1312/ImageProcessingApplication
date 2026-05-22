@@ -26,10 +26,14 @@ interface ImageDetailModalProps {
     }
     likedByCurrentUser?: boolean
     visibility?: 'PUBLIC' | 'PRIVATE' | 'UNLISTED'
+    title?: string
+    description?: string
+    tags?: string
   }
   onUpdateLikes?: (newLikes: number, liked: boolean) => void
   onUpdateComments?: (newComments: number) => void
   onUpdateVisibility?: (id: string, visibility: 'PUBLIC' | 'PRIVATE' | 'UNLISTED') => void
+  onUpdateMetadata?: (id: string, updatedFields: { title: string; description: string; tags: string; prompt?: string }) => void
 }
 
 interface CommentItem {
@@ -43,7 +47,7 @@ interface CommentItem {
   createdAt: string
 }
 
-export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpdateComments, onUpdateVisibility }: ImageDetailModalProps) {
+export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpdateComments, onUpdateVisibility, onUpdateMetadata }: ImageDetailModalProps) {
   const { user } = useAuth()
   const navigate = useNavigate()
   
@@ -59,6 +63,14 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
   const [visibility, setVisibility] = useState<'PUBLIC' | 'PRIVATE' | 'UNLISTED'>(item.visibility ?? 'PUBLIC')
   const [updatingVisibility, setUpdatingVisibility] = useState(false)
 
+  // Metadata Edit States
+  const [editMode, setEditMode] = useState(false)
+  const [title, setTitle] = useState(item.title ?? '')
+  const [description, setDescription] = useState(item.description ?? '')
+  const [tags, setTags] = useState(item.tags ?? '')
+  const [prompt, setPrompt] = useState(item.prompt ?? '')
+  const [savingMetadata, setSavingMetadata] = useState(false)
+
   useEffect(() => {
     if (visible && item.id) {
       // Sync local state
@@ -68,6 +80,13 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
       setLiked(item.likedByCurrentUser ?? false)
       setVisibility(item.visibility ?? 'PUBLIC')
       setNewComment('')
+
+      // Sync metadata
+      setTitle(item.title ?? '')
+      setDescription(item.description ?? '')
+      setTags(item.tags ?? '')
+      setPrompt(item.prompt ?? '')
+      setEditMode(false)
       
       // Increment views
       axiosInstance.post(`/api/v1/images/${item.id}/view`)
@@ -82,6 +101,33 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
       fetchComments()
     }
   }, [visible, item.id])
+
+  const handleSaveMetadata = async () => {
+    setSavingMetadata(true)
+    try {
+      await axiosInstance.put(`/api/v1/images/${item.id}/metadata`, {
+        title: title.trim(),
+        description: description.trim(),
+        tags: tags.trim(),
+        prompt: prompt.trim(),
+      })
+      message.success('Details updated successfully')
+      setEditMode(false)
+      if (onUpdateMetadata) {
+        onUpdateMetadata(item.id, {
+          title: title.trim(),
+          description: description.trim(),
+          tags: tags.trim(),
+          prompt: prompt.trim()
+        })
+      }
+    } catch (err) {
+      const errorMsg = (err as { response?: { data?: { error?: string } } }).response?.data?.error || 'Failed to update details'
+      message.error(errorMsg)
+    } finally {
+      setSavingMetadata(false)
+    }
+  }
 
   const fetchComments = async () => {
     setLoadingComments(true)
@@ -216,13 +262,13 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
         {/* Left pane: Image & prompt detail */}
         <div className="detail-modal-image-pane">
           <div className="detail-modal-image-container">
-            <img src={item.url} alt={item.prompt || 'Creation'} />
+            <img src={item.url} alt={title || prompt || 'Creation'} />
           </div>
           <div className="detail-modal-meta-bar">
-            {item.prompt && (
+            {prompt && (
               <div className="prompt-display-box">
                 <span className="prompt-label">Prompt</span>
-                <p className="prompt-text">{item.prompt}</p>
+                <p className="prompt-text">{prompt}</p>
               </div>
             )}
             <div className="modal-actions-footer">
@@ -255,6 +301,127 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
               <h4>{item.owner.username}</h4>
               <span>Published {new Date(item.createdAt).toLocaleDateString()}</span>
             </div>
+          </div>
+
+          <Divider style={{ margin: '12px 0', borderColor: 'rgba(255,255,255,0.08)' }} />
+
+          {/* Metadata Section */}
+          <div className="metadata-section" style={{ padding: '4px 8px 12px 8px' }}>
+            {editMode ? (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Title</label>
+                  <Input 
+                    value={title} 
+                    onChange={e => setTitle(e.target.value)} 
+                    placeholder="Enter image title" 
+                    size="middle"
+                    style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Description</label>
+                  <Input.TextArea 
+                    value={description} 
+                    onChange={e => setDescription(e.target.value)} 
+                    placeholder="Describe this creation..." 
+                    size="middle"
+                    autoSize={{ minRows: 2, maxRows: 4 }}
+                    style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Tags (comma separated)</label>
+                  <Input 
+                    value={tags} 
+                    onChange={e => setTags(e.target.value)} 
+                    placeholder="e.g. vintage, portrait, warm" 
+                    size="middle"
+                    style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                  />
+                </div>
+                {item.prompt && (
+                  <div>
+                    <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Prompt</label>
+                    <Input.TextArea 
+                      value={prompt} 
+                      onChange={e => setPrompt(e.target.value)} 
+                      placeholder="Generation prompt..." 
+                      size="middle"
+                      autoSize={{ minRows: 1, maxRows: 3 }}
+                      style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                    />
+                  </div>
+                )}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                  <Button 
+                    type="primary" 
+                    size="middle" 
+                    onClick={handleSaveMetadata} 
+                    loading={savingMetadata}
+                    style={{ flex: 1, borderRadius: '6px' }}
+                  >
+                    Save
+                  </Button>
+                  <Button 
+                    size="middle" 
+                    onClick={() => {
+                      setEditMode(false)
+                      setTitle(item.title ?? '')
+                      setDescription(item.description ?? '')
+                      setTags(item.tags ?? '')
+                      setPrompt(item.prompt ?? '')
+                    }}
+                    style={{ borderRadius: '6px', background: 'transparent', borderColor: 'rgba(255,255,255,0.15)', color: 'var(--text-secondary)' }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {title || 'Untitled Creation'}
+                  </h3>
+                  {user && user.userId === item.owner.userId && (
+                    <Button 
+                      size="small" 
+                      onClick={() => setEditMode(true)}
+                      style={{ fontSize: '11px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}
+                    >
+                      Edit Details
+                    </Button>
+                  )}
+                </div>
+                
+                {description && (
+                  <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                    {description}
+                  </p>
+                )}
+
+                {tags && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                    {tags.split(',').map((tag: string) => tag.trim()).filter(Boolean).map((tag: string) => (
+                      <span 
+                        key={tag} 
+                        style={{ 
+                          fontSize: '11px', 
+                          background: 'rgba(94, 106, 210, 0.1)', 
+                          color: '#8A97FF', 
+                          padding: '2px 8px', 
+                          borderRadius: '4px',
+                          border: '1px solid rgba(94, 106, 210, 0.2)' 
+                        }}
+                      >
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           <Divider style={{ margin: '12px 0', borderColor: 'rgba(255,255,255,0.08)' }} />

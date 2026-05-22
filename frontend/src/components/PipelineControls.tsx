@@ -212,6 +212,15 @@ export function PipelineControls({
             </Form.Item>
           </div>
         </section>
+
+        <section className="control-section">
+          <h3>7. Output Title</h3>
+          <div className="control-fields one-col">
+            <Form.Item name="title" label="Title">
+              <Input placeholder="Give your creation a name (optional)" />
+            </Form.Item>
+          </div>
+        </section>
       </div>
 
       <Form.Item className="submit-row">

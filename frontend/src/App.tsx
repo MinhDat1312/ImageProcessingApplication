@@ -363,6 +363,10 @@ export default function App() {
     }
     formData.append('compressionQuality', String(values.compressionQuality))
     formData.append('visibility', visibility.toUpperCase())
+    if (values.title) formData.append('title', values.title)
+    if (values.description) formData.append('description', values.description)
+    if (values.tags) formData.append('tags', values.tags)
+    if (values.prompt) formData.append('prompt', values.prompt)
 
     try {
       const response = await axiosInstance.post<ApiResponse<ProcessResponse>>('/api/v1/images/process', formData, {

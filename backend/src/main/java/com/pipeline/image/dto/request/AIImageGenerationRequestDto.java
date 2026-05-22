@@ -7,4 +7,5 @@ public class AIImageGenerationRequestDto {
     private String prompt;
     private String negativePrompt;
     private String aspectRatio; // "1:1", "16:9", "4:3", "9:16"
+    private String title;
 }

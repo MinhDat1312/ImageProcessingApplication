@@ -7,6 +7,7 @@ import com.pipeline.image.entity.Image;
 import com.pipeline.image.entity.ImageVersion;
 import com.pipeline.image.entity.User;
 import com.pipeline.image.dto.request.ProcessRequestDto;
+import com.pipeline.image.dto.request.ImageMetadataRequestDto;
 import com.pipeline.image.dto.response.ProcessResponseDto;
 import com.pipeline.image.exception.InvalidException;
 import com.pipeline.image.repository.ImageRepository;
@@ -36,6 +37,7 @@ import com.pipeline.image.dto.request.CommentRequestDto;
 import com.pipeline.image.common.Visibility;
 import com.pipeline.image.dto.response.ImageFeedItem;
 import com.pipeline.image.service.ImageService;
+import com.pipeline.image.service.AssistantService;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestController
@@ -54,6 +56,7 @@ public class ImageController {
     private final ImageVersionRepository imageVersionRepository;
     private final ObjectMapper objectMapper;
     private final HttpServletRequest httpServletRequest;
+    private final AssistantService assistantService;
 
     @PostMapping("/process")
     public ResponseEntity<?> processImage(
@@ -164,7 +167,49 @@ public class ImageController {
             savedImage.setUrl(context.getOutputUrl());
             savedImage.setWidth(context.getImage() != null ? context.getImage().getWidth() : 0);
             savedImage.setHeight(context.getImage() != null ? context.getImage().getHeight() : 0);
-            savedImage.setTitle(file.getOriginalFilename());
+            
+            String title = requestDto.getTitle() != null && !requestDto.getTitle().isBlank() ? requestDto.getTitle() : file.getOriginalFilename();
+            savedImage.setTitle(title);
+            
+            // Image processing does not have a prompt
+            savedImage.setPrompt(null);
+            
+            // Generate description and tags using AI
+            StringBuilder detailsBuilder = new StringBuilder();
+            if (requestDto.getCropX() != null) {
+                detailsBuilder.append("Cropped. ");
+            }
+            if (requestDto.getRotateAngle() != null && requestDto.getRotateAngle() != 0) {
+                detailsBuilder.append("Rotated ").append(requestDto.getRotateAngle()).append(" degrees. ");
+            }
+            if (requestDto.getResizeWidth() != null) {
+                detailsBuilder.append("Resized to ").append(requestDto.getResizeWidth()).append("x").append(requestDto.getResizeHeight()).append(". ");
+            }
+            if (requestDto.getFilterType() != null && !FilterType.none.equals(requestDto.getFilterType())) {
+                detailsBuilder.append("Applied filter: ").append(requestDto.getFilterType().name()).append(". ");
+            }
+            if (requestDto.getWatermarkText() != null && !requestDto.getWatermarkText().trim().isEmpty()) {
+                detailsBuilder.append("Added watermark '").append(requestDto.getWatermarkText()).append("'. ");
+            }
+            if (requestDto.getCompressionQuality() != null) {
+                detailsBuilder.append("Compressed quality to ").append((int)(requestDto.getCompressionQuality() * 100)).append("%. ");
+            }
+            String details = detailsBuilder.toString().trim();
+            if (details.isEmpty()) {
+                details = "Uploaded original image.";
+            }
+
+            try {
+                AssistantService.ImageAiMetadata aiMetadata = assistantService.generateAiMetadata(title, details, false);
+                savedImage.setDescription(aiMetadata.getDescription());
+                savedImage.setTags(aiMetadata.getTags());
+            } catch (Exception ex) {
+                log.warn("Failed to generate AI metadata for processed image, using fallback", ex);
+                savedImage.setDescription("Processed image: " + title);
+                savedImage.setTags("processed, edit");
+            }
+
+            savedImage.setThumbnailUrl(requestDto.getThumbnailUrl());
             savedImage.setVisibility(requestDto.getVisibility() != null ? requestDto.getVisibility() : Visibility.PUBLIC);
             Image persistedImage = this.imageRepository.save(savedImage);
             log.info("Image saved to DB: {}", persistedImage.getImageId());
@@ -523,6 +568,48 @@ public class ImageController {
             } catch (IllegalArgumentException e) {
                 return ResponseEntity.badRequest().body(Map.of("error", "Invalid visibility value. Allowed: PUBLIC, PRIVATE, UNLISTED"));
             }
+        } catch (InvalidException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/{id}/metadata")
+    @Transactional
+    public ResponseEntity<?> updateMetadata(
+            @PathVariable("id") String id,
+            @RequestBody ImageMetadataRequestDto req
+    ) {
+        try {
+            User currentUser = currentUser();
+            Image image = imageRepository.findById(id)
+                    .orElseThrow(() -> new InvalidException("Image not found"));
+
+            if (image.getUser() == null || !image.getUser().getUserId().equals(currentUser.getUserId())) {
+                return ResponseEntity.status(403).body(Map.of("error", "You do not own this image"));
+            }
+
+            if (req.getTitle() != null) {
+                image.setTitle(req.getTitle());
+            }
+            if (req.getPrompt() != null) {
+                image.setPrompt(req.getPrompt());
+            }
+            if (req.getTags() != null) {
+                image.setTags(req.getTags());
+            }
+            if (req.getDescription() != null) {
+                image.setDescription(req.getDescription());
+            }
+
+            imageRepository.save(image);
+
+            return ResponseEntity.ok(Map.of(
+                    "id", image.getImageId(),
+                    "title", image.getTitle() != null ? image.getTitle() : "",
+                    "prompt", image.getPrompt() != null ? image.getPrompt() : "",
+                    "tags", image.getTags() != null ? image.getTags() : "",
+                    "description", image.getDescription() != null ? image.getDescription() : ""
+            ));
         } catch (InvalidException e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }

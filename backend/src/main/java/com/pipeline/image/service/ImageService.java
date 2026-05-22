@@ -52,6 +52,7 @@ public class ImageService {
             it.setTitle(image.getTitle());
             it.setPrompt(image.getPrompt());
             it.setTags(image.getTags());
+            it.setDescription(image.getDescription());
             it.setCreatedAt(image.getCreatedAt());
             it.setLikes(image.getLikesCount());
             it.setViews(image.getViewsCount());
