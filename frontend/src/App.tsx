@@ -121,6 +121,7 @@ export default function App() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
   const [processedUrl, setProcessedUrl] = useState<string | null>(null)
   const [processedFilename, setProcessedFilename] = useState<string>()
+  const [processedImageId, setProcessedImageId] = useState<string>()
   const [processing, setProcessing] = useState(false)
   const [executionTime, setExecutionTime] = useState<number | null>(null)
   const [visibility, setVisibility] = useState<'public' | 'private'>('private')
@@ -211,6 +212,7 @@ export default function App() {
           setPreviewUrl(incomingUrl)
           setProcessedUrl(null)
           setProcessedFilename(undefined)
+          setProcessedImageId(undefined)
           setExecutionTime(null)
         })
         .catch(err => {
@@ -323,6 +325,7 @@ export default function App() {
     setFile(nextFile)
     setProcessedUrl(null)
     setProcessedFilename(undefined)
+    setProcessedImageId(undefined)
     setExecutionTime(null)
     form.resetFields(['resizeWidth', 'resizeHeight', 'watermarkText'])
   }
@@ -337,6 +340,7 @@ export default function App() {
 
     setProcessing(true)
     setProcessedUrl(null)
+    setProcessedImageId(undefined)
     startSimulation(values)
     startWaiting()
 
@@ -376,6 +380,7 @@ export default function App() {
       completeAll()
       setProcessedUrl(data.url)
       setProcessedFilename(data.filename)
+      setProcessedImageId(data.imageId)
       setExecutionTime(data.executionTimeMs)
       notification.success({
         message: 'Image processed successfully',
@@ -559,6 +564,7 @@ export default function App() {
                   processedUrl={processedUrl}
                   executionTime={executionTime}
                   processedFilename={processedFilename}
+                  imageId={processedImageId}
                 />
               </Card>
             </div>

@@ -48,6 +48,14 @@ export interface ProcessResponse {
   imageId: string;
 }
 
+export interface ImagePreviewProps {
+  originalUrl: string | null;
+  processedUrl: string | null;
+  executionTime: number | null;
+  processedFilename?: string;
+  imageId?: string | null;
+}
+
 export interface ApiResponse<T> {
   statusCode: number;
   message: string;
