@@ -1,16 +1,104 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import './styles/design-tokens.css';
+
 :root {
-  --sans: system-ui, 'Segoe UI', Roboto, sans-serif;
-  font-family: var(--sans);
+  --font-sans: 'Inter', system-ui, sans-serif;
+  --font-display: 'Space Grotesk', 'Inter', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+  font-family: var(--font-sans);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  color-scheme: dark;
+
+  /* Mappings for legacy app variable support */
+  --bg-canvas: var(--background-base);
+  --bg-surface: var(--surface);
+  --bg-surface-2: rgba(255, 255, 255, 0.08);
+  --bg-surface-3: rgba(255, 255, 255, 0.12);
+  --border-soft: var(--border-default);
+  --border-strong: var(--border-accent);
+  --text-primary: var(--foreground);
+  --text-secondary: var(--foreground-muted);
+  --text-tertiary: var(--foreground-subtle);
+  --primary: var(--accent);
+  --primary-hover: var(--accent-bright);
+  --secondary: #7a5ef0;
+  --success: #30e3a6;
+  --warning: #f5b942;
+  --danger: #ff6b7a;
+  --focus-ring: var(--accent-glow);
+}
+
+html {
+  background: var(--bg-canvas);
 }
 
 body {
   margin: 0;
+  min-height: 100vh;
+  background: var(--bg-canvas);
+  color: var(--text-primary);
+  overflow-x: hidden;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+a {
+  color: inherit;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  color: var(--foreground);
+}
+
+button,
+input,
+textarea,
+select,
+.ant-btn,
+.ant-switch,
+.ant-input,
+.ant-input-affix-wrapper,
+.ant-select-selector {
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease, background-color 180ms ease;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
 }
 
 #root {
   min-height: 100vh;
 }
+
+::selection {
+  background: var(--accent-glow);
+  color: #fff;
+}
+
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

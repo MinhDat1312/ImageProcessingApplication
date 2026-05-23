@@ -16,6 +16,7 @@ public class LoginResponse {
     private String email;
     private Gender gender;
     private String avatar;
+    private String bio;
     private boolean enabled;
     private RoleUser role;
 

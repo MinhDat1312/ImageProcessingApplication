@@ -5,15 +5,24 @@ import com.pipeline.image.core.ImageStage;
 import com.pipeline.image.core.PipelineContext;
 import java.awt.Color;
 import java.awt.image.BufferedImage;
+import java.awt.image.BufferedImageOp;
+import java.awt.image.ConvolveOp;
+import java.awt.image.Kernel;
 import java.awt.image.RescaleOp;
 
 public class FilterStage implements ImageStage {
     private final FilterType filterType;
     private final float brightnessLevel; // 1.0 is default, >1 brighter, <1 darker
+    private final float contrastLevel;   // 1.0 is default, >1 higher contrast
 
     public FilterStage(FilterType filterType, float brightnessLevel) {
+        this(filterType, brightnessLevel, 1.0f);
+    }
+
+    public FilterStage(FilterType filterType, float brightnessLevel, float contrastLevel) {
         this.filterType = filterType != null ? filterType : FilterType.none;
         this.brightnessLevel = brightnessLevel > 0 ? brightnessLevel : 1.0f;
+        this.contrastLevel = contrastLevel > 0 ? contrastLevel : 1.0f;
     }
 
     @Override
@@ -41,8 +50,17 @@ public class FilterStage implements ImageStage {
                 case brightness:
                     output = applyBrightness(output);
                     break;
+                case contrast:
+                    output = applyContrast(output);
+                    break;
+                case blur:
+                    output = applyBlur(output);
+                    break;
+                case sharpen:
+                    output = applySharpen(output);
+                    break;
                 case none:
-                default:
+default:
                     break;
             }
 
@@ -97,5 +115,33 @@ public class FilterStage implements ImageStage {
         RescaleOp op = new RescaleOp(brightnessLevel, 0, null);
         op.filter(img, result);
         return result;
+    }
+
+    private BufferedImage applyContrast(BufferedImage img) {
+        BufferedImage result = new BufferedImage(img.getWidth(), img.getHeight(), img.getType() == 0 ? BufferedImage.TYPE_INT_ARGB : img.getType());
+        float offset = 128.0f * (1.0f - contrastLevel);
+        RescaleOp op = new RescaleOp(contrastLevel, offset, null);
+        op.filter(img, result);
+        return result;
+    }
+
+    private BufferedImage applyBlur(BufferedImage img) {
+        float[] matrix = {
+            1/9f, 1/9f, 1/9f,
+            1/9f, 1/9f, 1/9f,
+            1/9f, 1/9f, 1/9f
+        };
+        BufferedImageOp op = new ConvolveOp(new Kernel(3, 3, matrix), ConvolveOp.EDGE_NO_OP, null);
+        return op.filter(img, null);
+    }
+
+    private BufferedImage applySharpen(BufferedImage img) {
+        float[] matrix = {
+            0f, -1f, 0f,
+            -1f, 5f, -1f,
+            0f, -1f, 0f
+        };
+        BufferedImageOp op = new ConvolveOp(new Kernel(3, 3, matrix), ConvolveOp.EDGE_NO_OP, null);
+        return op.filter(img, null);
     }
 }

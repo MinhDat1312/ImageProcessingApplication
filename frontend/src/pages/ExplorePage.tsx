@@ -1,0 +1,109 @@
+import { Tag } from 'antd'
+import { useEffect, useState } from 'react'
+import { CompassOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { Input } from '../components/ui/Input'
+import { motion } from 'framer-motion'
+import { useSearchParams } from 'react-router-dom'
+import HomeFeed from '../ui/HomeFeed'
+import TrendingSection from '../ui/TrendingSection'
+
+const discoveryTags = ['cinematic portrait', 'neo futuristic', 'product render', 'editorial', 'cinematic lighting']
+
+export function ExplorePage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const urlQuery = searchParams.get('q') || ''
+  const [inputVal, setInputVal] = useState(urlQuery)
+
+  useEffect(() => {
+    document.title = 'Goat Image AI — Explore'
+  }, [])
+
+  // Sync local input value with URL parameter changes
+  useEffect(() => {
+    setInputVal(urlQuery)
+  }, [urlQuery])
+
+  const triggerSearch = (val: string) => {
+    setSearchParams(prev => {
+      const value = val.trim()
+      if (value) {
+        prev.set('q', value)
+      } else {
+        prev.delete('q')
+      }
+      return prev
+    })
+  }
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      triggerSearch(inputVal)
+    }
+  }
+
+  return (
+    <div className="explore-shell">
+      <motion.section
+        className="explore-hero glass-card"
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3 }}
+      >
+        <div>
+          <span className="section-kicker">Discover</span>
+          <h1>Explore community images, public prompts, and remix-ready inspiration.</h1>
+          <p>
+            Search by prompt, tag, or style. The feed is designed as a Pinterest-style discovery surface for AI image
+            creators.
+          </p>
+          <div className="explore-search-row">
+            <Input
+              size="large"
+              prefix={<SearchOutlined />}
+              placeholder="Search prompt, tag, creator, style..."
+              value={inputVal}
+              onChange={event => setInputVal(event.target.value)}
+              onKeyDown={handleKeyDown}
+            />
+            <Button 
+              size="large" 
+              variant="primary" 
+              icon={<CompassOutlined />}
+              onClick={() => triggerSearch(inputVal)}
+            >
+              Search
+            </Button>
+          </div>
+          <div className="prompt-seed-list prompt-seed-inline">
+            {discoveryTags.map(tag => (
+              <Tag key={tag} color="cyan" style={{ cursor: 'pointer' }} onClick={() => triggerSearch(tag)}>
+                {tag}
+              </Tag>
+            ))}
+          </div>
+        </div>
+        <Card className="glass-card explore-side-card" bordered={false}>
+          <span className="section-kicker">AI discovery</span>
+          <strong>Prompt remix and generation history</strong>
+          <p>
+            Combine public feed discovery with prompt templates, auto-tagging, and remix workflows powered by Gemini.
+          </p>
+          <Button variant="secondary" icon={<ThunderboltOutlined />}>Open prompt gallery</Button>
+        </Card>
+      </motion.section>
+
+      <section className="explore-layout">
+        <main>
+          <HomeFeed searchQuery={urlQuery} />
+        </main>
+        <aside>
+          <TrendingSection />
+        </aside>
+      </section>
+    </div>
+  )
+}
+
+export default ExplorePage

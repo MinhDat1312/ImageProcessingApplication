@@ -1,10 +1,12 @@
-import { Alert, Button, Form, Input } from 'antd'
+import { Alert, Form } from 'antd'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
 import { isAdminRole } from '../utils/roleUtils'
-import type { LoginResponse } from '../types'
+import type { ApiResponse, LoginResponse } from '../types'
 
 interface LoginFields {
   email: string
@@ -31,18 +33,18 @@ export function LoginPage() {
     setUnverified(null)
     setLoading(true)
     try {
-      const res = await axiosInstance.post<LoginResponse>('/api/v1/auth/login', values)
-      login(res.data)
-      const isAdmin = res.data.role ? isAdminRole(res.data.role.name) : false
+      const res = await axiosInstance.post<ApiResponse<LoginResponse>>('/api/v1/auth/login', values)
+      login(res.data.data)
+      const isAdmin = res.data.data.role ? isAdminRole(res.data.data.role.name) : false
       window.location.replace(isAdmin ? '/admin' : '/')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: string } }).response?.data
         ?? (err as Error).message
-        ?? 'Đăng nhập thất bại'
-      if (typeof msg === 'string' && msg.includes('xác thực')) {
+        ?? 'Login failed'
+      if (typeof msg === 'string' && (msg.includes('xác thực') || msg.toLowerCase().includes('unverified') || msg.toLowerCase().includes('not verified'))) {
         setUnverified(values.email)
       } else {
-        setServerError(typeof msg === 'string' ? msg : 'Tài khoản hoặc mật khẩu không đúng')
+        setServerError(typeof msg === 'string' ? msg : 'Incorrect email or password')
       }
     } finally {
       setLoading(false)
@@ -52,8 +54,8 @@ export function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-card-title">Đăng nhập</div>
-        <div className="auth-card-subtitle">Chào mừng trở lại</div>
+        <div className="auth-card-title">Sign In</div>
+        <div className="auth-card-subtitle">Welcome back</div>
 
         {serverError && (
           <Alert className="auth-server-error" type="error" message={serverError} showIcon />
@@ -64,8 +66,8 @@ export function LoginPage() {
             type="warning"
             message={
               <span>
-                Tài khoản chưa được xác thực.{' '}
-                <Link to={`/verify?email=${encodeURIComponent(unverified)}`}>Xác thực ngay →</Link>
+                Account is not verified yet.{' '}
+                <Link to={`/verify?email=${encodeURIComponent(unverified)}`}>Verify now →</Link>
               </span>
             }
             showIcon
@@ -77,8 +79,8 @@ export function LoginPage() {
             name="email"
             label="Email"
             rules={[
-              { required: true, message: 'Email không được để trống' },
-              { type: 'email', message: 'Email không hợp lệ' },
+              { required: true, message: 'Email is required' },
+              { type: 'email', message: 'Invalid email' },
             ]}
           >
             <Input placeholder="your@email.com" size="large" />
@@ -86,21 +88,21 @@ export function LoginPage() {
 
           <Form.Item
             name="password"
-            label="Mật khẩu"
-            rules={[{ required: true, message: 'Mật khẩu không được để trống' }]}
+            label="Password"
+            rules={[{ required: true, message: 'Password is required' }]}
           >
             <Input.Password placeholder="••••••••" size="large" />
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, marginTop: 4 }}>
-            <Button type="primary" htmlType="submit" loading={loading} size="large" block>
-              Đăng nhập
+            <Button variant="primary" htmlType="submit" loading={loading} size="large" block>
+              Sign In
             </Button>
           </Form.Item>
         </Form>
 
         <div className="auth-footer">
-          Chưa có tài khoản? <Link to="/register">Đăng ký</Link>
+          Don't have an account? <Link to="/register">Sign Up</Link>
         </div>
       </div>
     </div>

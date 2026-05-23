@@ -5,8 +5,14 @@ export const AUTH_LOGOUT_EVENT = 'auth:logout' as const
 export interface ProcessFormValues {
   resizeWidth?: number;
   resizeHeight?: number;
-  filterType: "none" | "grayscale" | "sepia" | "brightness";
+  filterType: "none" | "grayscale" | "sepia" | "brightness" | "contrast" | "blur" | "sharpen";
   brightnessLevel?: number;
+  contrastLevel?: number;
+  cropX?: number;
+  cropY?: number;
+  cropWidth?: number;
+  cropHeight?: number;
+  rotateAngle?: number;
   watermarkText?: string;
   watermarkPosition:
     | "top-left"
@@ -16,6 +22,11 @@ export interface ProcessFormValues {
     | "bottom-right";
   watermarkSize: number;
   compressionQuality: number;
+  visibility?: 'public' | 'private' | 'unlisted';
+  title?: string;
+  description?: string;
+  tags?: string;
+  prompt?: string;
 }
 
 export type StepStatus = "wait" | "process" | "finish" | "error" | "waiting";
@@ -50,6 +61,7 @@ export interface LoginResponse {
   email: string
   gender: 'MALE' | 'FEMALE' | 'OTHER'
   avatar: string
+  bio?: string
   enabled: boolean
   role: { roleId: string; name: string }
 }
@@ -63,6 +75,11 @@ export interface ImageItem {
   id: string
   url: string
   createdAt: string
+  visibility?: 'PUBLIC' | 'PRIVATE' | 'UNLISTED'
+  title?: string
+  description?: string
+  tags?: string
+  prompt?: string
 }
 
 export interface Role {
@@ -118,4 +135,11 @@ export interface AccessStats {
   hourly: AccessLog[]
   daily: AccessLog[]
   monthly: AccessLog[]
+}
+
+export interface TagImage {
+  items: {
+    tag: string
+    count: number
+  }[]
 }

@@ -135,6 +135,8 @@ public class SecurityConfiguration {
 //              Các endpoint về role để người dùng có thể xem danh sách vai trò và chi tiết vai trò
                 "/api/v1/roles/{id}",
                 "/api/v1/roles",
+
+                "/api/v1/images/public/**",
         };
 
 

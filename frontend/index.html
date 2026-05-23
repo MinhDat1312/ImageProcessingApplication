@@ -3,8 +3,36 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <!-- Dynamically override favicon with project logo to use goat.png from src assets -->
+    <script type="module">
+      try {
+        import('/src/assets/goat.png').then(mod => {
+          const url = mod.default || mod
+          const el = document.querySelector("link[rel*='icon']") || document.createElement('link')
+          el.setAttribute('rel', 'icon')
+          el.setAttribute('type', 'image/png')
+          el.setAttribute('href', url)
+          if (!document.querySelector("link[rel*='icon']")) document.head.appendChild(el)
+        })
+        // Detect Chromium-based Edge to apply CSS fixes client-side if needed
+        try {
+          const ua = navigator.userAgent || ''
+          if (/Edg\//.test(ua)) {
+            document.documentElement.classList.add('is-edge')
+          }
+        } catch (e) {
+          /* ignore */
+        }
+      } catch (e) {
+        console.warn('Failed to set goat favicon dynamically', e)
+      }
+    </script>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <meta name="description" content="Goat Image — AI image generation and processing studio for creators." />
+    <meta name="theme-color" content="#5E6AD2" />
+    <meta property="og:title" content="Goat Image" />
+    <meta property="og:description" content="Goat Image — generate, edit and share AI images with a modern UI." />
+    <title>Goat Image</title>
   </head>
   <body>
     <div id="root"></div>

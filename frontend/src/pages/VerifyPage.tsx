@@ -1,8 +1,11 @@
-import { Alert, Button, Input, notification } from 'antd'
+import { Alert, notification } from 'antd'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
+import type { ApiResponse } from '../types'
 
 const OTP_LENGTH = 6
 const RESEND_COOLDOWN = 60
@@ -40,7 +43,7 @@ export function VerifyPage() {
   useEffect(() => {
     startExpireTimer()
     return () => { if (expireRef.current) clearInterval(expireRef.current) }
-  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+  }, [])
 
   useEffect(() => {
     return () => { if (cooldownRef.current) clearInterval(cooldownRef.current) }
@@ -62,23 +65,23 @@ export function VerifyPage() {
 
   const handleVerify = async () => {
     if (otp.length < OTP_LENGTH) {
-      setError('Vui lòng nhập đủ 6 chữ số')
+      setError('Please enter all 6 digits')
       return
     }
     if (expire === 0) {
-      setError('Mã xác thực đã hết hạn, vui lòng gửi lại')
+      setError('Verification code has expired, please resend')
       return
     }
     setError(null)
     setLoading(true)
     try {
-      await axiosInstance.post('/api/v1/auth/verify', { email, verificationCode: otp })
-      notification.success({ message: 'Xác thực tài khoản thành công!', duration: 3 })
+      await axiosInstance.post<ApiResponse<unknown>>('/api/v1/auth/verify', { email, verificationCode: otp })
+      notification.success({ message: 'Account verified successfully!', duration: 3 })
       navigate('/login')
     } catch (err: unknown) {
       const msg = (err as { response?: { data?: string } }).response?.data
-        ?? 'Mã xác thực không hợp lệ hoặc đã hết hạn'
-      setError(typeof msg === 'string' ? msg : 'Mã xác thực không hợp lệ')
+        ?? 'Invalid or expired verification code'
+      setError(typeof msg === 'string' ? msg : 'Invalid verification code')
     } finally {
       setLoading(false)
     }
@@ -87,20 +90,20 @@ export function VerifyPage() {
   const handleResend = async () => {
     if (cooldown > 0) return
     try {
-      await axiosInstance.post(`/api/v1/auth/resend?email=${encodeURIComponent(email)}`)
-      notification.success({ message: 'Đã gửi lại mã xác thực', duration: 3 })
+      await axiosInstance.post<ApiResponse<unknown>>(`/api/v1/auth/resend?email=${encodeURIComponent(email)}`)
+      notification.success({ message: 'Verification code resent successfully', duration: 3 })
       startExpireTimer()
       startCooldown()
     } catch {
-      notification.error({ message: 'Gửi lại thất bại, vui lòng thử lại' })
+      notification.error({ message: 'Failed to resend, please try again' })
     }
   }
 
   return (
     <div className="auth-page">
       <div className="auth-card">
-        <div className="auth-card-title">Xác thực email</div>
-        <div className="otp-hint">Mã xác thực đã gửi đến</div>
+        <div className="auth-card-title">Verify Email</div>
+        <div className="otp-hint">Verification code sent to</div>
         <div className="otp-email">{email}</div>
 
         {error && (
@@ -116,13 +119,12 @@ export function VerifyPage() {
         />
 
         {expire > 0 ? (
-          <div className="otp-expire">Mã hết hạn sau <span>{formatTime(expire)}</span></div>
+          <div className="otp-expire">Code expires in <span>{formatTime(expire)}</span></div>
         ) : (
-          <div className="otp-expire" style={{ color: '#dc2626' }}>Mã đã hết hạn</div>
+          <div className="otp-expire" style={{ color: '#dc2626' }}>Code expired</div>
         )}
 
-        <Button
-          type="primary"
+        <Button variant="primary"
           size="large"
           block
           loading={loading}
@@ -130,24 +132,24 @@ export function VerifyPage() {
           onClick={handleVerify}
           style={{ marginTop: 8 }}
         >
-          Xác thực tài khoản
+          Verify Account
         </Button>
 
         <div className="resend-row">
-          Chưa nhận được mã?&nbsp;
+          Didn't receive code?&nbsp;
           <Button
-            type="link"
+            variant="ghost"
             size="small"
             disabled={cooldown > 0}
             onClick={handleResend}
             style={{ padding: 0, height: 'auto' }}
           >
-            Gửi lại {cooldown > 0 && `(${cooldown}s)`}
+            Resend {cooldown > 0 && `(${cooldown}s)`}
           </Button>
         </div>
 
         <div className="auth-footer">
-          <Link to="/login">← Quay về đăng nhập</Link>
+          <Link to="/login">← Back to Sign In</Link>
         </div>
       </div>
     </div>

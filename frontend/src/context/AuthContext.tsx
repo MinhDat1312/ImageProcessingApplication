@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import axiosInstance from '../api/axiosInstance'
-import type { LoginResponse } from '../types'
+import type { ApiResponse, LoginResponse } from '../types'
 import { AUTH_LOGOUT_EVENT } from '../types'
 
 interface AuthContextValue {
@@ -22,8 +22,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const checkSession = async () => {
       try {
-        const res = await axiosInstance.get<LoginResponse>('/api/v1/auth/users')
-        setUser(res.data)
+        const res = await axiosInstance.get<ApiResponse<LoginResponse>>('/api/v1/auth/users')
+        setUser(res.data.data)
       } catch {
         setUser(null)
       } finally {
@@ -57,7 +57,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = async () => {
     isLoggingInRef.current = false
     try {
-      await axiosInstance.post('/api/v1/auth/logout')
+      await axiosInstance.post<ApiResponse<unknown>>('/api/v1/auth/logout')
     } finally {
       setUser(null)
     }

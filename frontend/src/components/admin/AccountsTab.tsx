@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Space } from 'antd'
+import { Table, Modal, Form, Select, message, Popconfirm, Space } from 'antd'
+import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
 import { EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
-import type { UserAccount, AdminRole } from '../../types'
+import type { ApiResponse, UserAccount, AdminRole } from '../../types'
 import './admin.css'
 
 type UpdateFormValues = { username: string; email: string; role: string }
@@ -24,10 +26,10 @@ export function AccountsTab() {
   const fetchAccounts = async () => {
     setLoading(true)
     try {
-      const res = await axiosInstance.get<{ users: UserAccount[] }>('/api/v1/admin/users')
-      setAccounts(res.data.users)
+      const res = await axiosInstance.get<ApiResponse<{ users: UserAccount[] }>>('/api/v1/admin/users')
+      setAccounts(res.data.data.users)
     } catch {
-      message.error('Lỗi khi tải danh sách tài khoản')
+      message.error('Error fetching accounts list')
     } finally {
       setLoading(false)
     }
@@ -36,10 +38,10 @@ export function AccountsTab() {
   const fetchRoles = async () => {
     setRolesLoading(true)
     try {
-      const res = await axiosInstance.get<{ roles: AdminRole[] }>('/api/v1/admin/roles')
-      setRoles(res.data.roles)
+      const res = await axiosInstance.get<ApiResponse<{ roles: AdminRole[] }>>('/api/v1/admin/roles')
+      setRoles(res.data.data.roles)
     } catch {
-      message.error('Lỗi khi tải danh sách vai trò')
+      message.error('Error fetching roles list')
     } finally {
       setRolesLoading(false)
     }
@@ -53,92 +55,92 @@ export function AccountsTab() {
 
   const handleDeleteAccount = async (userId: string) => {
     try {
-      await axiosInstance.delete(`/api/v1/admin/users/${userId}`)
-      message.success('Xóa tài khoản thành công')
+      await axiosInstance.delete<ApiResponse<unknown>>(`/api/v1/admin/users/${userId}`)
+      message.success('Account deleted successfully')
       fetchAccounts()
     } catch {
-      message.error('Lỗi khi xóa tài khoản')
+      message.error('Error deleting account')
     }
   }
 
   const handleToggleStatus = async (userId: string, currentStatus: boolean) => {
     try {
-      await axiosInstance.patch(`/api/v1/admin/users/${userId}/status`, { enabled: !currentStatus })
-      message.success(`Tài khoản đã ${!currentStatus ? 'kích hoạt' : 'vô hiệu hóa'}`)
+      await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/users/${userId}/status`, { enabled: !currentStatus })
+      message.success(`Account has been ${!currentStatus ? 'enabled' : 'disabled'}`)
       fetchAccounts()
     } catch {
-      message.error('Lỗi khi cập nhật trạng thái')
+      message.error('Error updating status')
     }
   }
 
   const handleSubmit = async (values: UpdateFormValues) => {
     try {
       if (editingUser) {
-        await axiosInstance.patch(`/api/v1/admin/users/${editingUser.userId}`, {
+        await axiosInstance.patch<ApiResponse<unknown>>(`/api/v1/admin/users/${editingUser.userId}`, {
           email: values.email,
           roleId: values.role,
         })
-        message.success('Cập nhật tài khoản thành công')
+        message.success('Account updated successfully')
       }
       setIsModalVisible(false)
       fetchAccounts()
     } catch {
-      message.error('Lỗi khi cập nhật tài khoản')
+      message.error('Error updating account')
     }
   }
 
   const columns = [
-    { title: 'Tên Đăng Nhập', dataIndex: 'username', key: 'username' },
+    { title: 'Username', dataIndex: 'username', key: 'username' },
     { title: 'Email', dataIndex: 'email', key: 'email' },
     {
-      title: 'Giới Tính',
+      title: 'Gender',
       dataIndex: 'gender',
       key: 'gender',
       render: (gender: string) => {
-        const map: Record<string, string> = { MALE: 'Nam', FEMALE: 'Nữ', OTHER: 'Khác' }
+        const map: Record<string, string> = { MALE: 'Male', FEMALE: 'Female', OTHER: 'Other' }
         return map[gender] ?? gender
       },
     },
-    { title: 'Vai Trò', dataIndex: ['role', 'name'], key: 'role' },
+    { title: 'Role', dataIndex: ['role', 'name'], key: 'role' },
     {
-      title: 'Trạng Thái',
+      title: 'Status',
       dataIndex: 'enabled',
       key: 'enabled',
       render: (enabled: boolean) => (
-        <span style={{ color: enabled ? 'green' : 'red' }}>
-          {enabled ? 'Đã Kích Hoạt' : 'Vô Hiệu Hóa'}
+        <span style={{ color: enabled ? '#10b981' : '#ef4444' }}>
+          {enabled ? 'Active' : 'Disabled'}
         </span>
       ),
     },
     {
-      title: 'Ngày Tạo',
+      title: 'Created At',
       dataIndex: 'createdAt',
       key: 'createdAt',
-      render: (date: string) => new Date(date).toLocaleDateString('vi-VN'),
+      render: (date: string) => new Date(date).toLocaleDateString('en-US'),
     },
     {
-      title: 'Hành Động',
+      title: 'Actions',
       key: 'action',
       render: (_: unknown, record: UserAccount) => (
         <Space>
-          <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Button variant="primary" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type="primary"
+            variant="primary"
             size="small"
             danger={!record.enabled}
             icon={record.enabled ? <LockOutlined /> : <UnlockOutlined />}
             onClick={() => handleToggleStatus(record.userId, record.enabled)}
           >
-            {record.enabled ? 'Khóa' : 'Mở'}
+            {record.enabled ? 'Block' : 'Unblock'}
           </Button>
           <Popconfirm
-            title="Xác Nhận Xóa"
-            description="Bạn có chắc chắn muốn xóa tài khoản này?"
+            title="Confirm Delete"
+            description="Are you sure you want to delete this account?"
             onConfirm={() => handleDeleteAccount(record.userId)}
-            okText="Có"
-            cancelText="Không"
+            okText="Yes"
+            cancelText="No"
           >
-            <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
+            <Button variant="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
@@ -148,31 +150,31 @@ export function AccountsTab() {
   return (
     <div className="admin-tab">
       <div className="tab-header">
-        <h2>Quản Lý Tài Khoản</h2>
+        <h2>Accounts Management</h2>
       </div>
       <Table columns={columns} dataSource={accounts} loading={loading} rowKey="userId" pagination={{ pageSize: 10 }} />
 
       <Modal
-        title="Cập Nhật Tài Khoản"
+        title="Update Account"
         open={isModalVisible}
         onCancel={() => setIsModalVisible(false)}
         onOk={() => form.submit()}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item label="Tên Đăng Nhập" name="username">
+          <Form.Item label="Username" name="username">
             <Input disabled />
           </Form.Item>
           <Form.Item
             label="Email"
             name="email"
-            rules={[{ required: true, type: 'email', message: 'Vui lòng nhập email hợp lệ' }]}
+            rules={[{ required: true, type: 'email', message: 'Please enter a valid email' }]}
           >
             <Input />
           </Form.Item>
           <Form.Item
-            label="Vai Trò"
+            label="Role"
             name="role"
-            rules={[{ required: true, message: 'Vui lòng chọn vai trò' }]}
+            rules={[{ required: true, message: 'Please select a role' }]}
           >
             <Select
               options={roles.map(r => ({ label: r.name, value: r.roleId }))}

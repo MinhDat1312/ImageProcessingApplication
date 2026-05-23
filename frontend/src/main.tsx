@@ -2,7 +2,12 @@ import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom'
 import './index.css'
+import './styles/design-tokens.css'
 import App from './App.tsx'
+import HomePage from './pages/HomePage.tsx'
+import GeneratePage from './pages/GeneratePage.tsx'
+import ExplorePage from './pages/ExplorePage.tsx'
+import ChatPage from './pages/ChatPage.tsx'
 import { AuthProvider } from './context/AuthContext.tsx'
 import { ImagesProvider } from './context/ImagesContext.tsx'
 import { ProtectedRoute } from './components/ProtectedRoute.tsx'
@@ -14,6 +19,8 @@ import { RegisterPage } from './pages/RegisterPage.tsx'
 import { VerifyPage } from './pages/VerifyPage.tsx'
 import { MyImagesPage } from './pages/MyImagesPage.tsx'
 import { AdminPage } from './pages/AdminPage.tsx'
+import { ProfilePage } from './pages/ProfilePage.tsx'
+import DesignSystemDemo from './pages/DesignSystemDemo'
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
@@ -21,35 +28,91 @@ createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <ImagesProvider>
           <Routes>
-          <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
-          <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
-          <Route path="/verify" element={<RootLayout><VerifyPage /></RootLayout>} />
-          <Route
-            path="/"
-            element={
-              <RootLayout contentClassName="app-content">
-                <App />
-              </RootLayout>
-            }
-          />
-          <Route
-            path="/my-images"
-            element={
-              <RootLayout contentClassName="my-images-page">
-                <ProtectedRoute><MyImagesPage /></ProtectedRoute>
-              </RootLayout>
-            }
-          />
-          <Route
-            path="/admin"
-            element={
-              <RootLayout contentClassName="admin-page">
-                <AdminProtectedRoute><AdminPage /></AdminProtectedRoute>
-              </RootLayout>
-            }
-          />
-          <Route path="*" element={<Navigate to="/login" replace />} />
-        </Routes>
+            <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
+            <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
+            <Route path="/verify" element={<RootLayout><VerifyPage /></RootLayout>} />
+            <Route
+              path="/"
+              element={
+                <RootLayout contentClassName="home-page">
+                  <HomePage />
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/explore"
+              element={
+                <RootLayout contentClassName="explore-page">
+                  <ExplorePage />
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/chat"
+              element={
+                <RootLayout contentClassName="chat-page">
+                  <ChatPage />
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/generate"
+              element={
+                <RootLayout contentClassName="generator-page">
+                  <GeneratePage />
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/studio"
+              element={
+                <RootLayout contentClassName="studio-page">
+                  <App />
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/my-images"
+              element={
+                <RootLayout contentClassName="my-images-page">
+                  <ProtectedRoute><MyImagesPage /></ProtectedRoute>
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/admin"
+              element={
+                <RootLayout contentClassName="admin-page">
+                  <AdminProtectedRoute><AdminPage /></AdminProtectedRoute>
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/profile"
+              element={
+                <RootLayout contentClassName="profile-page">
+                  <ProtectedRoute><ProfilePage /></ProtectedRoute>
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/profile/:userId"
+              element={
+                <RootLayout contentClassName="profile-page">
+                  <ProfilePage />
+                </RootLayout>
+              }
+            />
+            <Route
+              path="/design-system"
+              element={
+                <RootLayout contentClassName="design-system-page">
+                  <DesignSystemDemo />
+                </RootLayout>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
         </ImagesProvider>
       </AuthProvider>
     </BrowserRouter>
