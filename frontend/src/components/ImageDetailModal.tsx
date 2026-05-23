@@ -229,8 +229,11 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
   const handleDownload = async () => {
     try {
       message.info('Preparing your download...')
-      const res = await fetch(item.url)
-      const blob = await res.blob()
+      // Use backend API to avoid CORS issues with S3
+      const res = await axiosInstance.get(`/api/v1/images/download/${item.id}`, {
+        responseType: 'blob',
+      })
+      const blob = new Blob([res.data])
       const url = window.URL.createObjectURL(blob)
       const a = document.createElement('a')
       a.href = url
@@ -239,8 +242,11 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
       a.click()
       document.body.removeChild(a)
       window.URL.revokeObjectURL(url)
+      message.success('Download completed')
     } catch {
+      // Fallback: open in new tab
       window.open(item.url, '_blank')
+      message.info('Opening image in new tab...')
     }
   }
 

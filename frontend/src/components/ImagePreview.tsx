@@ -1,8 +1,9 @@
 import { DownloadOutlined, PictureOutlined } from "@ant-design/icons";
-import { Image as AntImage, Skeleton, Tag, Typography } from "antd";
+import { Image as AntImage, Skeleton, Tag, Typography, notification } from "antd";
 import { Button } from "./ui/Button";
 import { motion } from "framer-motion";
 import { ImageComparisonSlider } from "./ImageComparisonSlider";
+import axiosInstance from "../api/axiosInstance";
 
 const { Text } = Typography;
 
@@ -18,7 +19,51 @@ export function ImagePreview({
   processedUrl,
   executionTime,
   processedFilename,
+  imageId,
 }: ImagePreviewProps) {
+
+  const handleDownload = async () => {
+    if (!processedUrl) return;
+    try {
+      notification.info({ message: 'Downloading image...' });
+
+      // Use backend API if imageId is available (avoid CORS)
+      if (imageId) {
+        const response = await axiosInstance.get(`/api/v1/images/download/${imageId}`, {
+          responseType: 'blob',
+        });
+        const blob = new Blob([response.data]);
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = processedFilename || `processed-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+        notification.success({ message: 'Download completed' });
+      } else {
+        // Fallback to direct URL download (may fail due to CORS)
+        const res = await fetch(processedUrl);
+        if (!res.ok) throw new Error('Fetch failed');
+        const blob = await res.blob();
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = processedFilename || `processed-${Date.now()}.png`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(downloadUrl);
+        notification.success({ message: 'Download completed' });
+      }
+    } catch {
+      // Last fallback: open in new tab
+      window.open(processedUrl, '_blank');
+      notification.info({ message: 'Opening image in new tab...' });
+    }
+  };
+
   if (!originalUrl) {
     return (
       <div className="empty-preview-state">
@@ -59,10 +104,7 @@ export function ImagePreview({
             <Button
               variant="primary"
               icon={<DownloadOutlined />}
-              href={processedUrl as any}
-              target="_blank"
-              rel="noopener noreferrer"
-              download={processedFilename || "processed.png"}
+              onClick={handleDownload}
               size="large"
             >
               Download result

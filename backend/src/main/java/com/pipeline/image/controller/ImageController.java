@@ -39,6 +39,12 @@ import com.pipeline.image.dto.response.ImageFeedItem;
 import com.pipeline.image.service.ImageService;
 import com.pipeline.image.service.AssistantService;
 import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.core.io.InputStreamResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+
+import java.io.InputStream;
 
 @RestController
 @RequestMapping("/api/v1/images")
@@ -650,6 +656,74 @@ public class ImageController {
         String currentEmail = SecurityUtil.getCurrentUserEmail();
         return this.userRepository.findByEmailWithRole(currentEmail)
                 .orElseThrow(() -> new InvalidException("User not found"));
+    }
+
+    @GetMapping("/download/{id}")
+    public ResponseEntity<?> downloadImage(@PathVariable("id") String id) {
+        try {
+            Image image = imageRepository.findById(id)
+                    .orElseThrow(() -> new InvalidException("Image not found"));
+
+            // Extract S3 key from URL
+            String url = image.getUrl();
+            String key = extractS3Key(url);
+
+            if (key == null || key.isBlank()) {
+                return ResponseEntity.badRequest().body(Map.of("error", "Invalid image URL"));
+            }
+
+            // Get file from S3
+            InputStream inputStream = storageService.handleDownloadFile(key);
+
+            // Determine content type
+            String extension = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : "png";
+            String contentType = getContentType(extension);
+
+            // Extract filename from key
+            String filename = key.contains("/") ? key.substring(key.lastIndexOf("/") + 1) : key;
+
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.parseMediaType(contentType));
+            headers.setContentDispositionFormData("attachment", filename);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(new InputStreamResource(inputStream));
+
+        } catch (InvalidException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
+        } catch (Exception e) {
+            log.error("Failed to download image", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to download image"));
+        }
+    }
+
+    private String extractS3Key(String url) {
+        if (url == null || url.isBlank()) return null;
+        // URL format: https://bucket.s3.region.amazonaws.com/prod/folder/uuid.ext
+        // or: https://bucket-name.s3.ap-southeast-2.amazonaws.com/prod/folder/uuid.ext
+        try {
+            // Find "prod/" in URL which is our base folder
+            int prodIndex = url.indexOf("prod/");
+            if (prodIndex != -1) {
+                return url.substring(prodIndex);
+            }
+            return null;
+        } catch (Exception e) {
+            log.error("Failed to extract S3 key from URL: {}", url, e);
+            return null;
+        }
+    }
+
+    private String getContentType(String extension) {
+        return switch (extension.toLowerCase()) {
+            case "jpg", "jpeg" -> "image/jpeg";
+            case "png" -> "image/png";
+            case "gif" -> "image/gif";
+            case "webp" -> "image/webp";
+            case "bmp" -> "image/bmp";
+            default -> "application/octet-stream";
+        };
     }
 }
 
