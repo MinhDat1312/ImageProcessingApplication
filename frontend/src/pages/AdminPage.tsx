@@ -1,4 +1,5 @@
-import { Card, Statistic, Tabs, Tag } from 'antd'
+import { Statistic, Tabs, Tag } from 'antd'
+import { Card } from '../components/ui/Card'
 import { UserOutlined, FileImageOutlined, SafetyOutlined, BarChartOutlined, ThunderboltOutlined, DatabaseOutlined, TeamOutlined } from '@ant-design/icons'
 import { AccountsTab } from '../components/admin/AccountsTab'
 import { ImagesTab } from '../components/admin/ImagesTab'

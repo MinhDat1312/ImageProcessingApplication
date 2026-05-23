@@ -1,5 +1,6 @@
 import { HeartOutlined, HeartFilled, MessageOutlined, EyeOutlined, StarOutlined, ShareAltOutlined } from '@ant-design/icons'
-import { Button, Avatar } from 'antd'
+import { Avatar } from 'antd'
+import { Button } from '../components/ui/Button'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
@@ -72,14 +73,14 @@ export default function GalleryCard({ item }: GalleryCardProps) {
             <div 
               className="creator" 
               onClick={handleProfileClick} 
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}
             >
               <Avatar size={28} src={item.owner?.avatar || undefined}>{item.owner?.username?.slice(0,2)}</Avatar>
               <div className="creator-name" style={{ fontWeight: 600 }}>{item.owner?.username ?? 'Anonymous'}</div>
             </div>
             <div className="actions" onClick={(e) => e.stopPropagation()}>
               <Button 
-                type="text" 
+                variant="ghost" 
                 icon={liked ? <HeartFilled style={{ color: '#ff0055' }} /> : <HeartOutlined />}
                 onClick={async (e) => {
                   e.stopPropagation()
@@ -89,10 +90,10 @@ export default function GalleryCard({ item }: GalleryCardProps) {
               >
                 {likes}
               </Button>
-              <Button type="text" icon={<MessageOutlined />}>{comments}</Button>
-              <Button type="text" icon={<EyeOutlined />}>{item.views ?? 0}</Button>
-              <Button type="text" icon={<StarOutlined />} />
-              <Button type="text" icon={<ShareAltOutlined />} />
+              <Button variant="ghost" icon={<MessageOutlined />}>{comments}</Button>
+              <Button variant="ghost" icon={<EyeOutlined />}>{item.views ?? 0}</Button>
+              <Button variant="ghost" icon={<StarOutlined />} />
+              <Button variant="ghost" icon={<ShareAltOutlined />} />
             </div>
           </div>
         </div>

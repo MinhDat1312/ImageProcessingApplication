@@ -280,6 +280,37 @@ public class ImageController {
         ));
     }
 
+    @GetMapping("/tags")
+    public ResponseEntity<?> getTags(
+            @RequestParam(defaultValue = "PUBLIC") String visibility,
+            @RequestParam(defaultValue = "18") int limit
+    ) {
+        try {
+            Visibility vis = Visibility.valueOf(visibility.toUpperCase());
+            List<String> raw = imageRepository.findTagsByVisibility(vis);
+            java.util.Map<String, Integer> counts = new java.util.HashMap<>();
+            for (String s : raw) {
+                if (s == null) continue;
+                for (String part : s.split(",")) {
+                    String t = part.trim().toLowerCase();
+                    if (t.isEmpty()) continue;
+                    counts.put(t, counts.getOrDefault(t, 0) + 1);
+                }
+            }
+            var sorted = counts.entrySet().stream()
+                    .sorted((a, b) -> Integer.compare(b.getValue(), a.getValue()))
+                    .map(e -> Map.of("tag", e.getKey(), "count", e.getValue()))
+                    .limit(Math.max(0, limit))
+                    .toList();
+            return ResponseEntity.ok(Map.of("items", sorted));
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(Map.of("error", "Invalid visibility value"));
+        } catch (Exception e) {
+            log.error("Failed to fetch tags", e);
+            return ResponseEntity.internalServerError().body(Map.of("error", "Failed to fetch tags"));
+        }
+    }
+
     @GetMapping("/search")
     public ResponseEntity<?> searchFeed(
             @RequestParam(name = "q", required = false) String query,

@@ -55,7 +55,7 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
         accept="image/png,image/jpeg,image/webp,image/avif"
         showUploadList={false}
         disabled={disabled}
-        style={{ padding: "20px" }}
+        style={{ padding: "var(--spacing-5)" }}
       >
         <AnimatePresence mode="wait">
           {previewUrl ? (
@@ -67,7 +67,7 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
               exit={{ opacity: 0, y: -12 }}
               transition={{ duration: 0.22 }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+              <div className="upload-selected-header">
                 <Tag color="cyan"><RadarChartOutlined /> Live preview ready</Tag>
                 <Tag color="geekblue">Replace anytime</Tag>
               </div>
@@ -76,7 +76,7 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
                 alt="preview"
                 className="upload-preview-image"
               />
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div className="upload-selected-details">
                 <Text strong style={{ color: 'var(--text-primary)' }}>
                   <FileImageOutlined /> {file?.name ?? 'Selected image'}
                 </Text>
@@ -84,7 +84,7 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
                   {disabled ? 'Sign in to change image' : 'Click or drag to replace this image'}
                 </Text>
                 {file && (
-                  <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <div className="upload-selected-tags">
                     <Tag icon={<FileOutlined />} color="default">{formatFileSize(file.size)}</Tag>
                     <Tag color="purple">{file.type || 'image/*'}</Tag>
                   </div>
@@ -112,7 +112,7 @@ export function UploadZone({ file, previewUrl, onChange, disabled }: UploadZoneP
                   ? 'Please sign in to save history, gallery, and pipeline presets'
                   : 'PNG, JPG, WEBP, AVIF • instant local preview, then process in one flow'}
               </p>
-              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'center', marginTop: 14 }}>
+              <div className="upload-selected-tags" style={{ marginTop: 'var(--spacing-3)' }}>
                 <Tag color="cyan">Drag & drop</Tag>
                 <Tag color="purple">Paste screenshot</Tag>
                 <Tag color="geekblue">Browse file</Tag>

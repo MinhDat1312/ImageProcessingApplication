@@ -1,4 +1,4 @@
-import { Button, Statistic, Tag } from 'antd'
+import { Statistic, Tag } from 'antd'
 import { useEffect } from 'react'
 import { 
   CompassOutlined, 
@@ -12,7 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import HomeFeed from '../ui/HomeFeed'
 import TrendingSection from '../ui/TrendingSection'
 import Card from '../components/ui/Card'
-import { Button as DnaButton } from '../components/ui/Button'
+import { Button } from '../components/ui/Button'
 
 const communityStats = [
   { title: 'Creations generated', value: '150k+', icon: <ThunderboltOutlined style={{ color: '#ff007f' }} /> },
@@ -36,9 +36,8 @@ export default function HomePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4 }}
       >
-        <span className="section-kicker">Unified AI Dashboard</span>
         <h1>Welcome to Goat Image AI</h1>
-        <p>A next-generation platform for generative AI art creation and high-performance image processing.</p>
+        <p>A next-generation platform for generative AI art creation and high-performance image processing</p>
       </motion.div>
 
       {/* Workspace Portal Grid */}
@@ -70,7 +69,7 @@ export default function HomePage() {
             <li><span>✓</span> Prompt suggestions & negative prompts</li>
             <li><span>✓</span> One-click Remix in Studio</li>
           </ul>
-          <DnaButton
+          <Button
             variant="primary"
             size="large"
             icon={<RightOutlined />}
@@ -78,7 +77,7 @@ export default function HomePage() {
             className="portal-cta-btn generator-btn"
           >
             Launch Generator
-          </DnaButton>
+          </Button>
         </motion.div>
 
         {/* Card 2: Studio */}
@@ -108,7 +107,7 @@ export default function HomePage() {
             <li><span>✓</span> Precise watermark & compression layers</li>
             <li><span>✓</span> Real-time before/after side-by-side</li>
           </ul>
-          <DnaButton
+          <Button
             variant="primary"
             size="large"
             icon={<RightOutlined />}
@@ -116,7 +115,7 @@ export default function HomePage() {
             className="portal-cta-btn studio-btn"
           >
             Open Studio
-          </DnaButton>
+          </Button>
         </motion.div>
       </div>
 
@@ -144,7 +143,7 @@ export default function HomePage() {
                 <h2>Public showcase</h2>
                 <p>Explore community prompts and remix their creations inside the Studio.</p>
               </div>
-              <Button icon={<CompassOutlined />} type="default" onClick={() => navigate('/explore')}>
+              <Button icon={<CompassOutlined />} variant="secondary" onClick={() => navigate('/explore')}>
                 All creations
               </Button>
             </div>

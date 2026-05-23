@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Space, Tabs } from 'antd'
+import { Table, Modal, Form, Select, message, Popconfirm, Space, Tabs } from 'antd'
+import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
 import type { ApiResponse, AdminRole, Permission } from '../../types'
@@ -118,7 +120,7 @@ export function RolesPermissionsTab() {
       key: 'action',
       render: (_: unknown, record: AdminRole) => (
         <Space>
-          <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => handleEditRole(record)} />
+          <Button variant="primary" size="small" icon={<EditOutlined />} onClick={() => handleEditRole(record)} />
           <Popconfirm
             title="Confirm Delete"
             description="Are you sure you want to delete this role?"
@@ -126,7 +128,7 @@ export function RolesPermissionsTab() {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
+            <Button variant="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),
@@ -143,7 +145,7 @@ export function RolesPermissionsTab() {
       key: 'action',
       render: (_: unknown, record: Permission) => (
         <Space>
-          <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => handleEditPermission(record)} />
+          <Button variant="primary" size="small" icon={<EditOutlined />} onClick={() => handleEditPermission(record)} />
           <Popconfirm
             title="Confirm Delete"
             description="Are you sure you want to delete this permission?"
@@ -151,7 +153,7 @@ export function RolesPermissionsTab() {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
+            <Button variant="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),

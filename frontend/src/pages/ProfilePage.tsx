@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { Avatar, Button, Empty, Form, Input, Modal, Radio, Skeleton, Space, Tag, Upload, message } from 'antd'
+import { Avatar, Empty, Form, Modal, Radio, Skeleton, Space, Tag, Upload, message } from 'antd'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 import type { UploadFile } from 'antd'
 import { EditOutlined, UserOutlined, MailOutlined, CalendarOutlined, UploadOutlined, CompassOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
@@ -184,18 +186,18 @@ export function ProfilePage() {
 
   if (loadingProfile) {
     return (
-      <div className="profile-shell" style={{ padding: 24 }}>
+      <div className="profile-shell profile-shell--loading">
         <Skeleton active avatar paragraph={{ rows: 4 }} />
-        <Skeleton active style={{ marginTop: 24 }} />
+        <Skeleton active className="profile-skeleton-body" />
       </div>
     )
   }
 
   if (!profileUser && !targetUserId) {
     return (
-      <div className="profile-shell" style={{ padding: 24, textAlign: 'center' }}>
+      <div className="profile-shell profile-shell--empty">
         <Empty description="No profile found. Please sign in first.">
-          <Button type="primary" onClick={() => navigate('/login')}>Sign In</Button>
+          <Button variant="primary" onClick={() => navigate('/login')}>Sign In</Button>
         </Empty>
       </div>
     )
@@ -223,12 +225,7 @@ export function ProfilePage() {
               size={120}
               src={profileUser?.avatar || undefined}
               icon={<UserOutlined />}
-              style={{
-                background: 'linear-gradient(135deg, #1d4ed8, #8b7dff)',
-                fontSize: 48,
-                border: '4px solid rgba(255, 255, 255, 0.1)',
-                boxShadow: '0 8px 32px 0 rgba(0, 0, 0, 0.3)'
-              }}
+              className="profile-avatar"
             >
               {!profileUser?.avatar && profileUser?.username?.slice(0, 2).toUpperCase()}
             </Avatar>
@@ -237,7 +234,7 @@ export function ProfilePage() {
           <div className="profile-info-details">
             <div className="profile-name-row">
               <h1>{profileUser?.username}</h1>
-              <Tag color="purple" style={{ textTransform: 'uppercase', padding: '2px 8px', borderRadius: 6 }}>
+              <Tag color="purple" className="profile-role-tag">
                 {profileUser?.role?.name || 'User'}
               </Tag>
             </div>
@@ -258,19 +255,16 @@ export function ProfilePage() {
           
           <div className="profile-actions-wrapper">
             {isOwnProfile ? (
-              <Button
-                type="primary"
+              <Button variant="primary"
                 icon={<EditOutlined />}
                 onClick={handleOpenEditModal}
-                style={{ background: 'linear-gradient(135deg, #39d6ff, #8b7dff)', border: 'none', height: 42, borderRadius: 10 }}
               >
                 Edit Profile
               </Button>
             ) : (
               <Button
-                icon={<CompassOutlined />}
+                variant="secondary" icon={<CompassOutlined />}
                 onClick={() => navigate('/')}
-                style={{ height: 42, borderRadius: 10 }}
               >
                 Go to Studio
               </Button>
@@ -279,7 +273,7 @@ export function ProfilePage() {
         </div>
       </motion.section>
 
-      <section className="profile-gallery-section" style={{ marginTop: 32 }}>
+      <section className="profile-gallery-section">
         <div className="section-header">
           <div>
             <span className="section-kicker">Creations</span>
@@ -289,27 +283,27 @@ export function ProfilePage() {
         </div>
 
         {loadingImages ? (
-          <div className="masonry" style={{ marginTop: 20 }}>
+          <div className="masonry masonry--top-gap">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="gallery-skeleton">
-                <Skeleton.Image active style={{ width: '100%', height: 240, borderRadius: 12 }} />
+                <Skeleton.Image active className="gallery-skeleton-image" />
               </div>
             ))}
           </div>
         ) : images.length === 0 ? (
-          <div style={{ display: 'grid', placeItems: 'center', minHeight: '35vh' }}>
+          <div className="profile-empty-gallery">
             <Empty
               description={isOwnProfile ? 'You have not published any public images yet.' : `${profileUser?.username} hasn't published any public images.`}
             >
               {isOwnProfile && (
-                <Button type="primary" onClick={() => navigate('/studio')}>
+                <Button variant="primary" onClick={() => navigate('/studio')}>
                   Create & Publish Image
                 </Button>
               )}
             </Empty>
           </div>
         ) : (
-          <div className="masonry" style={{ marginTop: 20 }}>
+          <div className="masonry masonry--top-gap">
             {images.map(item => (
               <GalleryCard key={item.id} item={item} />
             ))}
@@ -335,7 +329,7 @@ export function ProfilePage() {
             gender: profileUser?.gender,
             bio: profileUser?.bio,
           }}
-          style={{ marginTop: 16 }}
+          className="profile-edit-form"
         >
           <Form.Item
             name="username"
@@ -376,18 +370,18 @@ export function ProfilePage() {
               listType="picture"
               fileList={fileList}
               onChange={handleUploadChange}
-              beforeUpload={() => false} // Stop automatic upload
+              beforeUpload={() => false}
               accept="image/*"
               maxCount={1}
             >
-              <Button icon={<UploadOutlined />}>Select Image File</Button>
+              <Button variant="secondary" icon={<UploadOutlined />}>Select Image File</Button>
             </Upload>
           </Form.Item>
 
-          <Form.Item style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 0, marginTop: 24 }}>
+          <Form.Item className="profile-form-footer">
             <Space>
-              <Button onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
-              <Button type="primary" htmlType="submit" loading={updating}>
+              <Button variant="secondary" onClick={() => setIsEditModalOpen(false)}>Cancel</Button>
+              <Button variant="primary" htmlType="submit" loading={updating}>
                 Save Changes
               </Button>
             </Space>

@@ -1,8 +1,9 @@
-import { Empty, Pagination, Skeleton, Button, Tabs, Badge } from 'antd'
+import { Empty, Pagination, Skeleton, Tabs, Badge } from 'antd'
 import { useEffect, useState } from 'react'
 import { ReloadOutlined, RocketOutlined, HeartFilled, LockOutlined, GlobalOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { Button } from '../components/ui/Button'
 import axiosInstance from '../api/axiosInstance'
 import { useImages } from '../context/useImages'
 import { useAuth } from '../context/AuthContext'
@@ -151,7 +152,7 @@ export function MyImagesPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.28 }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 12, flexWrap: 'wrap' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%', gap: 'var(--spacing-3)', flexWrap: 'wrap' }}>
           <div>
             <span className="section-kicker">Gallery</span>
             <h1>{activeTab === 'created' ? 'My Creations' : 'Liked Images'}</h1>
@@ -161,14 +162,16 @@ export function MyImagesPage() {
                 : (total > 0 ? `${total} liked images` : 'No liked images yet')}
             </p>
           </div>
-          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 'var(--spacing-2)', flexWrap: 'wrap' }}>
             <Button
+              variant="secondary"
               icon={<RocketOutlined />}
               onClick={() => navigate('/')}
             >
               Open studio
             </Button>
             <Button
+              variant="secondary"
               icon={<ReloadOutlined />}
               onClick={refreshImages}
               loading={loading}
@@ -178,7 +181,7 @@ export function MyImagesPage() {
           </div>
         </div>
       </motion.div>
-
+ 
       <Tabs
         activeKey={activeTab}
         onChange={(key) => setActiveTab(key as 'created' | 'liked')}
@@ -187,11 +190,11 @@ export function MyImagesPage() {
           { key: 'liked', label: <span><HeartFilled style={{ color: '#ff4d6d' }} /> Liked <Badge count={likedTotal} style={{ marginLeft: 8, backgroundColor: '#ff4d6d' }} /></span> },
         ]}
       />
-
+ 
       {loading ? (
         <div className="images-grid">
           {Array.from({ length: PAGE_SIZE }).map((_, i) => (
-            <Skeleton.Image key={i} active style={{ width: '100%', height: 200, borderRadius: 12 }} />
+            <Skeleton.Image key={i} active style={{ width: '100%', height: 200, borderRadius: 'var(--radius-md)' }} />
           ))}
         </div>
       ) : images.length === 0 ? (
@@ -200,9 +203,9 @@ export function MyImagesPage() {
             description={activeTab === 'created'
               ? "You haven't processed any images yet. Open the studio to create your first asset."
               : "You haven't liked any image yet. Explore and hit the heart to save favorites."}
-            style={{ margin: '48px auto' }}
+            style={{ margin: 'var(--spacing-12) auto' }}
           >
-            <Button type="primary" icon={<RocketOutlined />} onClick={() => navigate('/')}>
+            <Button variant="primary" icon={<RocketOutlined />} onClick={() => navigate('/')}>
               {activeTab === 'created' ? 'Go to studio' : 'Explore gallery'}
             </Button>
           </Empty>

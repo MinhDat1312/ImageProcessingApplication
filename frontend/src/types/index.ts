@@ -136,3 +136,10 @@ export interface AccessStats {
   daily: AccessLog[]
   monthly: AccessLog[]
 }
+
+export interface TagImage {
+  items: {
+    tag: string
+    count: number
+  }[]
+}

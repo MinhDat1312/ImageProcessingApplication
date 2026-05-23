@@ -1,8 +1,10 @@
 import { SendOutlined } from "@ant-design/icons";
 import { AnimatePresence, motion } from "framer-motion";
-import { Button, Form, Input, InputNumber, Select, Slider, Tag } from "antd";
+import { Form, InputNumber, Select, Slider, Tag } from "antd";
 import type { FormInstance } from "antd";
 import type { ProcessFormValues } from "../types";
+import { Button } from "./ui/Button";
+import { Input } from "./ui/Input";
 
 interface PipelineControlsProps {
   form: FormInstance<ProcessFormValues>;
@@ -225,7 +227,7 @@ export function PipelineControls({
 
       <Form.Item className="submit-row">
         <Button
-          type="primary"
+          variant="primary"
           htmlType="submit"
           loading={processing}
           disabled={processing || disabled}

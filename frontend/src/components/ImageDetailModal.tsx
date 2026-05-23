@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Modal, Button, Input, Avatar, List, message, Divider } from 'antd'
+import { Modal, Avatar, List, message, Divider } from 'antd'
 import { 
   HeartOutlined, HeartFilled, MessageOutlined, EyeOutlined, 
   DownloadOutlined, SendOutlined, RocketOutlined 
@@ -7,6 +7,8 @@ import {
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import axiosInstance from '../api/axiosInstance'
+import { Button } from './ui/Button'
+import { Input } from './ui/Input'
 
 interface ImageDetailModalProps {
   visible: boolean
@@ -303,67 +305,67 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
             </div>
           </div>
 
-          <Divider style={{ margin: '12px 0', borderColor: 'rgba(255,255,255,0.08)' }} />
+          <Divider style={{ margin: 'var(--spacing-3) 0', borderColor: 'var(--border-default)' }} />
 
           {/* Metadata Section */}
-          <div className="metadata-section" style={{ padding: '4px 8px 12px 8px' }}>
+          <div className="metadata-section" style={{ padding: 'var(--spacing-1) var(--spacing-2) var(--spacing-3) var(--spacing-2)' }}>
             {editMode ? (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Title</label>
+              <div className="detail-modal-edit-form">
+                <div className="detail-modal-field">
+                  <label>Title</label>
                   <Input 
                     value={title} 
                     onChange={e => setTitle(e.target.value)} 
                     placeholder="Enter image title" 
                     size="middle"
-                    style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                    className="detail-modal-input"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Description</label>
+                <div className="detail-modal-field">
+                  <label>Description</label>
                   <Input.TextArea 
                     value={description} 
                     onChange={e => setDescription(e.target.value)} 
                     placeholder="Describe this creation..." 
                     size="middle"
                     autoSize={{ minRows: 2, maxRows: 4 }}
-                    style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                    className="detail-modal-textarea"
                   />
                 </div>
-                <div>
-                  <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Tags (comma separated)</label>
+                <div className="detail-modal-field">
+                  <label>Tags (comma separated)</label>
                   <Input 
                     value={tags} 
                     onChange={e => setTags(e.target.value)} 
                     placeholder="e.g. vintage, portrait, warm" 
                     size="middle"
-                    style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                    className="detail-modal-input"
                   />
                 </div>
                 {item.prompt && (
-                  <div>
-                    <label style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)', fontWeight: 600 }}>Prompt</label>
+                  <div className="detail-modal-field">
+                    <label>Prompt</label>
                     <Input.TextArea 
                       value={prompt} 
                       onChange={e => setPrompt(e.target.value)} 
                       placeholder="Generation prompt..." 
                       size="middle"
                       autoSize={{ minRows: 1, maxRows: 3 }}
-                      style={{ marginTop: '4px', background: 'rgba(255,255,255,0.03)', color: 'var(--text-primary)', borderColor: 'rgba(255,255,255,0.1)' }}
+                      className="detail-modal-textarea"
                     />
                   </div>
                 )}
-                <div style={{ display: 'flex', gap: '8px', marginTop: '6px' }}>
+                <div className="detail-modal-edit-actions">
                   <Button 
-                    type="primary" 
+                    variant="primary" 
                     size="middle" 
                     onClick={handleSaveMetadata} 
                     loading={savingMetadata}
-                    style={{ flex: 1, borderRadius: '6px' }}
                   >
                     Save
                   </Button>
                   <Button 
+                    variant="secondary"
                     size="middle" 
                     onClick={() => {
                       setEditMode(false)
@@ -372,7 +374,6 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
                       setTags(item.tags ?? '')
                       setPrompt(item.prompt ?? '')
                     }}
-                    style={{ borderRadius: '6px', background: 'transparent', borderColor: 'rgba(255,255,255,0.15)', color: 'var(--text-secondary)' }}
                   >
                     Cancel
                   </Button>
@@ -380,15 +381,15 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
               </div>
             ) : (
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
-                  <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600, color: 'var(--text-primary)' }}>
+                <div className="detail-modal-title-row">
+                  <h3 className="detail-modal-title">
                     {title || 'Untitled Creation'}
                   </h3>
                   {user && user.userId === item.owner.userId && (
                     <Button 
                       size="small" 
+                      variant="secondary"
                       onClick={() => setEditMode(true)}
-                      style={{ fontSize: '11px', borderRadius: '4px', background: 'rgba(255,255,255,0.05)', borderColor: 'rgba(255,255,255,0.1)', color: 'var(--text-secondary)' }}
                     >
                       Edit Details
                     </Button>
@@ -396,24 +397,17 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
                 </div>
                 
                 {description && (
-                  <p style={{ margin: '8px 0 0 0', fontSize: '13px', color: 'var(--text-secondary)', lineHeight: 1.4 }}>
+                  <p className="detail-modal-desc">
                     {description}
                   </p>
                 )}
 
                 {tags && (
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginTop: '10px' }}>
+                  <div className="detail-modal-tags">
                     {tags.split(',').map((tag: string) => tag.trim()).filter(Boolean).map((tag: string) => (
                       <span 
                         key={tag} 
-                        style={{ 
-                          fontSize: '11px', 
-                          background: 'rgba(94, 106, 210, 0.1)', 
-                          color: '#8A97FF', 
-                          padding: '2px 8px', 
-                          borderRadius: '4px',
-                          border: '1px solid rgba(94, 106, 210, 0.2)' 
-                        }}
+                        className="detail-modal-tag"
                       >
                         #{tag}
                       </span>
@@ -424,32 +418,27 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
             )}
           </div>
 
-          <Divider style={{ margin: '12px 0', borderColor: 'rgba(255,255,255,0.08)' }} />
+          <Divider style={{ margin: 'var(--spacing-3) 0', borderColor: 'var(--border-default)' }} />
 
           {user && user.userId === item.owner.userId && (
             <>
-              <div className="visibility-settings-row" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '4px 8px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                  <span style={{ fontSize: '11px', textTransform: 'uppercase', color: 'var(--text-secondary)' }}>Visibility</span>
-                  <span style={{ fontSize: '14px', fontWeight: 500, color: 'var(--text-primary)', marginTop: '2px' }}>
+              <div className="detail-modal-visibility-row">
+                <div className="detail-modal-visibility-info">
+                  <span className="detail-modal-visibility-label">Visibility</span>
+                  <span className="detail-modal-visibility-val">
                     {visibility === 'PUBLIC' ? '🌐 Public' : '🔒 Private'}
                   </span>
                 </div>
                 <Button
                   size="small"
-                  type={visibility === 'PUBLIC' ? 'default' : 'primary'}
+                  variant={visibility === 'PUBLIC' ? 'secondary' : 'primary'}
                   onClick={handleVisibilityToggle}
                   loading={updatingVisibility}
-                  style={{
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    borderColor: visibility === 'PUBLIC' ? 'rgba(255,255,255,0.15)' : undefined
-                  }}
                 >
                   Make {visibility === 'PUBLIC' ? 'Private' : 'Public'}
                 </Button>
               </div>
-              <Divider style={{ margin: '12px 0', borderColor: 'rgba(255,255,255,0.08)' }} />
+              <Divider style={{ margin: 'var(--spacing-3) 0', borderColor: 'var(--border-default)' }} />
             </>
           )}
 
@@ -475,9 +464,9 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
           <div className="modal-comments-container">
             <h5>Comments</h5>
             {commentsError ? (
-              <div style={{ color: 'var(--text-secondary)', display: 'flex', gap: 8, alignItems: 'center' }}>
+              <div className="detail-modal-comments-error">
                 <div>Failed to load comments: {commentsError}</div>
-                <Button type="link" onClick={() => { setCommentsError(null); fetchComments(); }}>Retry</Button>
+                <Button variant="ghost" type="link" onClick={() => { setCommentsError(null); fetchComments(); }}>Retry</Button>
               </div>
             ) : (
               <List
@@ -514,6 +503,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
               placeholder={user ? "Write a comment..." : "Sign in to leave a comment"}
               disabled={!user || submittingComment}
               autoSize={{ minRows: 2, maxRows: 3 }}
+              className="detail-modal-textarea"
               onPressEnter={(e) => {
                 if (!e.shiftKey) {
                   e.preventDefault()
@@ -523,7 +513,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
             />
             <div className="comment-submit-row">
               <Button
-                type="primary"
+                variant="primary"
                 size="small"
                 icon={<SendOutlined />}
                 loading={submittingComment}

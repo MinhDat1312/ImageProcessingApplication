@@ -1,6 +1,9 @@
-import { Button, Card, Input, Tag } from 'antd'
+import { Tag } from 'antd'
 import { useEffect, useState } from 'react'
 import { CompassOutlined, SearchOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { Input } from '../components/ui/Input'
 import { motion } from 'framer-motion'
 import { useSearchParams } from 'react-router-dom'
 import HomeFeed from '../ui/HomeFeed'
@@ -66,7 +69,7 @@ export function ExplorePage() {
             />
             <Button 
               size="large" 
-              type="primary" 
+              variant="primary" 
               icon={<CompassOutlined />}
               onClick={() => triggerSearch(inputVal)}
             >
@@ -87,7 +90,7 @@ export function ExplorePage() {
           <p>
             Combine public feed discovery with prompt templates, auto-tagging, and remix workflows powered by Gemini.
           </p>
-          <Button icon={<ThunderboltOutlined />}>Open prompt gallery</Button>
+          <Button variant="secondary" icon={<ThunderboltOutlined />}>Open prompt gallery</Button>
         </Card>
       </motion.section>
 

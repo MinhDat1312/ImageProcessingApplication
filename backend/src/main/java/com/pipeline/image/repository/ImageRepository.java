@@ -34,4 +34,7 @@ public interface ImageRepository extends JpaRepository<Image, String>, JpaSpecif
            "LOWER(coalesce(i.prompt, '')) LIKE LOWER(CONCAT('%', :query, '%')) OR " +
            "LOWER(coalesce(i.tags, '')) LIKE LOWER(CONCAT('%', :query, '%')))")
     Page<Image> searchPublicImages(Visibility visibility, String query, Pageable pageable);
+
+    @Query("SELECT i.tags FROM Image i WHERE i.visibility = :visibility AND i.tags IS NOT NULL")
+    List<String> findTagsByVisibility(Visibility visibility);
 }

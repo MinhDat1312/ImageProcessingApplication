@@ -1,15 +1,15 @@
 import {
   App as AntApp,
-  Button,
-  Card,
   Form,
   Segmented,
   Space,
   Statistic,
   Tag,
   Modal,
-  Input,
 } from 'antd'
+import { Button } from './components/ui/Button'
+import { Card } from './components/ui/Card'
+import { Input } from './components/ui/Input'
 import {
   ArrowRightOutlined,
   CompassOutlined,
@@ -427,13 +427,13 @@ export default function App() {
             </p>
 
             <Space wrap size={12} className="hero-action-row">
-              <Button type="primary" size="large" icon={<RocketOutlined />} onClick={() => navigate('/studio')}>
+              <Button variant="primary" size="large" icon={<RocketOutlined />} onClick={() => navigate('/studio')}>
                 Open studio
               </Button>
-              <Button size="large" icon={<CompassOutlined />} onClick={() => navigate('/explore')}>
+              <Button variant="secondary" size="large" icon={<CompassOutlined />} onClick={() => navigate('/explore')}>
                 Explore gallery
               </Button>
-              <Button size="large" icon={<MessageOutlined />} onClick={() => navigate('/chat')}>
+              <Button variant="secondary" size="large" icon={<MessageOutlined />} onClick={() => navigate('/chat')}>
                 AI chat
               </Button>
             </Space>
@@ -499,11 +499,11 @@ export default function App() {
                   </p>
                 </div>
                 {user ? (
-                  <Button icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>
+                  <Button variant="secondary" icon={<PictureOutlined />} onClick={() => navigate('/my-images')}>
                     My gallery
                   </Button>
                 ) : (
-                  <Button type="primary" icon={<ArrowRightOutlined />} onClick={() => navigate('/login')}>
+                  <Button variant="primary" icon={<ArrowRightOutlined />} onClick={() => navigate('/login')}>
                     Sign in
                   </Button>
                 )}
@@ -571,7 +571,7 @@ export default function App() {
                 </div>
                 {user && (
                   <Button 
-                    type="primary" 
+                    variant="primary" 
                     icon={<PlusOutlined />} 
                     onClick={() => setIsSaveModalOpen(true)}
                   >
@@ -599,6 +599,7 @@ export default function App() {
                     <p>{preset.description}</p>
                     <div className="preset-actions">
                       <Button 
+                        variant="secondary"
                         size="small" 
                         icon={<PlayCircleOutlined />} 
                         onClick={() => handleApplyPreset(preset)}
@@ -606,6 +607,7 @@ export default function App() {
                         Run preset
                       </Button>
                       <Button 
+                        variant="secondary"
                         size="small" 
                         icon={<CopyOutlined />}
                         onClick={() => handleDuplicatePreset(preset)}
@@ -614,6 +616,7 @@ export default function App() {
                       </Button>
                       {preset.tag === 'Custom' && (
                         <Button 
+                          variant="secondary"
                           size="small" 
                           danger
                           icon={<DeleteOutlined />}

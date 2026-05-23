@@ -1,4 +1,4 @@
-import { DownOutlined, LogoutOutlined, PictureOutlined, DashboardOutlined, UserOutlined } from '@ant-design/icons'
+import { LogoutOutlined, PictureOutlined, DashboardOutlined, UserOutlined } from '@ant-design/icons'
 import { Avatar, Dropdown, Space, Tag, Typography } from 'antd'
 import type { MenuProps } from 'antd'
 import { useCallback, useMemo } from 'react'
@@ -27,19 +27,18 @@ export function UserMenu() {
     {
       key: 'info',
       label: (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 0' }}>
+        <div className="user-menu-dropdown-header">
           <Avatar
             size={36}
             src={user?.avatar || undefined}
-            style={{ background: '#1d4ed8', fontWeight: 700, flexShrink: 0 }}
+            style={{ background: 'var(--primary)', fontWeight: 700, flexShrink: 0 }}
           >
             {!user?.avatar && initials}
           </Avatar>
           <div>
-            <div style={{ fontWeight: 700 }}>{user?.username}</div>
-            <Typography.Text type="secondary" style={{ fontSize: 12 }}>{user?.email}</Typography.Text>
-            <div style={{ marginTop: 4 }}>
-              <Tag color="blue" style={{ fontSize: 11 }}>{normalizedRole}</Tag>
+            <Typography.Text type="secondary" style={{ fontSize: '0.75rem' }}>{user?.email}</Typography.Text>
+            <div style={{ marginTop: 'var(--spacing-1)' }}>
+              <Tag color="blue" style={{ fontSize: '0.6875rem' }}>{normalizedRole}</Tag>
             </div>
           </div>
         </div>
@@ -87,18 +86,16 @@ export function UserMenu() {
       <button
         type="button"
         aria-label={`User menu for ${user.username}`}
-        style={{ cursor: 'pointer', background: 'none', border: 'none', padding: 0, display: 'flex', alignItems: 'center' }}
+        className="user-menu-trigger-btn"
       >
         <Space>
           <Avatar
             size={32}
             src={user.avatar || undefined}
-            style={{ background: '#1d4ed8', fontWeight: 700 }}
+            style={{ background: 'var(--primary)', fontWeight: 700 }}
           >
             {!user.avatar && initials}
           </Avatar>
-          <span style={{ fontSize: 14, fontWeight: 600 }}>{user.username}</span>
-          <DownOutlined style={{ fontSize: 12, opacity: 0.5 }} />
         </Space>
       </button>
     </Dropdown>

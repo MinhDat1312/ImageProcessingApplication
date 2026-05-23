@@ -11,10 +11,17 @@ export const Button: React.FC<DnaButtonProps> = ({ variant = 'primary', classNam
   const classes = ['dna-btn'];
   if (variant === 'primary') classes.push('dna-btn-primary');
   if (variant === 'secondary') classes.push('dna-btn-secondary');
+  if (variant === 'ghost') classes.push('dna-btn-ghost');
   if (className) classes.push(className);
 
+  const antType = variant === 'primary' ? 'primary' : variant === 'ghost' ? 'text' : 'default';
+
   return (
-    <AntButton className={classes.join(' ')} {...rest}>
+    <AntButton 
+      className={classes.join(' ')} 
+      type={antType} 
+      {...rest}
+    >
       {children}
     </AntButton>
   );

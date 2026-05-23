@@ -29,9 +29,9 @@ export function ProgressPipeline({ steps }: ProgressPipelineProps) {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.28 }}
-        style={{ padding: '12px 0' }}
+        className="progress-pipeline-wrap"
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-4)' }}>
           <Tag color="cyan">Waiting</Tag>
           <Text type="secondary">Run the pipeline to unlock live progress, previews, and result actions.</Text>
         </div>
@@ -46,9 +46,9 @@ export function ProgressPipeline({ steps }: ProgressPipelineProps) {
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -16 }}
       transition={{ duration: 0.3 }}
-      style={{ padding: '12px 0' }}
+      className="progress-pipeline-wrap"
     >
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 16 }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 'var(--spacing-2)', marginBottom: 'var(--spacing-4)' }}>
         <Tag color="success">{completedCount} complete</Tag>
         <Tag color="processing">{processingCount} active</Tag>
         <Tag color={errorCount ? 'error' : 'default'}>{errorCount ? `${errorCount} failed` : 'No errors'}</Tag>
@@ -57,35 +57,19 @@ export function ProgressPipeline({ steps }: ProgressPipelineProps) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          style={{
-            display: "flex",
-            alignItems: "center",
-            gap: 8,
-            marginBottom: 16,
-            padding: "12px 16px",
-            background: "linear-gradient(135deg, rgba(57, 214, 255, 0.18) 0%, rgba(139, 125, 255, 0.2) 100%)",
-            borderRadius: 16,
-            color: "white",
-            border: '1px solid rgba(255,255,255,0.10)',
-            boxShadow: '0 16px 36px rgba(5,8,22,0.32)',
-          }}
+          className="progress-waiting-banner"
         >
           <Spin size="small" indicator={<span style={{ color: "white" }}>⏳</span>} />
           <motion.span
             animate={{ opacity: [0.5, 1, 0.5] }}
             transition={{ duration: 1.5, repeat: Infinity }}
+            className="progress-waiting-text"
           >
             Waiting for processing...
           </motion.span>
         </motion.div>
       )}
-      <div style={{
-        padding: '16px',
-        borderRadius: 20,
-        border: '1px solid rgba(255,255,255,0.08)',
-        background: 'linear-gradient(180deg, rgba(18, 28, 56, 0.62), rgba(9, 14, 31, 0.54))',
-        backdropFilter: 'blur(18px)',
-      }}>
+      <div className="progress-steps-card">
         <Steps
           orientation="vertical"
           size="small"

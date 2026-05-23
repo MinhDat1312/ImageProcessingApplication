@@ -22,12 +22,12 @@ export function ImagePreview({
   if (!originalUrl) {
     return (
       <div className="empty-preview-state">
-        <div style={{ width: 88, height: 88, borderRadius: 28, display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, rgba(57, 214, 255, 0.14), rgba(139, 125, 255, 0.12))', border: '1px solid rgba(255,255,255,0.08)' }}>
+        <div style={{ width: 88, height: 88, borderRadius: "var(--radius-xl)", display: 'grid', placeItems: 'center', background: 'linear-gradient(135deg, rgba(57, 214, 255, 0.14), rgba(139, 125, 255, 0.12))', border: '1px solid rgba(255,255,255,0.08)' }}>
           <PictureOutlined style={{ fontSize: 38, color: 'var(--primary)' }} />
         </div>
         <strong>Upload an image to unlock the live preview</strong>
         <span>The comparison view will appear here after processing.</span>
-        <Tag color="cyan" style={{ marginTop: 4 }}>Before / after workspace</Tag>
+        <Tag color="cyan" style={{ marginTop: "var(--spacing-1)" }}>Before / after workspace</Tag>
       </div>
     );
   }
@@ -46,8 +46,8 @@ export function ImagePreview({
             processedUrl={processedUrl}
             height="400px"
           />
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: "var(--spacing-4)", gap: "var(--spacing-3)", flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: "var(--spacing-2)", flexWrap: 'wrap' }}>
               <Tag color="cyan" style={{ margin: 0 }}>Result ready</Tag>
               <Tag color="geekblue" style={{ margin: 0 }}>{processedFilename || 'processed.png'}</Tag>
               {executionTime !== null && (
@@ -78,7 +78,7 @@ export function ImagePreview({
             <div className="image-box image-box-original">
               <AntImage
                 src={originalUrl}
-                style={{ width: "100%", borderRadius: 12, objectFit: "contain" }}
+                style={{ width: "100%", borderRadius: "var(--radius-md)", objectFit: "contain" }}
               />
             </div>
           </div>
@@ -89,7 +89,7 @@ export function ImagePreview({
             </Text>
             <div className="image-box image-box-pending">
               <Skeleton active title={false} paragraph={{ rows: 4 }} />
-              <div style={{ marginTop: 12 }}>Waiting for the pipeline to finish...</div>
+              <div style={{ marginTop: "var(--spacing-3)" }}>Waiting for the pipeline to finish...</div>
             </div>
           </div>
         </div>

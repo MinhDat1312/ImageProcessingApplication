@@ -1,4 +1,7 @@
-import { Button, Card, Input, Tag, message } from 'antd'
+import { Tag, message } from 'antd'
+import { Button } from '../components/ui/Button'
+import { Card } from '../components/ui/Card'
+import { Input } from '../components/ui/Input'
 import { useEffect, useState, useRef } from 'react'
 import { BulbOutlined, MessageOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { motion } from 'framer-motion'
@@ -127,8 +130,8 @@ export function ChatPage() {
             inside the platform.
           </p>
           <div className="chat-actions">
-            <Button type="primary" icon={<ThunderboltOutlined />} onClick={handleStartNewThread}>Start new thread</Button>
-            <Button icon={<BulbOutlined />} onClick={() => {
+            <Button variant="primary" icon={<ThunderboltOutlined />} onClick={handleStartNewThread}>Start new thread</Button>
+            <Button variant="secondary" icon={<BulbOutlined />} onClick={() => {
               if (user) {
                 setPrompt('Give me some creative prompt ideas.')
               } else {
@@ -150,7 +153,7 @@ export function ChatPage() {
             <span className="section-kicker">Conversation</span>
             <Tag color="processing">Gemini connected</Tag>
           </div>
-          <div className="message-list" style={{ minHeight: 250, maxHeight: 450, overflowY: 'auto' }}>
+          <div className="message-list">
             {messages.map((message, index) => (
               <div key={index} className={`chat-message chat-message-${message.role}`}>
                 <span>{message.role === 'assistant' ? 'Goat Image AI' : 'You'}</span>
@@ -166,7 +169,7 @@ export function ChatPage() {
                 <ThunderboltOutlined style={{ fontSize: 32, color: '#ff007f', marginBottom: 12 }} />
                 <h3>Sign in to unlock AI assistant</h3>
                 <p>Unlock context-aware conversations, customized image pipelines, prompt improvements, and history tracking.</p>
-                <Button type="primary" onClick={() => navigate('/login')} size="large">
+                <Button variant="primary" onClick={() => navigate('/login')} size="large">
                   Sign in
                 </Button>
               </div>
@@ -182,7 +185,7 @@ export function ChatPage() {
                   placeholder="Ask about prompts, image edits, pipelines, or generation tips..."
                   disabled={loading}
                 />
-                <Button type="primary" icon={<MessageOutlined />} onClick={() => handleSend()} loading={loading} disabled={loading}>
+                <Button variant="primary" icon={<MessageOutlined />} onClick={() => handleSend()} loading={loading} disabled={loading}>
                   Send
                 </Button>
               </div>
@@ -218,10 +221,10 @@ export function ChatPage() {
           <Card className="glass-card" bordered={false}>
             <span className="section-kicker">Quick actions</span>
             <div className="chat-list">
-              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('Generate 3 variations of a cinematic portrait prompt.')}>Generate prompt variations</div>
-              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('How do I write a prompt in Midjourney style?')}>Rewrite for Midjourney style</div>
-              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('Suggest a cleanup pipeline for noisy scanned documents.')}>Suggest a cleanup pipeline</div>
-              <div style={{ cursor: 'pointer', padding: '4px 0' }} onClick={() => handleSend('Explain the difference between blur and sharpen filters.')}>Explain blur vs sharpen</div>
+              <div className="chat-quick-action" onClick={() => handleSend('Generate 3 variations of a cinematic portrait prompt.')}>Generate prompt variations</div>
+              <div className="chat-quick-action" onClick={() => handleSend('How do I write a prompt in Midjourney style?')}>Rewrite for Midjourney style</div>
+              <div className="chat-quick-action" onClick={() => handleSend('Suggest a cleanup pipeline for noisy scanned documents.')}>Suggest a cleanup pipeline</div>
+              <div className="chat-quick-action" onClick={() => handleSend('Explain the difference between blur and sharpen filters.')}>Explain blur vs sharpen</div>
             </div>
           </Card>
         </aside>

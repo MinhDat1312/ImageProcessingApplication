@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Modal, Popconfirm, message, Space, Image, Tooltip } from 'antd'
+import { Table, Modal, Popconfirm, message, Space, Image, Tooltip } from 'antd'
+import { Button } from '../ui/Button'
 import { DeleteOutlined, EyeOutlined, DownloadOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
 import type { ApiResponse, AdminImage } from '../../types'
@@ -83,7 +84,7 @@ export function ImagesTab() {
         <Space>
           <Tooltip title="View">
             <Button
-              type="primary"
+              variant="primary"
               size="small"
               icon={<EyeOutlined />}
               onClick={() => setPreviewImage(record.url)}
@@ -91,7 +92,7 @@ export function ImagesTab() {
           </Tooltip>
           <Tooltip title="Download">
             <Button
-              type="default"
+              variant="secondary"
               size="small"
               icon={<DownloadOutlined />}
               onClick={() => handleDownload(record.url, record.filename)}
@@ -104,7 +105,7 @@ export function ImagesTab() {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
+            <Button variant="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),

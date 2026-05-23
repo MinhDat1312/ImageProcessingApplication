@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Card, Row, Col, Tabs, message, Statistic, DatePicker, Button, Space, Empty } from 'antd'
+import { Row, Col, Tabs, message, Statistic, DatePicker, Space, Empty } from 'antd'
+import { Card } from '../ui/Card'
+import { Button } from '../ui/Button'
 import type { Dayjs } from 'dayjs'
 import {
   LineChart, Line, BarChart, Bar,
@@ -91,7 +93,7 @@ export function AccessStatsTab() {
                     onChange={(d: Dayjs | null) => setSelectedDate(d)}
                   />
                   <Button
-                    type="primary"
+                    variant="primary"
                     icon={<CalendarOutlined />}
                     loading={loading}
                     disabled={!selectedDate}
@@ -130,7 +132,7 @@ export function AccessStatsTab() {
                     onChange={(d: Dayjs | null) => setSelectedMonth(d)}
                   />
                   <Button
-                    type="primary"
+                    variant="primary"
                     icon={<CalendarOutlined />}
                     loading={loading}
                     disabled={!selectedMonth}
@@ -169,7 +171,7 @@ export function AccessStatsTab() {
                     onChange={(d: Dayjs | null) => setSelectedYear(d)}
                   />
                   <Button
-                    type="primary"
+                    variant="primary"
                     icon={<CalendarOutlined />}
                     loading={loading}
                     disabled={!selectedYear}

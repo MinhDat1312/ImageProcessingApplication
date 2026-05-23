@@ -312,7 +312,7 @@ export default function GeneratePage() {
                   <div className="ai-output-actions">
                     <Button 
                       size="small" 
-                      type="primary"
+                      variant="primary"
                       onClick={() => {
                         setPrompt(aiOutput.content)
                         setAiOutput(null)
@@ -322,6 +322,7 @@ export default function GeneratePage() {
                     </Button>
                     <Button 
                       size="small"
+                      variant="secondary"
                       onClick={() => {
                         navigator.clipboard.writeText(aiOutput.content)
                         antNotification.success({ message: 'Copied to clipboard' })
@@ -329,7 +330,7 @@ export default function GeneratePage() {
                     >
                       Copy
                     </Button>
-                    <Button size="small" type="text" onClick={() => setAiOutput(null)}>
+                    <Button size="small" variant="ghost" onClick={() => setAiOutput(null)}>
                       Dismiss
                     </Button>
                   </div>
@@ -381,17 +382,17 @@ export default function GeneratePage() {
                 animate={{ opacity: 1, y: 0 }}
               >
                 <Button 
-                  type="primary" 
+                  variant="primary" 
                   icon={<RocketOutlined />} 
                   onClick={handleRemixInStudio}
                   className="btn-remix-glow"
                 >
                   Remix in Studio
                 </Button>
-                <Button icon={<DownloadOutlined />} onClick={handleDownload}>
+                <Button variant="secondary" icon={<DownloadOutlined />} onClick={handleDownload}>
                   Download
                 </Button>
-                <Button icon={<ShareAltOutlined />} onClick={handlePublishToExplore}>
+                <Button variant="secondary" icon={<ShareAltOutlined />} onClick={handlePublishToExplore}>
                   Publish to Explore
                 </Button>
               </motion.div>

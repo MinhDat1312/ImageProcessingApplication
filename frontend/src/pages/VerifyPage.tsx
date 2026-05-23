@@ -1,4 +1,6 @@
-import { Alert, Button, Input, notification } from 'antd'
+import { Alert, notification } from 'antd'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
@@ -122,8 +124,7 @@ export function VerifyPage() {
           <div className="otp-expire" style={{ color: '#dc2626' }}>Code expired</div>
         )}
 
-        <Button
-          type="primary"
+        <Button variant="primary"
           size="large"
           block
           loading={loading}
@@ -137,7 +138,7 @@ export function VerifyPage() {
         <div className="resend-row">
           Didn't receive code?&nbsp;
           <Button
-            type="link"
+            variant="ghost"
             size="small"
             disabled={cooldown > 0}
             onClick={handleResend}

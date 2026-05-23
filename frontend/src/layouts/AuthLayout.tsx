@@ -1,4 +1,5 @@
-import { Button, ConfigProvider, Layout, Tag, theme } from 'antd'
+import { ConfigProvider, Layout, Tag, theme } from 'antd'
+import { Button } from '../components/ui/Button'
 import { type ReactNode } from 'react'
 import { useNavigate } from 'react-router-dom'
 import goatLogo from '../assets/goat.png'
@@ -20,12 +21,17 @@ export function AuthLayout({ children }: AuthLayoutProps) {
       theme={{
         algorithm: themeMode === 'dark' ? theme.darkAlgorithm : theme.defaultAlgorithm,
         token: {
-          colorPrimary: '#7c3aed',
-          colorInfo: '#22d3ee',
-          colorSuccess: '#14b8a6',
-          colorError: '#f43f5e',
-          borderRadius: 18,
-          fontFamily: 'Manrope, sans-serif',
+          colorPrimary: '#5E6AD2',
+          colorInfo: '#5E6AD2',
+          colorSuccess: '#30e3a6',
+          colorError: '#ff6b7a',
+          colorWarning: '#f5b942',
+          borderRadius: 12,
+          fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+          fontSize: 14,
+          colorBgLayout: 'transparent',
+          colorBgContainer: themeMode === 'dark' ? 'rgba(10, 10, 12, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          colorBorder: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.08)',
         },
       }}
     >
@@ -76,7 +82,7 @@ export function AuthLayout({ children }: AuthLayoutProps) {
 
           <div className="auth-form-panel">
             <div className="auth-theme-toggle">
-              <Button type="text" onClick={toggleTheme} size="small">
+              <Button variant="ghost" onClick={toggleTheme} size="small">
                 {themeMode === 'dark' ? 'Light mode' : 'Dark mode'}
               </Button>
             </div>

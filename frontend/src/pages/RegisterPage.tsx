@@ -1,5 +1,7 @@
-import { Alert, Button, Form, Input, Select } from 'antd'
-import { useState } from 'react'
+import { Alert, Form, Select } from 'antd'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
+import { useState, type ChangeEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
 import { useAuth } from '../context/AuthContext'
@@ -94,7 +96,7 @@ export function RegisterPage() {
             <Input.Password
               placeholder="••••••••"
               size="large"
-              onChange={e => setPassword(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setPassword(e.target.value)}
             />
           </Form.Item>
 
@@ -150,8 +152,7 @@ export function RegisterPage() {
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, marginTop: 4 }}>
-            <Button
-              type="primary"
+            <Button variant="primary"
               htmlType="submit"
               loading={loading}
               disabled={password.length > 0 && !allRulesPass}

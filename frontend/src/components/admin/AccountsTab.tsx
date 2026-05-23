@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react'
-import { Table, Button, Modal, Form, Input, Select, message, Popconfirm, Space } from 'antd'
+import { Table, Modal, Form, Select, message, Popconfirm, Space } from 'antd'
+import { Button } from '../ui/Button'
+import { Input } from '../ui/Input'
 import { EditOutlined, DeleteOutlined, LockOutlined, UnlockOutlined } from '@ant-design/icons'
 import axiosInstance from '../../api/axiosInstance'
 import type { ApiResponse, UserAccount, AdminRole } from '../../types'
@@ -121,9 +123,9 @@ export function AccountsTab() {
       key: 'action',
       render: (_: unknown, record: UserAccount) => (
         <Space>
-          <Button type="primary" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
+          <Button variant="primary" size="small" icon={<EditOutlined />} onClick={() => handleEdit(record)} />
           <Button
-            type="primary"
+            variant="primary"
             size="small"
             danger={!record.enabled}
             icon={record.enabled ? <LockOutlined /> : <UnlockOutlined />}
@@ -138,7 +140,7 @@ export function AccountsTab() {
             okText="Yes"
             cancelText="No"
           >
-            <Button type="primary" danger size="small" icon={<DeleteOutlined />} />
+            <Button variant="primary" danger size="small" icon={<DeleteOutlined />} />
           </Popconfirm>
         </Space>
       ),

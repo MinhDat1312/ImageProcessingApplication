@@ -1,4 +1,6 @@
-import { Alert, Button, Form, Input } from 'antd'
+import { Alert, Form } from 'antd'
+import { Button } from '../components/ui/Button'
+import { Input } from '../components/ui/Input'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import axiosInstance from '../api/axiosInstance'
@@ -93,7 +95,7 @@ export function LoginPage() {
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, marginTop: 4 }}>
-            <Button type="primary" htmlType="submit" loading={loading} size="large" block>
+            <Button variant="primary" htmlType="submit" loading={loading} size="large" block>
               Sign In
             </Button>
           </Form.Item>

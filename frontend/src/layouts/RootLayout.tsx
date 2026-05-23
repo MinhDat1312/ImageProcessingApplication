@@ -1,8 +1,10 @@
 import { AppstoreOutlined, BellOutlined, CommentOutlined, CompassOutlined, PictureOutlined, RocketOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
-import { Button, ConfigProvider, Layout, theme } from 'antd'
+import { ConfigProvider, Layout, theme } from 'antd'
+import { Button } from '../components/ui/Button'
 import { type ReactNode } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import goatLogo from '../assets/goat.png'
+import '../styles/system.css'
 import { ThemeToggle } from '../components/ThemeToggle'
 import { UserMenu } from '../components/UserMenu'
 import { useAuth } from '../context/AuthContext'
@@ -50,8 +52,8 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
           fontFamily: "'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
           fontSize: 14,
           colorBgLayout: 'transparent',
-          colorBgContainer: 'rgba(10, 10, 12, 0.8)',
-          colorBorder: 'rgba(255, 255, 255, 0.06)',
+          colorBgContainer: themeMode === 'dark' ? 'rgba(10, 10, 12, 0.8)' : 'rgba(255, 255, 255, 0.8)',
+          colorBorder: themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(15, 23, 42, 0.08)',
         },
       }}
     >
@@ -91,8 +93,8 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
                 </nav>
 
                 <div className="app-actions">
-                  <Button type="text" icon={<BellOutlined />} aria-label="Notifications" />
-                  {user ? <UserMenu /> : <Button type="primary" onClick={() => navigate('/login')}>Sign In</Button>}
+                  <Button variant="ghost" icon={<BellOutlined style={{ fontSize: '22px' }} />} aria-label="Notifications" style={{ marginTop: 'var(--spacing-2)' }} />
+                  {user ? <UserMenu /> : <Button variant="primary" onClick={() => navigate('/login')}>Sign In</Button>}
                   <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
                 </div>
               </div>
