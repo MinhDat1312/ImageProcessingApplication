@@ -61,7 +61,7 @@
 
 .dna-btn-primary{
   background: var(--accent);
-  color: var(--foreground);
+  color: #ffffff;
   box-shadow: 0 4px 12px rgba(94,106,210,0.18), inset 0 1px 0 rgba(255,255,255,0.06);
   border: none;
 }
@@ -203,7 +203,7 @@
 }
 .ant-segmented-item-selected {
   background: var(--accent) !important;
-  color: var(--foreground) !important;
+  color: #ffffff !important;
   box-shadow: 0 2px 8px rgba(94, 106, 210, 0.2) !important;
 }
 

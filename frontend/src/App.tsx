@@ -1,7 +1,6 @@
 import {
   App as AntApp,
   Form,
-  Segmented,
   Space,
   Statistic,
   Tag,
@@ -24,6 +23,7 @@ import {
   ThunderboltOutlined,
   UngroupOutlined,
   DeleteOutlined,
+  MinusOutlined,
   PlusOutlined,
 } from '@ant-design/icons'
 import { AnimatePresence, motion } from 'framer-motion'
@@ -97,11 +97,6 @@ const recentHistory = [
   { label: 'Color grade preset', meta: '1 h ago', status: 'Saved' },
 ]
 
-const visibilityOptions = [
-  { label: 'Public', value: 'public' },
-  { label: 'Private', value: 'private' },
-]
-
 interface ApiError {
   response?: { data?: { error?: string } }
   message?: string
@@ -124,12 +119,14 @@ export default function App() {
   const [processedImageId, setProcessedImageId] = useState<string>()
   const [processing, setProcessing] = useState(false)
   const [executionTime, setExecutionTime] = useState<number | null>(null)
-  const [visibility, setVisibility] = useState<'public' | 'private'>('private')
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const [customPresets, setCustomPresets] = useState<any[]>([])
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false)
   const [savePresetName, setSavePresetName] = useState('')
+  const [liveStatusExpanded, setLiveStatusExpanded] = useState(true)
+
+  const currentVisibility = Form.useWatch('visibility', form) ?? 'private'
 
   const fetchPresets = async () => {
     if (!user) {
@@ -366,7 +363,7 @@ export default function App() {
       formData.append('watermarkSize', String(values.watermarkSize))
     }
     formData.append('compressionQuality', String(values.compressionQuality))
-    formData.append('visibility', visibility.toUpperCase())
+    formData.append('visibility', (values.visibility ?? 'private').toUpperCase())
     if (values.title) formData.append('title', values.title)
     if (values.description) formData.append('description', values.description)
     if (values.tags) formData.append('tags', values.tags)
@@ -453,7 +450,7 @@ export default function App() {
           </motion.div>
 
           <motion.div
-            className="studio-hero-rail glass-card"
+            className={`studio-hero-rail glass-card${liveStatusExpanded ? '' : ' is-collapsed'}`}
             initial={{ opacity: 0, y: 18 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4, delay: 0.05 }}
@@ -461,33 +458,60 @@ export default function App() {
             <div className="rail-header">
               <div>
                 <span className="section-kicker">Live status</span>
-                <h3>Studio command center</h3>
+                <AnimatePresence initial={false}>
+                  {liveStatusExpanded && (
+                    <motion.h3
+                      key="rail-title"
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+                      style={{ overflow: 'hidden', margin: 0 }}
+                    >
+                      Studio command center
+                    </motion.h3>
+                  )}
+                </AnimatePresence>
               </div>
-              <Tag color="success">Online</Tag>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <Tag color="success">Online</Tag>
+                <button
+                  type="button"
+                  className="live-status-toggle"
+                  onClick={() => setLiveStatusExpanded(v => !v)}
+                  aria-label={liveStatusExpanded ? 'Collapse live status' : 'Expand live status'}
+                  title={liveStatusExpanded ? 'Collapse' : 'Expand'}
+                >
+                  {liveStatusExpanded ? <MinusOutlined /> : <PlusOutlined />}
+                </button>
+              </div>
             </div>
 
-            <div className="rail-stack">
-              <div className="status-card status-card-accent">
-                <strong>{processing ? 'Processing image' : 'Ready for upload'}</strong>
-                <span>{processing ? 'Pipeline is currently running with realtime progress.' : 'Drag an image to start a pipeline or open a prompt preset.'}</span>
-              </div>
+            <AnimatePresence initial={false}>
+              {liveStatusExpanded && (
+                <motion.div
+                  key="rail-body"
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.28, ease: [0.16, 1, 0.3, 1] }}
+                  style={{ overflow: 'hidden' }}
+                >
+                  <div className="rail-stack" style={{ paddingTop: 'var(--spacing-3)' }}>
+                    <div className="status-card status-card-accent">
+                      <strong>{processing ? 'Processing image…' : 'Ready for upload'}</strong>
+                      <span>{processing ? 'Pipeline is running with realtime progress.' : 'Drag an image to start the pipeline.'}</span>
+                    </div>
 
-              <div className="status-card">
-                <span className="status-label">Visibility</span>
-                <Segmented
-                  value={visibility}
-                  options={visibilityOptions}
-                  onChange={value => setVisibility(value as 'public' | 'private')}
-                  block
-                />
-              </div>
-
-              <div className="status-card">
-                <span className="status-label">Preview latency</span>
-                <strong>{executionTime !== null ? `${executionTime} ms` : 'Instant local preview'}</strong>
-                <span>{processedFilename || 'Processed output will appear here'}</span>
-              </div>
-            </div>
+                    <div className="status-card">
+                      <span className="status-label">Last execution</span>
+                      <strong>{executionTime !== null ? `${executionTime} ms` : '—'}</strong>
+                      <span>{processedFilename || 'No output yet'}</span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </motion.div>
         </section>
 
@@ -712,11 +736,11 @@ export default function App() {
                 </div>
               </div>
               <div className="status-card status-card-accent">
-                <strong>{visibility === 'public' ? 'Public image' : 'Private image'}</strong>
+                <strong>{currentVisibility === 'public' ? 'Public image' : 'Private image'}</strong>
                 <span>
-                  {visibility === 'public'
-                    ? 'This result can be surfaced in the community feed and search.'
-                    : 'Keep this result private until you are ready to publish it.'}
+                  {currentVisibility === 'public'
+                    ? 'Visible in the community feed and searchable by everyone.'
+                    : 'Only you can see this. Change in the pipeline controls below.'}
                 </span>
               </div>
             </Card>

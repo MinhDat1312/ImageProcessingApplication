@@ -1,6 +1,6 @@
-import { SendOutlined } from "@ant-design/icons";
+import { EyeInvisibleOutlined, GlobalOutlined, SendOutlined } from "@ant-design/icons";
 import { AnimatePresence, motion } from "framer-motion";
-import { Form, InputNumber, Select, Slider, Tag } from "antd";
+import { Form, InputNumber, Segmented, Select, Slider, Tag } from "antd";
 import type { FormInstance } from "antd";
 import type { ProcessFormValues } from "../types";
 import { Button } from "./ui/Button";
@@ -20,6 +20,7 @@ export function PipelineControls({
   disabled,
 }: PipelineControlsProps) {
   const filterType = Form.useWatch("filterType", form);
+  const visibilityValue = Form.useWatch("visibility", form) ?? "private";
 
   return (
     <Form
@@ -221,6 +222,26 @@ export function PipelineControls({
             <Form.Item name="title" label="Title">
               <Input placeholder="Give your creation a name (optional)" />
             </Form.Item>
+          </div>
+        </section>
+
+        <section className="control-section" style={{ gridColumn: '1 / -1' }}>
+          <h3>8. Visibility</h3>
+          <div className="control-fields one-col">
+            <Form.Item name="visibility" initialValue="private" style={{ marginBottom: 8 }}>
+              <Segmented
+                block
+                options={[
+                  { label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><GlobalOutlined />Public</span>, value: 'public' },
+                  { label: <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}><EyeInvisibleOutlined />Private</span>, value: 'private' },
+                ]}
+              />
+            </Form.Item>
+            <p className="visibility-hint">
+              {visibilityValue === 'public'
+                ? 'Visible in the community feed and searchable by everyone.'
+                : 'Only you can see this image. Switch to Public when ready to share.'}
+            </p>
           </div>
         </section>
       </div>
