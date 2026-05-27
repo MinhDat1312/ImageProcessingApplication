@@ -143,7 +143,7 @@ public class ImageController {
             }
 
             // Compression
-            if (requestDto.getCompressionQuality() != null) {
+            if (requestDto.getCompressionQuality() != null && requestDto.getCompressionQuality() < 0.999f) {
                 pipeline.addStage(new CompressionStage(requestDto.getCompressionQuality()));
                 log.info("Added CompressionStage: quality {}", requestDto.getCompressionQuality());
             }
@@ -197,7 +197,7 @@ public class ImageController {
             if (requestDto.getWatermarkText() != null && !requestDto.getWatermarkText().trim().isEmpty()) {
                 detailsBuilder.append("Added watermark '").append(requestDto.getWatermarkText()).append("'. ");
             }
-            if (requestDto.getCompressionQuality() != null) {
+            if (requestDto.getCompressionQuality() != null && requestDto.getCompressionQuality() < 0.999f) {
                 detailsBuilder.append("Compressed quality to ").append((int)(requestDto.getCompressionQuality() * 100)).append("%. ");
             }
             String details = detailsBuilder.toString().trim();
@@ -247,7 +247,7 @@ public class ImageController {
 
             ProcessResponseDto response = ProcessResponseDto.builder()
                     .url(context.getOutputUrl())
-                    .filename(context.getOutputFilename())
+                    .filename(buildDownloadFilename(title, context.getOutputFilename()))
                     .executionTimeMs(context.getExecutionTimeMs())
                     .imageId(persistedImage.getImageId())
                     .build();
@@ -679,8 +679,8 @@ public class ImageController {
             String extension = key.contains(".") ? key.substring(key.lastIndexOf(".") + 1) : "png";
             String contentType = getContentType(extension);
 
-            // Extract filename from key
-            String filename = key.contains("/") ? key.substring(key.lastIndexOf("/") + 1) : key;
+            String storedFilename = key.contains("/") ? key.substring(key.lastIndexOf("/") + 1) : key;
+            String filename = buildDownloadFilename(image.getTitle(), storedFilename);
 
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.parseMediaType(contentType));
@@ -724,6 +724,38 @@ public class ImageController {
             case "bmp" -> "image/bmp";
             default -> "application/octet-stream";
         };
+    }
+
+    private String buildDownloadFilename(String requestedTitle, String fallbackFilename) {
+        String extension = getExtension(fallbackFilename);
+        String title = requestedTitle == null ? "" : requestedTitle.trim();
+
+        if (title.isBlank()) {
+            return fallbackFilename;
+        }
+
+        title = title.replaceAll("[\\\\/:*?\"<>|]", "_").replaceAll("\\s+", "_");
+        if (title.isBlank()) {
+            return fallbackFilename;
+        }
+
+        String titleExtension = getExtension(title);
+        if (!titleExtension.isBlank()) {
+            return title;
+        }
+
+        return extension.isBlank() ? title : title + "." + extension;
+    }
+
+    private String getExtension(String filename) {
+        if (filename == null || filename.isBlank()) {
+            return "";
+        }
+        int dot = filename.lastIndexOf('.');
+        if (dot < 0 || dot == filename.length() - 1) {
+            return "";
+        }
+        return filename.substring(dot + 1);
     }
 }
 

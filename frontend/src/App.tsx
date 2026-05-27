@@ -39,6 +39,7 @@ import { useAuth } from './context/AuthContext'
 import { useImages } from './context/useImages'
 import { usePipelineSteps } from './hooks/usePipelineSteps'
 import type { ApiResponse, ProcessFormValues, ProcessResponse } from './types'
+import { getUserFacingError } from './utils/errorUtils'
 
 const heroStats = [
   { label: 'Realtime status', value: 'Live', prefix: <SafetyOutlined /> },
@@ -96,12 +97,6 @@ const recentHistory = [
   { label: 'Batch watermark', meta: '34 min ago', status: 'Synced' },
   { label: 'Color grade preset', meta: '1 h ago', status: 'Saved' },
 ]
-
-interface ApiError {
-  response?: { data?: { error?: string } }
-  message?: string
-  code?: string
-}
 
 export default function App() {
   const { notification } = AntApp.useApp()
@@ -340,7 +335,6 @@ export default function App() {
     setProcessedImageId(undefined)
     startSimulation(values)
     startWaiting()
-
     const formData = new FormData()
     formData.append('file', file)
     if (values.resizeWidth) formData.append('resizeWidth', String(values.resizeWidth))
@@ -354,8 +348,9 @@ export default function App() {
     if (values.cropY !== undefined && values.cropY !== null) formData.append('cropY', String(values.cropY))
     if (values.cropWidth !== undefined && values.cropWidth !== null) formData.append('cropWidth', String(values.cropWidth))
     if (values.cropHeight !== undefined && values.cropHeight !== null) formData.append('cropHeight', String(values.cropHeight))
-    if (values.rotateAngle !== undefined && values.rotateAngle !== null && values.rotateAngle !== 0) {
-      formData.append('rotateAngle', String(values.rotateAngle))
+    const rotateAngle = Number(values.rotateAngle ?? 0)
+    if (Number.isFinite(rotateAngle) && rotateAngle !== 0) {
+      formData.append('rotateAngle', String(rotateAngle))
     }
     if (values.watermarkText) {
       formData.append('watermarkText', values.watermarkText)
@@ -386,14 +381,7 @@ export default function App() {
       triggerRefresh()
     } catch (err: unknown) {
       failCurrent()
-      const error = err as ApiError
-      let errorMessage = error.message ?? 'An unexpected error occurred'
-
-      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        errorMessage = 'Request timeout - image processing took too long'
-      } else if (error.response?.data?.error) {
-        errorMessage = error.response.data.error
-      }
+      const errorMessage = getUserFacingError(err, 'Image processing failed. Please check the file and pipeline settings.')
 
       notification.error({
         message: 'Processing failed',

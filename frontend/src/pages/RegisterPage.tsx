@@ -1,4 +1,4 @@
-import { Alert, Form, Select } from 'antd'
+import { Alert, Form } from 'antd'
 import { Button } from '../components/ui/Button'
 import { Input } from '../components/ui/Input'
 import { useState, type ChangeEvent } from 'react'
@@ -16,6 +16,12 @@ interface RegisterFields {
 }
 
 const PW_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/
+
+const genderOptions = [
+  { value: 'MALE', label: 'Male' },
+  { value: 'FEMALE', label: 'Female' },
+  { value: 'OTHER', label: 'Other' },
+]
 
 function getPwRules(pw: string) {
   return {
@@ -140,15 +146,14 @@ export function RegisterPage() {
             label="Gender"
             rules={[{ required: true, message: 'Please select your gender' }]}
           >
-            <Select
-              size="large"
-              placeholder="Select gender"
-              options={[
-                { value: 'MALE', label: 'Male' },
-                { value: 'FEMALE', label: 'Female' },
-                { value: 'OTHER', label: 'Other' },
-              ]}
-            />
+            <select className="auth-native-select" defaultValue="" aria-label="Gender">
+              <option value="" disabled>Select gender</option>
+              {genderOptions.map(option => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
           </Form.Item>
 
           <Form.Item style={{ marginBottom: 0, marginTop: 4 }}>

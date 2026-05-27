@@ -1,6 +1,6 @@
 import { EyeInvisibleOutlined, GlobalOutlined, SendOutlined } from "@ant-design/icons";
 import { AnimatePresence, motion } from "framer-motion";
-import { Form, InputNumber, Segmented, Select, Slider, Tag } from "antd";
+import { Form, InputNumber, Segmented, Slider, Tag } from "antd";
 import type { FormInstance } from "antd";
 import type { ProcessFormValues } from "../types";
 import { Button } from "./ui/Button";
@@ -12,6 +12,31 @@ interface PipelineControlsProps {
   processing: boolean;
   disabled?: boolean;
 }
+
+const filterOptions = [
+  { value: "none", label: "None" },
+  { value: "grayscale", label: "Grayscale" },
+  { value: "sepia", label: "Sepia" },
+  { value: "brightness", label: "Brightness" },
+  { value: "contrast", label: "Contrast" },
+  { value: "blur", label: "Blur" },
+  { value: "sharpen", label: "Sharpen" },
+];
+
+const rotationOptions = [
+  { value: 0, label: "0 deg (None)" },
+  { value: 90, label: "90 deg" },
+  { value: 180, label: "180 deg" },
+  { value: 270, label: "270 deg" },
+];
+
+const watermarkPositionOptions = [
+  { value: "bottom-right", label: "Bottom right" },
+  { value: "bottom-left", label: "Bottom left" },
+  { value: "top-right", label: "Top right" },
+  { value: "top-left", label: "Top left" },
+  { value: "center", label: "Center" },
+];
 
 export function PipelineControls({
   form,
@@ -73,17 +98,13 @@ export function PipelineControls({
           <h3>2. Filter lens</h3>
           <div className="control-fields one-col">
             <Form.Item name="filterType" label="Filter">
-              <Select
-                options={[
-                  { value: "none", label: "None" },
-                  { value: "grayscale", label: "Grayscale" },
-                  { value: "sepia", label: "Sepia" },
-                  { value: "brightness", label: "Brightness" },
-                  { value: "contrast", label: "Contrast" },
-                  { value: "blur", label: "Blur" },
-                  { value: "sharpen", label: "Sharpen" },
-                ]}
-              />
+              <select className="pipeline-native-select" disabled={disabled} aria-label="Filter">
+                {filterOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </Form.Item>
             <AnimatePresence mode="wait">
               {filterType === "brightness" && (
@@ -162,14 +183,13 @@ export function PipelineControls({
           <h3>4. Rotate</h3>
           <div className="control-fields one-col">
             <Form.Item name="rotateAngle" label="Rotation angle" initialValue={0}>
-              <Select
-                options={[
-                  { value: 0, label: "0° (None)" },
-                  { value: 90, label: "90°" },
-                  { value: 180, label: "180°" },
-                  { value: 270, label: "270°" },
-                ]}
-              />
+              <select className="pipeline-native-select" disabled={disabled} aria-label="Rotation angle">
+                {rotationOptions.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </Form.Item>
           </div>
         </section>
@@ -182,15 +202,13 @@ export function PipelineControls({
             </Form.Item>
             <div className="control-fields two-col">
               <Form.Item name="watermarkPosition" label="Position">
-                <Select
-                  options={[
-                    { value: "bottom-right", label: "Bottom right" },
-                    { value: "bottom-left", label: "Bottom left" },
-                    { value: "top-right", label: "Top right" },
-                    { value: "top-left", label: "Top left" },
-                    { value: "center", label: "Center" },
-                  ]}
-                />
+                <select className="pipeline-native-select" disabled={disabled} aria-label="Watermark position">
+                  {watermarkPositionOptions.map(option => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
               </Form.Item>
               <Form.Item name="watermarkSize" label="Font size (px)">
                 <InputNumber min={8} max={200} style={{ width: "100%" }} />

@@ -14,6 +14,7 @@ import Input from '../components/ui/Input'
 import { Button } from '../components/ui/Button'
 import Spotlight from '../components/ui/Spotlight'
 import Image from '../components/ui/Image'
+import { getUserFacingError } from '../utils/errorUtils'
 
 const promptSuggestions = [
   'Cinematic portrait of a cyberpunk explorer, volumetric purple light, detailed matte canvas',
@@ -121,7 +122,6 @@ export default function GeneratePage() {
       message: 'Generating image...',
       description: 'Invoking Gemini Imagen 3 model...',
     })
-
     try {
       const response = await axiosInstance.post('/api/v1/images/generate', {
         prompt,
@@ -144,7 +144,7 @@ export default function GeneratePage() {
       })
       triggerRefresh()
     } catch (err) {
-      const errorMsg = (err as { response?: { data?: { error?: string } }; message?: string }).response?.data?.error || (err as Error).message || 'Generation failed'
+      const errorMsg = getUserFacingError(err, 'AI image generation failed. Please check your prompt and try again.')
       antNotification.error({
         key: 'ai-gen',
         message: 'Generation Failed',

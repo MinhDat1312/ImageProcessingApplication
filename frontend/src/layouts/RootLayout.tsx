@@ -1,4 +1,4 @@
-import { AppstoreOutlined, BellOutlined, CommentOutlined, CompassOutlined, PictureOutlined, RocketOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
+import { AppstoreOutlined, CommentOutlined, CompassOutlined, PictureOutlined, RocketOutlined, SettingOutlined, ThunderboltOutlined } from '@ant-design/icons'
 import { ConfigProvider, Layout, theme } from 'antd'
 import { Button } from '../components/ui/Button'
 import { type ReactNode } from 'react'
@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../hooks/useTheme'
 import { isAdminRole } from '../utils/roleUtils'
 import AmbientBackground from '../components/AmbientBackground'
+import { NotificationBell } from '../components/NotificationBell'
 
 const { Header, Content } = Layout
 
@@ -93,7 +94,7 @@ export function RootLayout({ children, contentClassName }: RootLayoutProps) {
                 </nav>
 
                 <div className="app-actions">
-                  <Button variant="ghost" icon={<BellOutlined style={{ fontSize: '22px' }} />} aria-label="Notifications" style={{ marginTop: 'var(--spacing-2)' }} />
+                  <NotificationBell />
                   {user ? <UserMenu /> : <Button variant="primary" onClick={() => navigate('/login')}>Sign In</Button>}
                   <ThemeToggle themeMode={themeMode} onToggle={toggleTheme} />
                 </div>

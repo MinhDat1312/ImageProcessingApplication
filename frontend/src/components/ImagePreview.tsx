@@ -12,6 +12,7 @@ interface ImagePreviewProps {
   processedUrl: string | null;
   executionTime: number | null;
   processedFilename?: string;
+  imageId?: string;
 }
 
 export function ImagePreview({
