@@ -30,6 +30,10 @@ public class CompressionStage implements ImageStage {
                 return context;
             }
 
+            if (quality >= 0.999f) {
+                return context;
+            }
+
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             Thumbnails.of(input)
                     .scale(1.0)

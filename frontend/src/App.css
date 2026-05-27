@@ -1345,6 +1345,212 @@
   border-radius: var(--radius-lg);
 }
 
+.auth-native-select {
+  width: 100%;
+  height: 48px;
+  padding: 0 42px 0 14px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background-color: color-mix(in srgb, var(--surface) 84%, transparent);
+  color: var(--text-primary);
+  font: inherit;
+  line-height: 48px;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.auth-native-select:invalid {
+  color: var(--text-tertiary);
+}
+
+.auth-native-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--focus-ring);
+  outline: none;
+}
+
+.auth-native-select option {
+  color: #111827;
+  background: #ffffff;
+}
+
+.pipeline-native-select {
+  width: 100%;
+  min-height: 42px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  background-color: rgba(0, 0, 0, 0.28);
+  color: var(--text-primary);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  appearance: auto;
+}
+
+.pipeline-native-select:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 4px var(--focus-ring);
+  outline: none;
+}
+
+.pipeline-native-select:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.pipeline-native-select option {
+  color: #111827;
+  background: #ffffff;
+}
+
+.notification-root {
+  position: relative;
+  display: inline-flex;
+}
+
+.notification-trigger {
+  display: inline-flex;
+  margin-top: var(--spacing-2);
+}
+
+.notification-trigger-button {
+  display: inline-grid;
+  width: 40px;
+  height: 40px;
+  place-items: center;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 180ms ease, color 180ms ease, transform 180ms ease;
+}
+
+.notification-trigger-button:hover {
+  background: color-mix(in srgb, var(--primary) 12%, transparent);
+  color: var(--primary);
+}
+
+.notification-trigger-button:active {
+  transform: translateY(1px);
+}
+
+.notification-floating-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 10000;
+  overflow: hidden;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-lg);
+  background: color-mix(in srgb, var(--surface-strong) 94%, #050506 6%);
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(24px);
+}
+
+.notification-panel {
+  width: min(380px, calc(100vw - 32px));
+  max-height: min(520px, calc(100vh - 120px));
+  color: var(--text-primary);
+}
+
+.notification-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.notification-panel-header strong,
+.notification-item-title strong {
+  display: block;
+  color: var(--text-primary);
+}
+
+.notification-panel-header span,
+.notification-item-body span {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+}
+
+.notification-panel-actions {
+  display: flex;
+  gap: var(--spacing-2);
+}
+
+.notification-panel-actions button {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--primary);
+  cursor: pointer;
+  font-size: 0.82rem;
+}
+
+.notification-list {
+  display: grid;
+  max-height: 430px;
+  overflow: auto;
+}
+
+.notification-item {
+  display: grid;
+  grid-template-columns: 28px 1fr;
+  gap: var(--spacing-3);
+  padding: var(--spacing-4);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.notification-item.is-unread {
+  background: color-mix(in srgb, var(--primary) 8%, transparent);
+}
+
+.notification-item-icon {
+  padding-top: 2px;
+  font-size: 1.1rem;
+}
+
+.notification-kind-success {
+  color: var(--success);
+}
+
+.notification-kind-error {
+  color: var(--danger);
+}
+
+.notification-kind-info {
+  color: var(--primary);
+}
+
+.notification-item-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-2);
+}
+
+.notification-item-body p {
+  margin: 4px 0 6px;
+  color: var(--text-secondary);
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .notification-floating-panel {
+    position: fixed;
+    top: 72px;
+    right: 12px;
+    left: 12px;
+  }
+
+  .notification-panel {
+    width: 100%;
+  }
+}
+
 .otp-hint,
 .otp-expire,
 .resend-row {
