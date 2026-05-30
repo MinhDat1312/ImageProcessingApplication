@@ -1,4 +1,4 @@
-import { HeartOutlined, HeartFilled, MessageOutlined, EyeOutlined, StarOutlined, ShareAltOutlined } from '@ant-design/icons'
+import { HeartOutlined, HeartFilled, MessageOutlined, EyeOutlined } from '@ant-design/icons'
 import { Avatar } from 'antd'
 import { Button } from '../components/ui/Button'
 import { motion } from 'framer-motion'
@@ -76,7 +76,6 @@ export default function GalleryCard({ item }: GalleryCardProps) {
               style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 'var(--spacing-2)' }}
             >
               <Avatar size={28} src={item.owner?.avatar || undefined}>{item.owner?.username?.slice(0,2)}</Avatar>
-              <div className="creator-name" style={{ fontWeight: 600 }}>{item.owner?.username ?? 'Anonymous'}</div>
             </div>
             <div className="actions" onClick={(e) => e.stopPropagation()}>
               <Button 
@@ -92,8 +91,6 @@ export default function GalleryCard({ item }: GalleryCardProps) {
               </Button>
               <Button variant="ghost" icon={<MessageOutlined />}>{comments}</Button>
               <Button variant="ghost" icon={<EyeOutlined />}>{item.views ?? 0}</Button>
-              <Button variant="ghost" icon={<StarOutlined />} />
-              <Button variant="ghost" icon={<ShareAltOutlined />} />
             </div>
           </div>
         </div>
