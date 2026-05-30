@@ -25,4 +25,4 @@ dist-ssr
 
 .agents
 
-frontend/.env
+.env
