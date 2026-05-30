@@ -12,7 +12,6 @@ import { Input } from './components/ui/Input'
 import {
   ArrowRightOutlined,
   CompassOutlined,
-  CopyOutlined,
   DownloadOutlined,
   HistoryOutlined,
   MessageOutlined,
@@ -22,7 +21,6 @@ import {
   SafetyOutlined,
   ThunderboltOutlined,
   UngroupOutlined,
-  DeleteOutlined,
   MinusOutlined,
   PlusOutlined,
 } from '@ant-design/icons'
@@ -48,56 +46,6 @@ const heroStats = [
   { label: 'Scale ready', value: 'S3 + Redis', prefix: <CompassOutlined /> },
 ]
 
-const systemPresets = [
-  {
-    id: 'system-cinematic',
-    title: 'Cinematic enhancement',
-    description: 'Sharpen, contrast, watermark, and compress for gallery-ready exports.',
-    tag: 'System',
-      values: {
-      filterType: 'contrast',
-      contrastLevel: 1.4,
-      watermarkText: 'Goat Image AI',
-      watermarkPosition: 'bottom-right',
-      watermarkSize: 24,
-      compressionQuality: 0.85,
-    }
-  },
-  {
-    id: 'system-social',
-    title: 'Batch social resize',
-    description: 'Resize and crop for square social posts, stories, and thumbnails.',
-    tag: 'System',
-    values: {
-      resizeWidth: 1080,
-      resizeHeight: 1080,
-      cropX: 0,
-      cropY: 0,
-      cropWidth: 800,
-      cropHeight: 800,
-      filterType: 'none',
-      compressionQuality: 0.9,
-    }
-  },
-  {
-    id: 'system-archival',
-    title: 'Clean archival',
-    description: 'Grayscale, mild sharpen, and lossless preservation for document workflows.',
-    tag: 'System',
-    values: {
-      filterType: 'grayscale',
-      compressionQuality: 1.0,
-    }
-  }
-]
-
-const recentHistory = [
-  { label: 'Prompt remix', meta: '2 min ago', status: 'Queued' },
-  { label: 'Portrait cleanup', meta: '11 min ago', status: 'Completed' },
-  { label: 'Batch watermark', meta: '34 min ago', status: 'Synced' },
-  { label: 'Color grade preset', meta: '1 h ago', status: 'Saved' },
-]
-
 export default function App() {
   const { notification } = AntApp.useApp()
   const { user } = useAuth()
@@ -116,7 +64,8 @@ export default function App() {
   const [executionTime, setExecutionTime] = useState<number | null>(null)
   const resetTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
-  const [customPresets, setCustomPresets] = useState<any[]>([])
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
+  const [_customPresets, setCustomPresets] = useState<any[]>([])
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false)
   const [savePresetName, setSavePresetName] = useState('')
   const [liveStatusExpanded, setLiveStatusExpanded] = useState(true)
@@ -129,6 +78,7 @@ export default function App() {
       return
     }
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const response = await axiosInstance.get<ApiResponse<any[]>>('/api/v1/presets')
       setCustomPresets(response.data.data || [])
     } catch (error) {
@@ -169,23 +119,6 @@ export default function App() {
     }
   }
 
-  const handleDeletePreset = async (presetId: string) => {
-    try {
-      await axiosInstance.delete(`/api/v1/presets/${presetId}`)
-      notification.success({
-        message: 'Preset Deleted',
-        description: 'Your custom preset has been successfully removed.',
-      })
-      fetchPresets()
-    } catch (err) {
-      console.error(err)
-      notification.error({
-        message: 'Delete Failed',
-        description: 'Could not delete the custom preset.',
-      })
-    }
-  }
-
   // Listen to forwarded image URLs (e.g. from the generator page)
   useEffect(() => {
     const incomingUrl = location.state?.imageUrl
@@ -216,85 +149,6 @@ export default function App() {
         })
     }
   }, [location.state])
-
-  const handleApplyPreset = (preset: any) => {
-    let presetTitle = '';
-    if (preset.values) {
-      // System preset
-      presetTitle = preset.title;
-      form.setFieldsValue({
-        filterType: 'none',
-        brightnessLevel: 1.0,
-        contrastLevel: 1.0,
-        rotateAngle: 0,
-        watermarkText: '',
-        watermarkPosition: 'bottom-right',
-        watermarkSize: 18,
-        compressionQuality: 0.9,
-        resizeWidth: undefined,
-        resizeHeight: undefined,
-        cropX: undefined,
-        cropY: undefined,
-        cropWidth: undefined,
-        cropHeight: undefined,
-        ...preset.values
-      });
-    } else {
-      // Custom user preset
-      presetTitle = preset.name;
-      try {
-        const values = JSON.parse(preset.stepsJson);
-        form.setFieldsValue({
-          filterType: 'none',
-          brightnessLevel: 1.0,
-          contrastLevel: 1.0,
-          rotateAngle: 0,
-          watermarkText: '',
-          watermarkPosition: 'bottom-right',
-          watermarkSize: 18,
-          compressionQuality: 0.9,
-          resizeWidth: undefined,
-          resizeHeight: undefined,
-          cropX: undefined,
-          cropY: undefined,
-          cropWidth: undefined,
-          cropHeight: undefined,
-          ...values
-        });
-      } catch (err) {
-        console.error(err);
-        notification.error({
-          message: 'Error Loading Preset',
-          description: 'The saved configuration could not be parsed.',
-        });
-        return;
-      }
-    }
-    notification.success({
-      message: 'Preset Applied',
-      description: `Settings for "${presetTitle}" loaded. Click "Run pipeline" to apply.`,
-    });
-  }
-
-  const handleDuplicatePreset = (preset: any) => {
-    const title = preset.title || preset.name;
-    const configString = preset.values 
-      ? JSON.stringify(preset.values, null, 2) 
-      : JSON.stringify(JSON.parse(preset.stepsJson), null, 2);
-    
-    navigator.clipboard.writeText(configString).then(() => {
-      notification.info({
-        message: 'Preset Copied',
-        description: `Configuration JSON for "${title}" copied to clipboard.`,
-      });
-    }).catch(err => {
-      console.error('Failed to copy', err);
-      notification.warning({
-        message: 'Copy Failed',
-        description: `Preset details for "${title}" could not be written to clipboard automatically.`,
-      });
-    });
-  }
 
   useEffect(() => {
     document.title = 'Goat Image AI — Studio'
