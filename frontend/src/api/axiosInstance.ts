@@ -3,12 +3,60 @@ import type { ApiResponse } from '../types'
 import { AUTH_LOGOUT_EVENT } from '../types'
 import { pushAppNotification } from '../context/NotificationsContext'
 import { getUserFacingError } from '../utils/errorUtils'
+import { rateLimiters } from '../utils/rateLimiter'
 
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:4000',
   withCredentials: true,
   timeout: 60000, // 60 seconds timeout for image processing
 })
+
+// Rate Limiter Request Interceptor
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const url = config.url || '';
+
+    let limiter = rateLimiters.api;
+
+    if (url.includes('/upload') || url.includes('/images/upload') || url.includes('/images/process')) {
+      limiter = rateLimiters.upload;
+    } else if (url.includes('/chat') || url.includes('/assistant')) {
+      limiter = rateLimiters.chat;
+    } else if (url.includes('/generate') || url.includes('/generation')) {
+      limiter = rateLimiters.generation;
+    }
+
+    // Check BEFORE recording to see current state
+    const status = limiter.canMakeRequest();
+
+    // DEBUG
+    console.log(`[RateLimiter] URL: ${url} | Allowed: ${status.allowed} | Remaining: ${status.remaining}`);
+
+    if (!status.allowed) {
+      const waitSeconds = Math.ceil(status.resetIn / 1000);
+      const actionName = url.includes('/upload') || url.includes('/process') ? 'tải lên'
+        : url.includes('/chat') ? 'gửi tin nhắn'
+        : url.includes('/generate') ? 'tạo ảnh'
+        : 'gửi yêu cầu';
+
+      pushAppNotification({
+        kind: 'warning',
+        title: 'Rate Limit Reached',
+        message: `Quá nhiều yêu cầu ${actionName}. Vui lòng chờ ${waitSeconds}s.`,
+        duration: 5,
+      });
+
+      return Promise.reject(new axios.Cancel('Rate limit exceeded'));
+    }
+
+    // Record AFTER successful check (so limit=1 means 1 request total)
+    limiter.recordRequest();
+    config.headers['X-RateLimit-Remaining'] = String(Math.max(0, status.remaining - 1));
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
 
 let isRefreshing = false
 let failedQueue: Array<{
