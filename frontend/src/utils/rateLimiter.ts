@@ -106,7 +106,7 @@ export const rateLimiters = {
 
   upload: new RateLimiter({
     key: 'upload',
-    maxRequests: 1,
+    maxRequests: 5,
     windowMs: 80 * 1000, // 5 uploads per minute
   }),
 
