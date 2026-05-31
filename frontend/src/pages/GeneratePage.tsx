@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Segmented, notification as antNotification } from 'antd'
 import { 
   ThunderboltOutlined, BulbOutlined, DownloadOutlined, 
-  ShareAltOutlined, RocketOutlined, LoadingOutlined, PictureOutlined 
+  ShareAltOutlined, LoadingOutlined, PictureOutlined 
 } from '@ant-design/icons'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
@@ -181,11 +181,6 @@ export default function GeneratePage() {
       description: 'This image is now visible in the community feed.',
     })
     navigate('/explore')
-  }
-
-  const handleRemixInStudio = () => {
-    if (!generatedImageUrl) return
-    navigate('/studio', { state: { imageUrl: generatedImageUrl } })
   }
 
   return (
@@ -381,14 +376,6 @@ export default function GeneratePage() {
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
               >
-                <Button 
-                  variant="primary" 
-                  icon={<RocketOutlined />} 
-                  onClick={handleRemixInStudio}
-                  className="btn-remix-glow"
-                >
-                  Remix in Studio
-                </Button>
                 <Button variant="secondary" icon={<DownloadOutlined />} onClick={handleDownload}>
                   Download
                 </Button>
