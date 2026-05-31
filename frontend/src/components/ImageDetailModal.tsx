@@ -2,9 +2,8 @@ import { useEffect, useState } from 'react'
 import { Modal, Avatar, List, message, Divider } from 'antd'
 import { 
   HeartOutlined, HeartFilled, MessageOutlined, EyeOutlined, 
-  DownloadOutlined, SendOutlined, RocketOutlined 
+  DownloadOutlined, SendOutlined 
 } from '@ant-design/icons'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import axiosInstance from '../api/axiosInstance'
 import { Button } from './ui/Button'
@@ -51,7 +50,6 @@ interface CommentItem {
 
 export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpdateComments, onUpdateVisibility, onUpdateMetadata }: ImageDetailModalProps) {
   const { user } = useAuth()
-  const navigate = useNavigate()
   
   const [likes, setLikes] = useState(item.likes ?? 0)
   const [views, setViews] = useState(item.views ?? 0)
@@ -137,6 +135,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
       const res = await axiosInstance.get(`/api/v1/images/${item.id}/comments`)
       // Support multiple response shapes: { items: [...] } or { data: { items: [...] } } or array
       const payload = res.data ?? {}
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let rawItems: any[] = []
       if (Array.isArray(payload)) rawItems = payload
       else if (Array.isArray(payload.items)) rawItems = payload.items
@@ -144,6 +143,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
       else rawItems = []
 
       // Normalize comment shape to CommentItem
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const normalized = rawItems.map((it: any) => ({
         id: it.id ?? it.commentId ?? String(Math.random()),
         user: it.user ? { id: it.user.userId || it.user.id, username: it.user.username || it.user.name, avatar: it.user.avatar } : (it.owner ? { id: it.owner.userId, username: it.owner.username, avatar: it.owner.avatar } : null),
@@ -155,6 +155,7 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
     } catch (err) {
       console.error('Failed to load comments', err)
       // Surface a friendly message to the UI so users can retry
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const messageText = (err as any)?.response?.data?.error || (err as Error).message || 'Failed to load comments'
       setCommentsError(messageText)
     } finally {
@@ -250,11 +251,6 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
     }
   }
 
-  const handleRemix = () => {
-    onClose()
-    navigate('/studio', { state: { imageUrl: item.url } })
-  }
-
   return (
     <Modal
       open={visible}
@@ -280,14 +276,6 @@ export function ImageDetailModal({ visible, onClose, item, onUpdateLikes, onUpda
               </div>
             )}
             <div className="modal-actions-footer">
-              <Button 
-                type="primary" 
-                icon={<RocketOutlined />} 
-                onClick={handleRemix}
-                className="btn-remix-glow"
-              >
-                Remix in Studio
-              </Button>
               <Button icon={<DownloadOutlined />} onClick={handleDownload}>
                 Download
               </Button>

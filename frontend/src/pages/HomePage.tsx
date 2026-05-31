@@ -67,7 +67,6 @@ export default function HomePage() {
             <li><span>✓</span> Gemini Prompt Helper integrations</li>
             <li><span>✓</span> Standard & cinematic aspect ratios</li>
             <li><span>✓</span> Prompt suggestions & negative prompts</li>
-            <li><span>✓</span> One-click Remix in Studio</li>
           </ul>
           <Button
             variant="primary"
@@ -156,7 +155,7 @@ export default function HomePage() {
           <Card className="glass-card home-side-card" bordered={false}>
             <span className="section-kicker">How it works</span>
             <h3>Prompt to Remix</h3>
-            <p>Generate a high-fidelity base image in the AI Generator, and click "Remix in Studio" to crop, add filters, or apply watermarks instantly.</p>
+            <p>Generate a high-fidelity base image in the AI Generator, and click "Studio" to crop, add filters, or apply watermarks instantly.</p>
           </Card>
         </aside>
       </div>
