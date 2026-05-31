@@ -41,6 +41,7 @@ dependencies {
     implementation("io.awspring.cloud:spring-cloud-starter-aws-secrets-manager-config:2.4.4")
     implementation ("net.coobird:thumbnailator:0.4.20")
     implementation ("me.paulschwarz:spring-dotenv:4.0.0")
+    implementation("ai.fal.client:fal-client:0.7.1")
 
     implementation("commons-io:commons-io:2.19.0")
     implementation("commons-net:commons-net:3.12.0")

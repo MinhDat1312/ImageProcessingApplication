@@ -2,6 +2,7 @@ package com.pipeline.image.service;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pipeline.image.dto.request.AIImageGenerationRequestDto;
 import com.pipeline.image.entity.Image;
 import com.pipeline.image.entity.ImageVersion;
@@ -27,6 +28,7 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -217,69 +219,117 @@ public class AIImageGenerationService {
 
     private byte[] generateFalImage(String prompt, String aspectRatio) {
         try {
-            String imageSize = switch (aspectRatio) {
-                case "16:9" -> "landscape_16_9";
-                case "9:16" -> "portrait_16_9";
-                case "4:3" -> "landscape_4_3";
-                default -> "square_hd";
+            String falModel = "fal-ai/nano-banana-2";
+
+            String falAspectRatio = switch (aspectRatio) {
+                case "16:9" -> "16:9";
+                case "9:16" -> "9:16";
+                case "4:3" -> "4:3";
+                case "1:1" -> "1:1";
+                default -> "auto";
             };
 
-            String submitUrl = "https://queue.fal.run/fal-ai/flux-1/schnell";
-
-            String body = """
-            {
-            "prompt": "%s",
-            "image_size": "%s",
-            "num_images": 1,
-            "enable_safety_checker": true
-            }
-            """.formatted(prompt.replace("\"", "\\\""), imageSize);
-
-            HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(submitUrl))
-                    .header("Authorization", "Key " + falApiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(body))
+            HttpClient client = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(30))
                     .build();
 
-            HttpClient client = HttpClient.newHttpClient();
-            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+            ObjectNode bodyJson = objectMapper.createObjectNode();
+            bodyJson.put("prompt", prompt);
+            bodyJson.put("num_images", 1);
+            bodyJson.put("aspect_ratio", falAspectRatio);
+            bodyJson.put("output_format", "png");
+            bodyJson.put("safety_tolerance", "4");
+            bodyJson.put("resolution", "1K");
+            bodyJson.put("limit_generations", true);
 
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Fal submit failed: " + response.body());
+            HttpRequest submitRequest = HttpRequest.newBuilder()
+                    .uri(URI.create("https://queue.fal.run/" + falModel))
+                    .timeout(Duration.ofSeconds(60))
+                    .header("Authorization", "Key " + falApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(bodyJson)))
+                    .build();
+
+            HttpResponse<String> submitResponse =
+                    client.send(submitRequest, HttpResponse.BodyHandlers.ofString());
+
+            if (submitResponse.statusCode() != 200 && submitResponse.statusCode() != 201) {
+                throw new RuntimeException("Fal submit failed: "
+                        + submitResponse.statusCode() + " - " + submitResponse.body());
             }
 
-            JsonNode json = objectMapper.readTree(response.body());
-            String requestId = json.get("request_id").asText();
+            String requestId = objectMapper.readTree(submitResponse.body())
+                    .path("request_id")
+                    .asText(null);
 
-            String resultUrl = "https://queue.fal.run/fal-ai/flux-1/schnell/requests/" + requestId;
+            if (requestId == null || requestId.isBlank()) {
+                throw new RuntimeException("Fal response missing request_id: " + submitResponse.body());
+            }
 
-            for (int i = 0; i < 30; i++) {
+            String statusUrl = "https://queue.fal.run/" + falModel + "/requests/" + requestId + "/status";
+            String resultUrl = "https://queue.fal.run/" + falModel + "/requests/" + requestId;
+
+            for (int i = 0; i < 90; i++) {
                 Thread.sleep(1000);
 
-                HttpRequest resultRequest = HttpRequest.newBuilder()
-                        .uri(URI.create(resultUrl))
+                HttpRequest statusRequest = HttpRequest.newBuilder()
+                        .uri(URI.create(statusUrl))
+                        .timeout(Duration.ofSeconds(30))
                         .header("Authorization", "Key " + falApiKey)
                         .GET()
                         .build();
 
-                HttpResponse<String> resultResponse =
-                        client.send(resultRequest, HttpResponse.BodyHandlers.ofString());
+                HttpResponse<String> statusResponse =
+                        client.send(statusRequest, HttpResponse.BodyHandlers.ofString());
 
-                if (resultResponse.statusCode() == 200) {
+                if (statusResponse.statusCode() != 200) {
+                    throw new RuntimeException("Fal status failed: "
+                            + statusResponse.statusCode() + " - " + statusResponse.body());
+                }
+
+                JsonNode statusJson = objectMapper.readTree(statusResponse.body());
+                String status = statusJson.path("status").asText();
+
+                if ("COMPLETED".equalsIgnoreCase(status)) {
+                    HttpRequest resultRequest = HttpRequest.newBuilder()
+                            .uri(URI.create(resultUrl))
+                            .timeout(Duration.ofSeconds(60))
+                            .header("Authorization", "Key " + falApiKey)
+                            .GET()
+                            .build();
+
+                    HttpResponse<String> resultResponse =
+                            client.send(resultRequest, HttpResponse.BodyHandlers.ofString());
+
+                    if (resultResponse.statusCode() != 200) {
+                        throw new RuntimeException("Fal result failed: "
+                                + resultResponse.statusCode() + " - " + resultResponse.body());
+                    }
+
                     JsonNode resultJson = objectMapper.readTree(resultResponse.body());
 
-                    if (resultJson.has("images")) {
-                        String imageUrl = resultJson.get("images").get(0).get("url").asText();
-                        return downloadImage(imageUrl);
+                    JsonNode images = resultJson.path("images");
+                    if (!images.isArray() || images.isEmpty()) {
+                        throw new RuntimeException("Fal result missing images: " + resultResponse.body());
                     }
+
+                    String imageUrl = images.get(0).path("url").asText(null);
+                    if (imageUrl == null || imageUrl.isBlank()) {
+                        throw new RuntimeException("Fal image url is empty: " + resultResponse.body());
+                    }
+
+                    return downloadImage(imageUrl);
+                }
+
+                if ("FAILED".equalsIgnoreCase(status)) {
+                    throw new RuntimeException("Fal generation failed: " + statusResponse.body());
                 }
             }
 
             throw new RuntimeException("Fal image generation timeout");
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to generate image via Fal AI", e);
+            throw new RuntimeException("Failed to generate image via Fal AI: " + e.getMessage(), e);
         }
     }
 
@@ -289,20 +339,26 @@ public class AIImageGenerationService {
 
             HttpRequest request = HttpRequest.newBuilder()
                     .uri(URI.create(imageUrl))
+                    .timeout(Duration.ofSeconds(60))
                     .GET()
                     .build();
 
             HttpResponse<byte[]> response =
                     client.send(request, HttpResponse.BodyHandlers.ofByteArray());
 
-            if (response.statusCode() != 200) {
-                throw new RuntimeException("Download image failed");
+            String contentType = response.headers()
+                    .firstValue("Content-Type")
+                    .orElse("");
+
+            if (response.statusCode() != 200 || !contentType.startsWith("image/")) {
+                throw new RuntimeException("Download image failed: "
+                        + response.statusCode() + ", contentType=" + contentType);
             }
 
             return response.body();
 
         } catch (Exception e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed to download Fal image: " + e.getMessage(), e);
         }
     }
 }
