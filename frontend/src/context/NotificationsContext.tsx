@@ -1,6 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
 
-export type NotificationKind = 'success' | 'error' | 'info'
+export type NotificationKind = 'success' | 'error' | 'info' | 'warning'
 
 export interface AppNotification {
   id: string
@@ -9,6 +9,7 @@ export interface AppNotification {
   kind: NotificationKind
   createdAt: string
   read: boolean
+  duration?: number
 }
 
 interface NotificationsContextValue {
@@ -95,6 +96,7 @@ export function NotificationsProvider({ children }: { children: ReactNode }) {
   )
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function useNotifications() {
   const context = useContext(NotificationsContext)
   if (!context) {
@@ -103,6 +105,7 @@ export function useNotifications() {
   return context
 }
 
+// eslint-disable-next-line react-refresh/only-export-components
 export function pushAppNotification(input: AppNotificationInput) {
   const current = readStoredNotifications()
   const latest = current[0]
