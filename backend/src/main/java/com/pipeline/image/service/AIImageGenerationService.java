@@ -1,8 +1,6 @@
 package com.pipeline.image.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.JsonObject;
 import com.pipeline.image.dto.request.AIImageGenerationRequestDto;
 import com.pipeline.image.entity.Image;
 import com.pipeline.image.entity.ImageVersion;
@@ -38,9 +36,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AIImageGenerationService {
 
-    @Value("${google.api.fal.key}")
-    private String falApiKey;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Value("${cloudflare.ai.worker.url}")
+    private String cloudflareWorkerUrl;
+    @Value("${cloudflare.ai.worker.token}")
+    private String cloudflareWorkerToken;
 
     private final StorageService storageService;
     private final ImageRepository imageRepository;
@@ -58,10 +57,10 @@ public class AIImageGenerationService {
 
         try {
             log.info("Requesting AI Image Generation for user: {}, prompt: '{}'", currentUser.getEmail(), requestDto.getPrompt());
-            imgBytes = generateFalImage(requestDto.getPrompt(), requestDto.getAspectRatio());
-            log.info("AI Image successfully generated via Fal.ai");
+            imgBytes = generateCloudflareImage(requestDto.getPrompt());
+            log.info("AI Image successfully generated via Cloudflare Worker");
         } catch (Exception ex) {
-            log.warn("Fal.ai generation failed: {}, using fallback canvas", ex.getMessage());
+            log.warn("Cloudflare Worker generation failed: {}, using fallback canvas", ex.getMessage());
             imgBytes = generateFallbackImage(requestDto.getPrompt());
             isFallback = true;
         }
@@ -217,148 +216,47 @@ public class AIImageGenerationService {
         return lines;
     }
 
-    private byte[] generateFalImage(String prompt, String aspectRatio) {
+    private byte[] generateCloudflareImage(String prompt) {
         try {
-            String falModel = "fal-ai/nano-banana-2";
+            if (cloudflareWorkerUrl == null || cloudflareWorkerUrl.isBlank()) {
+                throw new IllegalStateException("Cloudflare Worker URL is missing. Set CLOUDFLARE_AI_WORKER_URL in the runtime environment.");
+            }
 
-            String falAspectRatio = switch (aspectRatio) {
-                case "16:9" -> "16:9";
-                case "9:16" -> "9:16";
-                case "4:3" -> "4:3";
-                case "1:1" -> "1:1";
-                default -> "auto";
-            };
+            if (cloudflareWorkerToken == null || cloudflareWorkerToken.isBlank()) {
+                throw new IllegalStateException("Cloudflare Worker token is missing. Set CLOUDFLARE_AI_WORKER_TOKEN in the runtime environment.");
+            }
 
             HttpClient client = HttpClient.newBuilder()
                     .connectTimeout(Duration.ofSeconds(30))
                     .build();
 
-            ObjectNode bodyJson = objectMapper.createObjectNode();
-            bodyJson.put("prompt", prompt);
-            bodyJson.put("num_images", 1);
-            bodyJson.put("aspect_ratio", falAspectRatio);
-            bodyJson.put("output_format", "png");
-            bodyJson.put("safety_tolerance", "4");
-            bodyJson.put("resolution", "1K");
-            bodyJson.put("limit_generations", true);
-
-            HttpRequest submitRequest = HttpRequest.newBuilder()
-                    .uri(URI.create("https://queue.fal.run/" + falModel))
-                    .timeout(Duration.ofSeconds(60))
-                    .header("Authorization", "Key " + falApiKey)
-                    .header("Content-Type", "application/json")
-                    .POST(HttpRequest.BodyPublishers.ofString(objectMapper.writeValueAsString(bodyJson)))
-                    .build();
-
-            HttpResponse<String> submitResponse =
-                    client.send(submitRequest, HttpResponse.BodyHandlers.ofString());
-
-            if (submitResponse.statusCode() != 200 && submitResponse.statusCode() != 201) {
-                throw new RuntimeException("Fal submit failed: "
-                        + submitResponse.statusCode() + " - " + submitResponse.body());
-            }
-
-            String requestId = objectMapper.readTree(submitResponse.body())
-                    .path("request_id")
-                    .asText(null);
-
-            if (requestId == null || requestId.isBlank()) {
-                throw new RuntimeException("Fal response missing request_id: " + submitResponse.body());
-            }
-
-            String statusUrl = "https://queue.fal.run/" + falModel + "/requests/" + requestId + "/status";
-            String resultUrl = "https://queue.fal.run/" + falModel + "/requests/" + requestId;
-
-            for (int i = 0; i < 90; i++) {
-                Thread.sleep(1000);
-
-                HttpRequest statusRequest = HttpRequest.newBuilder()
-                        .uri(URI.create(statusUrl))
-                        .timeout(Duration.ofSeconds(30))
-                        .header("Authorization", "Key " + falApiKey)
-                        .GET()
-                        .build();
-
-                HttpResponse<String> statusResponse =
-                        client.send(statusRequest, HttpResponse.BodyHandlers.ofString());
-
-                if (statusResponse.statusCode() != 200) {
-                    throw new RuntimeException("Fal status failed: "
-                            + statusResponse.statusCode() + " - " + statusResponse.body());
-                }
-
-                JsonNode statusJson = objectMapper.readTree(statusResponse.body());
-                String status = statusJson.path("status").asText();
-
-                if ("COMPLETED".equalsIgnoreCase(status)) {
-                    HttpRequest resultRequest = HttpRequest.newBuilder()
-                            .uri(URI.create(resultUrl))
-                            .timeout(Duration.ofSeconds(60))
-                            .header("Authorization", "Key " + falApiKey)
-                            .GET()
-                            .build();
-
-                    HttpResponse<String> resultResponse =
-                            client.send(resultRequest, HttpResponse.BodyHandlers.ofString());
-
-                    if (resultResponse.statusCode() != 200) {
-                        throw new RuntimeException("Fal result failed: "
-                                + resultResponse.statusCode() + " - " + resultResponse.body());
-                    }
-
-                    JsonNode resultJson = objectMapper.readTree(resultResponse.body());
-
-                    JsonNode images = resultJson.path("images");
-                    if (!images.isArray() || images.isEmpty()) {
-                        throw new RuntimeException("Fal result missing images: " + resultResponse.body());
-                    }
-
-                    String imageUrl = images.get(0).path("url").asText(null);
-                    if (imageUrl == null || imageUrl.isBlank()) {
-                        throw new RuntimeException("Fal image url is empty: " + resultResponse.body());
-                    }
-
-                    return downloadImage(imageUrl);
-                }
-
-                if ("FAILED".equalsIgnoreCase(status)) {
-                    throw new RuntimeException("Fal generation failed: " + statusResponse.body());
-                }
-            }
-
-            throw new RuntimeException("Fal image generation timeout");
-
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to generate image via Fal AI: " + e.getMessage(), e);
-        }
-    }
-
-    private byte[] downloadImage(String imageUrl) {
-        try {
-            HttpClient client = HttpClient.newHttpClient();
+            JsonObject bodyJson = new JsonObject();
+            bodyJson.addProperty("prompt", prompt);
 
             HttpRequest request = HttpRequest.newBuilder()
-                    .uri(URI.create(imageUrl))
-                    .timeout(Duration.ofSeconds(60))
-                    .GET()
+                    .uri(URI.create(cloudflareWorkerUrl.trim()))
+                    .timeout(Duration.ofSeconds(120))
+                    .header("Authorization", "Bearer " + cloudflareWorkerToken.trim())
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(bodyJson.toString()))
                     .build();
 
-            HttpResponse<byte[]> response =
-                    client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+            String contentType = response.headers().firstValue("Content-Type").orElse("");
 
-            String contentType = response.headers()
-                    .firstValue("Content-Type")
-                    .orElse("");
+            if (response.statusCode() < 200 || response.statusCode() >= 300) {
+                String responseText = new String(response.body());
+                throw new RuntimeException("Cloudflare Worker request failed: " + response.statusCode() + " - " + responseText);
+            }
 
-            if (response.statusCode() != 200 || !contentType.startsWith("image/")) {
-                throw new RuntimeException("Download image failed: "
-                        + response.statusCode() + ", contentType=" + contentType);
+            if (!contentType.startsWith("image/")) {
+                throw new RuntimeException("Cloudflare Worker returned non-image content: " + contentType);
             }
 
             return response.body();
 
         } catch (Exception e) {
-            throw new RuntimeException("Failed to download Fal image: " + e.getMessage(), e);
+            throw new RuntimeException("Failed to generate image via Cloudflare Worker: " + e.getMessage(), e);
         }
     }
 }
