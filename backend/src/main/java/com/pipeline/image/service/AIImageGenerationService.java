@@ -1,8 +1,7 @@
 package com.pipeline.image.service;
 
-import com.google.genai.Client;
-import com.google.genai.types.GenerateImagesConfig;
-import com.google.genai.types.GenerateImagesResponse;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pipeline.image.dto.request.AIImageGenerationRequestDto;
 import com.pipeline.image.entity.Image;
 import com.pipeline.image.entity.ImageVersion;
@@ -14,6 +13,8 @@ import com.pipeline.image.repository.UserRepository;
 import com.pipeline.image.util.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Service;
 
@@ -22,8 +23,11 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.UUID;
 
@@ -32,7 +36,10 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AIImageGenerationService {
 
-    private final Client googleClient;
+    @Value("${google.api.fal.key}")
+    private String falApiKey;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+
     private final StorageService storageService;
     private final ImageRepository imageRepository;
     private final ImageVersionRepository imageVersionRepository;
@@ -49,10 +56,10 @@ public class AIImageGenerationService {
 
         try {
             log.info("Requesting AI Image Generation for user: {}, prompt: '{}'", currentUser.getEmail(), requestDto.getPrompt());
-            imgBytes = generatePollinationsImage(requestDto.getPrompt(), requestDto.getAspectRatio());
-            log.info("AI Image successfully generated via Pollinations.ai");
+            imgBytes = generateFalImage(requestDto.getPrompt(), requestDto.getAspectRatio());
+            log.info("AI Image successfully generated via Fal.ai");
         } catch (Exception ex) {
-            log.warn("Pollinations.ai generation failed: {}, using fallback canvas", ex.getMessage());
+            log.warn("Fal.ai generation failed: {}, using fallback canvas", ex.getMessage());
             imgBytes = generateFallbackImage(requestDto.getPrompt());
             isFallback = true;
         }
@@ -118,7 +125,7 @@ public class AIImageGenerationService {
         version.setHeight(image.getHeight());
         version.setFileSize((long) imgBytes.length);
         version.setVersionType("AI_GENERATED");
-        version.setPipelineStepsJson(isFallback ? "{\"model\":\"programmatic-fallback\"}" : "{\"model\":\"pollinations-ai-flux\"}");
+        version.setPipelineStepsJson(isFallback ? "{\"model\":\"programmatic-fallback\"}" : "{\"model\":\"fal-ai-flux\"}");
         imageVersionRepository.save(version);
 
         return savedImage;
@@ -208,51 +215,93 @@ public class AIImageGenerationService {
         return lines;
     }
 
-    private byte[] generatePollinationsImage(String prompt, String aspectRatio) {
+    private byte[] generateFalImage(String prompt, String aspectRatio) {
         try {
-            int width = 1024;
-            int height = 1024;
-            if ("16:9".equals(aspectRatio)) {
-                width = 1024;
-                height = 576;
-            } else if ("9:16".equals(aspectRatio)) {
-                width = 576;
-                height = 1024;
-            } else if ("4:3".equals(aspectRatio)) {
-                width = 1024;
-                height = 768;
+            String imageSize = switch (aspectRatio) {
+                case "16:9" -> "landscape_16_9";
+                case "9:16" -> "portrait_16_9";
+                case "4:3" -> "landscape_4_3";
+                default -> "square_hd";
+            };
+
+            String submitUrl = "https://queue.fal.run/fal-ai/flux-1/schnell";
+
+            String body = """
+            {
+            "prompt": "%s",
+            "image_size": "%s",
+            "num_images": 1,
+            "enable_safety_checker": true
+            }
+            """.formatted(prompt.replace("\"", "\\\""), imageSize);
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(submitUrl))
+                    .header("Authorization", "Key " + falApiKey)
+                    .header("Content-Type", "application/json")
+                    .POST(HttpRequest.BodyPublishers.ofString(body))
+                    .build();
+
+            HttpClient client = HttpClient.newHttpClient();
+            HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Fal submit failed: " + response.body());
             }
 
-            String encodedPrompt = java.net.URLEncoder.encode(prompt, java.nio.charset.StandardCharsets.UTF_8.toString());
-            String urlString = String.format("https://image.pollinations.ai/prompt/%s?width=%d&height=%d&nologo=true", 
-                encodedPrompt, width, height);
+            JsonNode json = objectMapper.readTree(response.body());
+            String requestId = json.get("request_id").asText();
 
-            log.info("Fetching image from Pollinations.ai: {}", urlString);
-            
-            java.net.URL url = new java.net.URL(urlString);
-            java.net.HttpURLConnection connection = (java.net.HttpURLConnection) url.openConnection();
-            connection.setRequestMethod("GET");
-            connection.setConnectTimeout(30000);
-            connection.setReadTimeout(30000);
-            
-            int responseCode = connection.getResponseCode();
-            if (responseCode == 200) {
-                try (java.io.InputStream inputStream = connection.getInputStream();
-                     java.io.ByteArrayOutputStream outputStream = new java.io.ByteArrayOutputStream()) {
-                    byte[] buffer = new byte[4096];
-                    int bytesRead;
-                    while ((bytesRead = inputStream.read(buffer)) != -1) {
-                        outputStream.write(buffer, 0, bytesRead);
+            String resultUrl = "https://queue.fal.run/fal-ai/flux-1/schnell/requests/" + requestId;
+
+            for (int i = 0; i < 30; i++) {
+                Thread.sleep(1000);
+
+                HttpRequest resultRequest = HttpRequest.newBuilder()
+                        .uri(URI.create(resultUrl))
+                        .header("Authorization", "Key " + falApiKey)
+                        .GET()
+                        .build();
+
+                HttpResponse<String> resultResponse =
+                        client.send(resultRequest, HttpResponse.BodyHandlers.ofString());
+
+                if (resultResponse.statusCode() == 200) {
+                    JsonNode resultJson = objectMapper.readTree(resultResponse.body());
+
+                    if (resultJson.has("images")) {
+                        String imageUrl = resultJson.get("images").get(0).get("url").asText();
+                        return downloadImage(imageUrl);
                     }
-                    byte[] imgBytes = outputStream.toByteArray();
-                    log.info("Successfully generated image from Pollinations.ai, size: {} bytes", imgBytes.length);
-                    return imgBytes;
                 }
-            } else {
-                throw new RuntimeException("Pollinations.ai returned status: " + responseCode);
             }
+
+            throw new RuntimeException("Fal image generation timeout");
+
         } catch (Exception e) {
-            log.error("Failed to generate image via Pollinations.ai: {}", e.getMessage());
+            throw new RuntimeException("Failed to generate image via Fal AI", e);
+        }
+    }
+
+    private byte[] downloadImage(String imageUrl) {
+        try {
+            HttpClient client = HttpClient.newHttpClient();
+
+            HttpRequest request = HttpRequest.newBuilder()
+                    .uri(URI.create(imageUrl))
+                    .GET()
+                    .build();
+
+            HttpResponse<byte[]> response =
+                    client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+            if (response.statusCode() != 200) {
+                throw new RuntimeException("Download image failed");
+            }
+
+            return response.body();
+
+        } catch (Exception e) {
             throw new RuntimeException(e);
         }
     }
