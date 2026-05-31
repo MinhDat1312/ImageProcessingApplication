@@ -133,8 +133,8 @@ public class AuthService {
         ResponseCookie accessCookie = ResponseCookie
                 .from("accessToken", accessToken)
                 .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -142,8 +142,8 @@ public class AuthService {
         ResponseCookie refreshCookie = ResponseCookie
                 .from("refreshToken", refreshToken)
                 .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
@@ -203,8 +203,8 @@ public class AuthService {
         ResponseCookie newAccessCookie = ResponseCookie
                 .from("accessToken", newAccessToken)
                 .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(jwtAccessToken)
                 .build();
@@ -212,8 +212,8 @@ public class AuthService {
         ResponseCookie newRefreshCookie = ResponseCookie
                 .from("refreshToken", newRefreshToken)
                 .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(jwtRefreshToken)
                 .build();
@@ -240,16 +240,16 @@ public class AuthService {
 
         ResponseCookie deleteAccessCookie = ResponseCookie.from("accessToken", "")
                 .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();
 
         ResponseCookie deleteRefreshCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
-                .secure(false) // for dev
-                .sameSite("Lax") // for dev
+                .secure(true)
+                .sameSite("None")
                 .path("/")
                 .maxAge(0)
                 .build();

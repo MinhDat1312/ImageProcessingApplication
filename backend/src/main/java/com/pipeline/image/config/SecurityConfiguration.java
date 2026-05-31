@@ -137,6 +137,7 @@ public class SecurityConfiguration {
                 "/api/v1/roles",
 
                 "/api/v1/images/public/**",
+                "/api/v1/images/tags"
         };
 
 
